@@ -4,10 +4,22 @@ import yaml
 
 
 def is_chart_file(content):
+    """
+    Check if input dictionary contains mandatory keys of a Helm Chart.yaml file
+    :param content: parsed YAML file as dictionary of key values
+    :return: True is dict contains mandatory values, else False
+    """
     return all(x in content for x in ['apiVersion', 'appVersion', 'description', 'name', 'version'])
 
 
-def is_semantic_version(semantic_string):
+def is_semantic_string(semantic_string):
+    """
+    Check if input string is a semantic version of type x.y.z
+    Function will validate if each of x,y,z is an integer
+    Will return [x, y, z] if True
+    :param semantic_string: string
+    :return: int array if True, else False
+    """
     try:
         semantic_array = [int(n) for n in semantic_string.split('.')]
     except ValueError:
@@ -24,6 +36,13 @@ def is_semantic_version(semantic_string):
 
 
 def bump_version(version_array, level):
+    """
+    Perform ++1 action on the array [x, y, z] cell,
+    Input values are assumed to be validated
+    :param version_array: int array of [x, y, z] validated array
+    :param level: string represents major|minor|patch
+    :return: int array with new value
+    """
     if level == 'major':
         version_array[0] += 1
     elif level == 'minor':
@@ -31,7 +50,7 @@ def bump_version(version_array, level):
     elif level == 'patch':
         version_array[2] += 1
     else:
-        raise ValueError("Missed to validate level, invalid level: '{}'.".format(level))
+        raise ValueError("Missed level validation on start, invalid level: '{}'.".format(level))
 
     return version_array
 
@@ -55,7 +74,7 @@ def main():
     else:
         raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(chart_yaml))
 
-    current_version_array = is_semantic_version(current_version)
+    current_version_array = is_semantic_string(current_version)
     if not current_version_array:
         print("Invalid semantic version format: {}".format(current_version))
         exit(1)
@@ -65,9 +84,10 @@ def main():
 
     chart_yaml['version'] = new_version
 
+    print(str(chart_yaml))
     with open(args['file'], 'w') as outfile:
-        yaml.dump(chart_yaml, outfile)
-    outfile.close()
+        yaml.dump(chart_yaml, outfile, default_flow_style=False)
+        outfile.close()
 
     if args['quiet'] is False:
         print(new_version)
