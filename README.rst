@@ -5,4 +5,4 @@ Simple python code to bump kubernetes package manager Helm charts version.
 
 Usage
 -----
-example: `python3 helmbump.py --file [PATH_TO_CHART.YAML] --level patch`
+example: `helmbump --file [PATH_TO_CHART.YAML] --level patch`

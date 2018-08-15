@@ -1,11 +1,11 @@
 import setuptools
 
-with open("README.md", "r") as fh:
+with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
     name="helmbump",
-    version="0.0.1",
+    version="0.0.3",
     author="Arie Lev",
     author_email="levinson.arie@gmail.com",
     description="Helm charts version bumper",
@@ -15,7 +15,12 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     classifiers=(
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: Apache License Version 2.0",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ),
+    entry_points={
+        'console_scripts': [
+            'helmbump = helmbump.helmbump:main'
+        ],
+    },
 )
