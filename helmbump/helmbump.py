@@ -57,9 +57,24 @@ def bump_version(version_array, level):
 
 def main():
     parser = argparse.ArgumentParser(description='Helm Charts version bumper')
-    parser.add_argument('--file', help='Path to Chart.yaml file', required=True)
-    parser.add_argument('--level', choices=['major', 'minor', 'patch'], help='major|minor|patch', required=True)
-    parser.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
+    subparsers = parser.add_subparsers(dest='sub_command')
+
+    # Sub-parser for bump version command
+    parser_bump = subparsers.add_parser('bump')
+    parser_bump.add_argument('--file', help='Path to Chart.yaml file', required=True)
+    parser_bump.add_argument('--level', choices=['major', 'minor', 'patch'], help='major|minor|patch', required=True)
+    parser_bump.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
+
+    # Sub-parser for set version command
+    parser_set = subparsers.add_parser('set')
+    parser_set.add_argument('--file', help='Path to Chart.yaml file', required=True)
+    parser_set.add_argument('--set-version', help='Semantic version to set as \'x.y.z\'', required=True)
+    parser_set.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
+
+    # Sub-parser for get version command
+    parser_get = subparsers.add_parser('get')
+    parser_get.add_argument('--file', help='Path to Chart.yaml file', required=True)
+
     args = vars(parser.parse_args())
 
     chart_yaml = {}
@@ -79,18 +94,30 @@ def main():
         print("Invalid semantic version format: {}".format(current_version))
         exit(1)
 
-    new_version_array = bump_version(current_version_array, args['level'])
-    new_version = '.'.join(str(x) for x in new_version_array)
+    if args['sub_command'] == 'get':
+        print(current_version)
 
-    chart_yaml['version'] = new_version
+    else:
+        if args['sub_command'] == 'set':
+            set_version = args['set_version']
+            new_version = is_semantic_string(set_version)
+            if not new_version:
+                print("Invalid semantic version format: {}".format(set_version))
+                exit(1)
+            new_version = set_version
 
-    print(str(chart_yaml))
-    with open(args['file'], 'w') as outfile:
-        yaml.dump(chart_yaml, outfile, default_flow_style=False)
-        outfile.close()
+        else:  # bump version ['sub_command'] == 'bump'
+            new_version_array = bump_version(current_version_array, args['level'])
+            new_version = '.'.join(str(x) for x in new_version_array)
 
-    if args['quiet'] is False:
-        print(new_version)
+        chart_yaml['version'] = new_version
+
+        with open(args['file'], 'w') as outfile:
+            yaml.dump(chart_yaml, outfile, default_flow_style=False)
+            outfile.close()
+
+        if args['quiet'] is False:
+            print(new_version)
 
 
 if __name__ == "__main__":
