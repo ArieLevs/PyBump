@@ -3,7 +3,7 @@ import argparse
 import yaml
 
 
-def is_chart_file(content):
+def is_valid_helm_chart(content):
     """
     Check if input dictionary contains mandatory keys of a Helm Chart.yaml file
     :param content: parsed YAML file as dictionary of key values
@@ -84,7 +84,7 @@ def main():
         except yaml.YAMLError as exc:
             print(exc)
 
-    if is_chart_file(chart_yaml):
+    if is_valid_helm_chart(chart_yaml):
         current_version = chart_yaml['version']
     else:
         raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(chart_yaml))
