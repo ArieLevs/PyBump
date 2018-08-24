@@ -29,7 +29,7 @@ def is_semantic_string(semantic_string):
         return False
 
     for index in semantic_array:
-        if index not in range(0, 10000):
+        if index not in range(0, 100000):
             return False
 
     return semantic_array
@@ -45,8 +45,11 @@ def bump_version(version_array, level):
     """
     if level == 'major':
         version_array[0] += 1
+        version_array[1] = 0
+        version_array[2] = 0
     elif level == 'minor':
         version_array[1] += 1
+        version_array[2] = 0
     elif level == 'patch':
         version_array[2] += 1
     else:
