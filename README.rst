@@ -3,6 +3,10 @@ Helm Version Bump
 
 Simple python code to bump kubernetes package manager Helm charts version.
 
+Install
+-------
+``pip install helmbump``
+
 Usage
 -----
 **bump** version:
@@ -27,4 +31,4 @@ Case: ``version: 0.1.4``
 
 
 Case: ``version: 0.0.1``
-``helmbump set --file Chart.yaml --set-version 1.4.0`` will bump version to ``version: 1.4.0``
+``helmbump set --file Chart.yaml --set-version 1.4.0`` will set version to ``version: 1.4.0``
