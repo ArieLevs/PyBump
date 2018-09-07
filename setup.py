@@ -5,7 +5,7 @@ with open("README.rst", "r") as fh:
 
 setuptools.setup(
     name="helmbump",
-    version="0.0.12",
+    version="0.0.13",
     author="Arie Lev",
     author_email="levinson.arie@gmail.com",
     description="Helm charts version bumper",
