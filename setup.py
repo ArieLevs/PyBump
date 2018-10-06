@@ -8,10 +8,10 @@ setuptools.setup(
     version="0.1.2",
     author="Arie Lev",
     author_email="levinsonarie@gmail.com",
-    description="Helm charts version bumper",
+    description="Python version bumper",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ArieLevs/HelmVersionBump",
+    url="https://github.com/ArieLevs/PyBump",
     license='Apache License 2.0',
     packages=setuptools.find_packages(),
     classifiers=(
