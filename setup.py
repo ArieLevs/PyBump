@@ -7,11 +7,12 @@ setuptools.setup(
     name="helmbump",
     version="0.0.12",
     author="Arie Lev",
-    author_email="levinson.arie@gmail.com",
+    author_email="levinsonarie@gmail.com",
     description="Helm charts version bumper",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ArieLevs/HelmVersionBump",
+    license='Apache License 2.0',
     packages=setuptools.find_packages(),
     classifiers=(
         "Programming Language :: Python :: 3",
