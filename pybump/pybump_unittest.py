@@ -1,5 +1,5 @@
 import unittest
-from helmbump.helmbump import is_semantic_string, is_valid_helm_chart, bump_version
+from pybump.pybump import is_semantic_string, is_valid_helm_chart, bump_version
 
 valid_helm_chart = {'apiVersion': 'v1',
                     'appVersion': '1.0',
@@ -14,7 +14,7 @@ invalid_helm_chart = {'apiVersion': 'v1',
 empty_helm_chart = {}
 
 
-class HelmBumpTest(unittest.TestCase):
+class PyBumpTest(unittest.TestCase):
 
     def setUp(self):
         pass

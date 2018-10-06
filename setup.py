@@ -4,7 +4,7 @@ with open("README.rst", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="helmbump",
+    name="pybump",
     version="0.1.1",
     author="Arie Lev",
     author_email="levinsonarie@gmail.com",
@@ -21,7 +21,7 @@ setuptools.setup(
     ),
     entry_points={
         'console_scripts': [
-            'helmbump = helmbump.helmbump:main'
+            'pybump = pybump.pybump:main'
         ],
     },
 )
