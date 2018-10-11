@@ -1,5 +1,5 @@
 import unittest
-from pybump.pybump import is_semantic_string, is_valid_helm_chart, bump_version
+from pybump.pybump import *
 
 valid_helm_chart = {'apiVersion': 'v1',
                     'appVersion': '1.0',
@@ -12,6 +12,42 @@ invalid_helm_chart = {'apiVersion': 'v1',
                       'name': 'test',
                       'version': '0.1.0'}
 empty_helm_chart = {}
+
+valid_setup_py = """
+    setuptools.setup(
+        name="pybump",
+        version="0.1.3",
+        author="Arie Lev",
+        author_email="levinsonarie@gmail.com",
+        description="Python version bumper",
+        long_description=long_description,
+        long_description_content_type="text/markdown",
+        url="https://github.com/ArieLevs/PyBump",
+        license='Apache License 2.0',
+        packages=setuptools.find_packages(),
+    )
+    """
+
+invalid_setup_py_1 = """
+    setuptools.setup(
+        name="pybump",
+        invalid_version_string="0.1.3",
+        author="Arie Lev",
+        author_email="levinsonarie@gmail.com",
+        description="Python version bumper",
+    )
+    """
+invalid_setup_py_2 = """
+    setuptools.setup(
+        name="pybump",
+        version="0.1.3",
+        version="0.1.2",
+        __version__="12356"
+        author="Arie Lev",
+        author_email="levinsonarie@gmail.com",
+        description="Python version bumper",
+    )
+    """
 
 
 class PyBumpTest(unittest.TestCase):
@@ -44,6 +80,15 @@ class PyBumpTest(unittest.TestCase):
         self.assertEqual(bump_version([1, 2, 3], 'minor'), [1, 3, 0])
         self.assertEqual(bump_version([1, 2, 3], 'patch'), [1, 2, 4])
         self.assertEqual(bump_version([0, 0, 9], 'patch'), [0, 0, 10])
+
+    def test_get_setup_py_version(self):
+        self.assertEqual(get_setup_py_version(valid_setup_py), '0.1.3')
+
+        with self.assertRaises(RuntimeError):
+            get_setup_py_version(invalid_setup_py_1)
+
+        with self.assertRaises(RuntimeError):
+            get_setup_py_version(invalid_setup_py_2)
 
 
 if __name__ == '__main__':

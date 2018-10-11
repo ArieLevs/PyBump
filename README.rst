@@ -1,5 +1,5 @@
-Helm Version Bump
-=================
+Python Version Bumper
+=====================
 
 Simple python code to bump kubernetes package manager Helm charts and setup.py versions.
 
