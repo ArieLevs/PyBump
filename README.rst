@@ -2,17 +2,12 @@ Python Version Bumper
 =====================
 
 |PyPI version pybump|
-
 .. |PyPI version pybump| image:: https://img.shields.io/pypi/v/pybump.svg
    :target: https://pypi.org/project/pybump/
-
 |PyPI license|
-
 .. |PyPI license| image:: https://img.shields.io/pypi/l/pybump.svg
    :target: https://pypi.org/project/pybump/
-
 |PyPI pyversions|
-
 .. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/pybump.svg
    :target: https://pypi.org/project/pybump/
 
