@@ -10,7 +10,7 @@ setuptools.setup(
     author_email="levinsonarie@gmail.com",
     description="Python version bumper",
     long_description=long_description,
-    long_description_content_type="text/markdown",
+    long_description_content_type="text/reStructuredText",
     url="https://github.com/ArieLevs/PyBump",
     license='Apache License 2.0',
     packages=setuptools.find_packages(),

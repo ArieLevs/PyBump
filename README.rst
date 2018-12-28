@@ -2,12 +2,15 @@ Python Version Bumper
 =====================
 
 .. image:: https://img.shields.io/pypi/v/pybump.svg
+    :alt: Version
     :target: https://pypi.org/project/pybump/
 
-.. image:: https://img.shields.io/pypi/l/pybump.svg
+.. image:: https://img.shields.io/pypi/l/pybump.svg?colorB=blue
+    :alt: License
     :target: https://pypi.org/project/pybump/
 
 .. image:: https://img.shields.io/pypi/pyversions/pybump.svg
+    :alt: Python Version
     :target: https://pypi.org/project/pybump/
 
 Simple python code to bump kubernetes package manager Helm charts and setup.py versions.
