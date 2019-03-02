@@ -14,6 +14,10 @@ setuptools.setup(
     url="https://github.com/ArieLevs/PyBump",
     license='Apache License 2.0',
     packages=setuptools.find_packages(),
+    install_requires=[
+        'pyyaml=3.13',
+        'argparse=1.4.0',
+    ],
     classifiers=(
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
