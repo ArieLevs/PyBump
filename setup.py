@@ -15,8 +15,8 @@ setuptools.setup(
     license='Apache License 2.0',
     packages=setuptools.find_packages(),
     install_requires=[
-        'pyyaml=3.13',
-        'argparse=1.4.0',
+        'pyyaml==3.13',
+        'argparse==1.4.0',
     ],
     classifiers=(
         "Programming Language :: Python :: 3",
