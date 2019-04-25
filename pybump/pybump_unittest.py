@@ -28,6 +28,7 @@ valid_setup_py = """
     )
     """
 
+# This setup.py content is missing 'version' key
 invalid_setup_py_1 = """
     setuptools.setup(
         name="pybump",
@@ -37,6 +38,7 @@ invalid_setup_py_1 = """
         description="Python version bumper",
     )
     """
+# This setup.py content 'version' key declared 3 times
 invalid_setup_py_2 = """
     setuptools.setup(
         name="pybump",
@@ -69,6 +71,10 @@ class PyBumpTest(unittest.TestCase):
         self.assertFalse(is_semantic_string('1.9'))
         self.assertFalse(is_semantic_string('text'))
 
+        self.assertFalse(is_semantic_string(4))
+        self.assertFalse(is_semantic_string(True))
+        self.assertFalse(is_semantic_string(None))
+
     def test_is_valid_helm_chart(self):
         self.assertTrue(is_valid_helm_chart(valid_helm_chart))
         self.assertFalse(is_valid_helm_chart(invalid_helm_chart))
@@ -80,6 +86,9 @@ class PyBumpTest(unittest.TestCase):
         self.assertEqual(bump_version([1, 2, 3], 'minor'), [1, 3, 0])
         self.assertEqual(bump_version([1, 2, 3], 'patch'), [1, 2, 4])
         self.assertEqual(bump_version([0, 0, 9], 'patch'), [0, 0, 10])
+
+        self.assertRaises(ValueError, bump_version, None, 'patch')
+        self.assertRaises(ValueError, bump_version, [1, 2, 3], 'not_patch')
 
     def test_get_setup_py_version(self):
         self.assertEqual(get_setup_py_version(valid_setup_py), '0.1.3')
