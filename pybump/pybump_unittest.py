@@ -99,6 +99,9 @@ class PyBumpTest(unittest.TestCase):
         with self.assertRaises(RuntimeError):
             get_setup_py_version(invalid_setup_py_2)
 
+    def test_get_self_version(self):
+        self.assertEqual(get_self_version('pybump'), 'version not found')
+
 
 if __name__ == '__main__':
     unittest.main()

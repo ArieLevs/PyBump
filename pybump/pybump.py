@@ -3,6 +3,7 @@ import argparse
 import yaml
 import re
 import os
+from pkg_resources import get_distribution, DistributionNotFound
 
 
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
@@ -78,7 +79,8 @@ def bump_version(version_array, level):
     :return: int array with new value
     """
     if type(version_array) != list:
-        raise ValueError("Error, invalid version_array: '{}'.".format(version_array))
+        raise ValueError("Error, invalid version_array: '{}', "
+                         "should be [x, y, z].".format(version_array))
 
     if level == 'major':
         version_array[0] += 1
@@ -90,14 +92,32 @@ def bump_version(version_array, level):
     elif level == 'patch':
         version_array[2] += 1
     else:
-        raise ValueError("Missed level validation on start, invalid level: '{}'.".format(level))
+        raise ValueError("Error, invalid level: '{}', "
+                         "should be major|minor|patch.".format(level))
 
     return version_array
+
+
+def get_self_version(dist_name):
+    """
+    Return version number of input distribution name,
+    If distribution not found return not found indication
+    :param dist_name: string
+    :return: version as string
+    """
+    try:
+        return get_distribution(dist_name).version
+    except DistributionNotFound:
+        return 'version not found'
 
 
 def main():
     parser = argparse.ArgumentParser(description='Python version bumper')
     subparsers = parser.add_subparsers(dest='sub_command')
+
+    parser.add_argument('--version', action='version',
+                        version='%(prog)s {}'.format(get_self_version('pybump')),
+                        help='Print version and exit')
 
     # Sub-parser for bump version command
     parser_bump = subparsers.add_parser('bump')
