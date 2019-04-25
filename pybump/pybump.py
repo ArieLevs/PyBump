@@ -137,6 +137,11 @@ def main():
 
     args = vars(parser.parse_args())
 
+    # Case where no args passed, sub_command is mandatory
+    if args['sub_command'] is None:
+        parser.print_help()
+        exit(0)
+
     current_version = ""
     setup_py_content = ""
     chart_yaml = {}
