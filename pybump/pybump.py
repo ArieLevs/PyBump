@@ -51,6 +51,9 @@ def is_semantic_string(semantic_string):
     :param semantic_string: string
     :return: int array if True, else False
     """
+    if type(semantic_string) != str:
+        return False
+
     try:
         semantic_array = [int(n) for n in semantic_string.split('.')]
     except ValueError:
@@ -74,6 +77,9 @@ def bump_version(version_array, level):
     :param level: string represents major|minor|patch
     :return: int array with new value
     """
+    if type(version_array) != list:
+        raise ValueError("Error, invalid version_array: '{}'.".format(version_array))
+
     if level == 'major':
         version_array[0] += 1
         version_array[1] = 0
