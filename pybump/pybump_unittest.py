@@ -51,6 +51,22 @@ invalid_setup_py_2 = """
     )
     """
 
+valid_version_file_1 = """0.12.4"""
+valid_version_file_2 = """
+
+    1.5.0
+    
+    
+    """
+invalid_version_file_1 = """
+    this is some text in addition to version
+    1.5.0
+    nothing except semantic version should be in this file 
+    """
+invalid_version_file_2 = """
+    version=1.5.0
+    """
+
 
 class PyBumpTest(unittest.TestCase):
 
@@ -98,6 +114,13 @@ class PyBumpTest(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             get_setup_py_version(invalid_setup_py_2)
+
+    def test_is_valid_version_file(self):
+        self.assertTrue(is_semantic_string(valid_version_file_1))
+        self.assertTrue(is_semantic_string(valid_version_file_2))
+        self.assertFalse(is_semantic_string(invalid_version_file_1))
+        self.assertFalse(is_semantic_string(invalid_version_file_2))
+        self.assertEqual(is_semantic_string(valid_version_file_1), [0, 12, 4])
 
 
 if __name__ == '__main__':

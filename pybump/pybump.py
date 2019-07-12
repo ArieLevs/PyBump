@@ -121,19 +121,19 @@ def main():
 
     # Sub-parser for bump version command
     parser_bump = subparsers.add_parser('bump')
-    parser_bump.add_argument('--file', help='Path to Chart.yaml/setup.py file', required=True)
+    parser_bump.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
     parser_bump.add_argument('--level', choices=['major', 'minor', 'patch'], help='major|minor|patch', required=True)
     parser_bump.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
 
     # Sub-parser for set version command
     parser_set = subparsers.add_parser('set')
-    parser_set.add_argument('--file', help='Path to Chart.yaml/setup.py file', required=True)
+    parser_set.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
     parser_set.add_argument('--set-version', help='Semantic version to set as \'x.y.z\'', required=True)
     parser_set.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
 
     # Sub-parser for get version command
     parser_get = subparsers.add_parser('get')
-    parser_get.add_argument('--file', help='Path to Chart.yaml/setup.py file', required=True)
+    parser_get.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
 
     args = vars(parser.parse_args())
 
@@ -163,7 +163,12 @@ def main():
             else:
                 raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(chart_yaml))
         else:
-            raise ValueError("File extension is not known to this app: {0}".format(file_extension))
+            if os.path.basename(filename) == 'VERSION':
+                # A version file should ONLY contain a valid semantic version string
+                current_version = stream.read()
+            else:
+                raise ValueError("File name or extension not known to this app: {}{}"
+                                 .format(os.path.basename(filename), file_extension))
 
     current_version_array = is_semantic_string(current_version)
     if not current_version_array:
@@ -192,6 +197,8 @@ def main():
             elif file_extension == '.yaml' or file_extension == '.yml':
                 chart_yaml['version'] = new_version
                 yaml.dump(chart_yaml, outfile, default_flow_style=False)
+            elif os.path.basename(filename) == 'VERSION':
+                outfile.write(new_version)
             outfile.close()
 
         if args['quiet'] is False:
