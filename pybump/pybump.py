@@ -154,7 +154,7 @@ def main():
             current_version = get_setup_py_version(setup_py_content)
         elif file_extension == '.yaml' or file_extension == '.yml':
             try:
-                chart_yaml = yaml.load(stream)
+                chart_yaml = yaml.safe_load(stream)
             except yaml.YAMLError as exc:
                 print(exc)
 
