@@ -71,12 +71,12 @@ invalid_version_file_2 = """
 
 
 def get_version(file):
-    return run(["python", "pybump.py", "get", "--file", file],
+    return run(["python", "pybump/pybump.py", "get", "--file", file],
                stdout=PIPE, stderr=PIPE)
 
 
 def set_version(file, version):
-    return run(["python", "pybump.py", "set", "--file", file, "--set-version", version],
+    return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version],
                stdout=PIPE, stderr=PIPE)
 
 
@@ -136,17 +136,19 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_patch():
-        set_version("test_valid_chart.yaml", "0.1.0")
-        completed_process_object = run(["python", "pybump.py", "bump",
+        set_version("pybump/test_valid_chart.yaml", "0.1.0")
+        completed_process_object = run(["python", "pybump/pybump.py", "bump",
                                         "--level", "patch",
-                                        "--file", "test_valid_chart.yaml"],
+                                        "--file", "pybump/test_valid_chart.yaml"],
                                        stdout=PIPE,
                                        stderr=PIPE)
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = get_version("test_valid_chart.yaml")
+        completed_process_object = get_version("pybump/test_valid_chart.yaml")
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
 
         stdout = completed_process_object.stdout.decode('utf-8').strip()
         if stdout != "0.1.1":
@@ -154,44 +156,50 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_minor():
-        set_version("test_valid_setup.py", "2.1.5")
-        completed_process_object = run(["python", "pybump.py", "bump",
+        set_version("pybump/test_valid_setup.py", "2.1.5")
+        completed_process_object = run(["python", "pybump/pybump.py", "bump",
                                         "--level", "minor",
-                                        "--file", "test_valid_setup.py"],
+                                        "--file", "pybump/test_valid_setup.py"],
                                        stdout=PIPE,
                                        stderr=PIPE)
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = get_version("test_valid_setup.py")
+        completed_process_object = get_version("pybump/test_valid_setup.py")
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
         stdout = completed_process_object.stdout.decode('utf-8').strip()
         if stdout != "2.2.0":
             raise Exception("test_bump_minor failed, return version should be 2.2.0 got " + stdout)
 
     @staticmethod
     def test_bump_major():
-        set_version("test_valid_chart.yaml", "0.5.9")
-        completed_process_object = run(["python", "pybump.py", "bump",
+        set_version("pybump/test_valid_chart.yaml", "0.5.9")
+        completed_process_object = run(["python", "pybump/pybump.py", "bump",
                                         "--level", "major",
-                                        "--file", "test_valid_chart.yaml"],
+                                        "--file", "pybump/test_valid_chart.yaml"],
                                        stdout=PIPE,
                                        stderr=PIPE)
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = get_version("test_valid_chart.yaml")
+        completed_process_object = get_version("pybump/test_valid_chart.yaml")
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
         stdout = completed_process_object.stdout.decode('utf-8').strip()
         if stdout != "1.0.0":
             raise Exception("test_bump_major failed, return version should be 1.0.0 got " + stdout)
 
     @staticmethod
     def test_invalid_bump_major():
-        set_version("test_invalid_chart.yaml", "3.5.5")
-        completed_process_object = run(["python", "pybump.py", "bump",
+        set_version("pybump/test_invalid_chart.yaml", "3.5.5")
+        completed_process_object = run(["python", "pybump/pybump.py", "bump",
                                         "--level", "major",
-                                        "--file", "test_invalid_chart.yaml"],
+                                        "--file", "pybump/test_invalid_chart.yaml"],
                                        stdout=PIPE,
                                        stderr=PIPE)
         if completed_process_object.returncode != 0:
