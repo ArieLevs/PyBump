@@ -134,6 +134,7 @@ def main():
     # Sub-parser for get version command
     parser_get = subparsers.add_parser('get')
     parser_get.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
+    parser_get.add_argument('--appversion', action='store_true', help='Output appVersion only', required=False)
 
     args = vars(parser.parse_args())
 
@@ -160,6 +161,7 @@ def main():
 
             if is_valid_helm_chart(chart_yaml):
                 current_version = chart_yaml['version']
+                current_appversion = chart_yaml['appVersion']
             else:
                 raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(chart_yaml))
         else:
@@ -176,7 +178,10 @@ def main():
         exit(1)
 
     if args['sub_command'] == 'get':
-        print(current_version)
+        if args['appversion']:
+          print(current_appversion)
+        else:
+          print(current_version)
     else:
         # Set the 'new_version' value
         if args['sub_command'] == 'set':

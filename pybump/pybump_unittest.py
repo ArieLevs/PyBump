@@ -74,6 +74,10 @@ def get_version(file):
     return run(["python", "pybump/pybump.py", "get", "--file", file],
                stdout=PIPE, stderr=PIPE)
 
+def get_appversion(file):
+    return run(["python", "pybump/pybump.py", "get", "--appversion", "--file", file],
+               stdout=PIPE, stderr=PIPE)
+
 
 def set_version(file, version):
     return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version],
@@ -207,6 +211,14 @@ class PyBumpTest(unittest.TestCase):
         else:
             raise Exception("test_invalid_bump_major failed, test should of fail, but passed")
 
+    @staticmethod
+    def test_get_appversion():
+        completed_process_object = get_appversion("pybump/test_valid_chart.yaml")
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "1.0":
+            raise Exception("test_get_appversion failed, return version should be 1.0 got " + stdout)
 
 if __name__ == '__main__':
     unittest.main()
