@@ -1,7 +1,7 @@
 import unittest
 from subprocess import run, PIPE
 
-from pybump.pybump import *
+from pybump.pybump import get_setup_py_version, is_semantic_string, bump_version, is_valid_helm_chart
 
 valid_helm_chart = {'apiVersion': 'v1',
                     'appVersion': '1.0',
@@ -57,13 +57,13 @@ valid_version_file_1 = """0.12.4"""
 valid_version_file_2 = """
 
     1.5.0
-    
-    
+
+
     """
 invalid_version_file_1 = """
     this is some text in addition to version
     1.5.0
-    nothing except semantic version should be in this file 
+    nothing except semantic version should be in this file
     """
 invalid_version_file_2 = """
     version=1.5.0
