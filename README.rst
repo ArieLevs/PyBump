@@ -1,6 +1,5 @@
 Python Version Bumper
 =====================
-
 .. image:: https://github.com/arielevs/pybump/workflows/Python%20package/badge.svg
     :alt: Build
     :target: https://pypi.org/project/pybump/
