@@ -5,3 +5,7 @@
 
 __pycache__
 pybump/test_*
+
+build
+dist
+pybump.egg-info
