@@ -1,10 +1,8 @@
-
 import argparse
 import yaml
 import re
 import os
 from pkg_resources import get_distribution, DistributionNotFound
-
 
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
@@ -35,8 +33,8 @@ def get_setup_py_version(content):
 def set_setup_py_version(version, content):
     """
     Replace version in setup.py file using regex,
-    \g<1> contains the string left of version 
-    \g<3> contains the string right of version 
+    g<1> contains the string left of version
+    g<3> contains the string right of version
     :param version: string
     :param content: content of setup.py as string
     :return: content of setup.py file with 'version'
