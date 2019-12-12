@@ -191,6 +191,21 @@ class PyBumpTest(unittest.TestCase):
         if stdout != "0.1.1":
             raise Exception("test_bump_patch failed, return version should be 0.1.1 got " + stdout)
 
+        # Simulate with --app-version flag
+        simulate_set_version("pybump/test_valid_chart.yaml", "3.1.5", True)
+        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "patch", True)
+
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", True)
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "3.1.6":
+            raise Exception("test_bump_patch failed, return version should be 3.1.6 got " + stdout)
+
     @staticmethod
     def test_bump_minor():
         simulate_set_version("pybump/test_valid_setup.py", "2.1.5")
@@ -221,6 +236,21 @@ class PyBumpTest(unittest.TestCase):
         stdout = completed_process_object.stdout.decode('utf-8').strip()
         if stdout != "1.0.0":
             raise Exception("test_bump_major failed, return version should be 1.0.0 got " + stdout)
+
+        # Simulate with --app-version flag
+        simulate_set_version("pybump/test_valid_chart.yaml", "2.2.8", True)
+        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "major", True)
+
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", True)
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "3.0.0":
+            raise Exception("test_bump_patch failed, return version should be 3.0.0 got " + stdout)
 
     @staticmethod
     def test_invalid_bump_major():
