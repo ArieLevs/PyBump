@@ -1,7 +1,8 @@
 import argparse
-import yaml
-import re
 import os
+import re
+
+import yaml
 from pkg_resources import get_distribution, DistributionNotFound
 
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
@@ -122,16 +123,22 @@ def main():
     parser_bump.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
     parser_bump.add_argument('--level', choices=['major', 'minor', 'patch'], help='major|minor|patch', required=True)
     parser_bump.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
+    parser_bump.add_argument('--app-version', action='store_true',
+                             help='Bump Helm chart appVersion, relevant only for Chart.yaml files', required=False)
 
     # Sub-parser for set version command
     parser_set = subparsers.add_parser('set')
     parser_set.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
     parser_set.add_argument('--set-version', help='Semantic version to set as \'x.y.z\'', required=True)
     parser_set.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
+    parser_set.add_argument('--app-version', action='store_true',
+                            help='Set Helm chart appVersion, relevant only for Chart.yaml files', required=False)
 
     # Sub-parser for get version command
     parser_get = subparsers.add_parser('get')
     parser_get.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
+    parser_get.add_argument('--app-version', action='store_true',
+                            help='Get Helm chart appVersion, relevant only for Chart.yaml files', required=False)
 
     args = vars(parser.parse_args())
 
@@ -157,7 +164,10 @@ def main():
                 print(exc)
 
             if is_valid_helm_chart(chart_yaml):
-                current_version = chart_yaml['version']
+                if args['app_version']:
+                    current_version = chart_yaml['appVersion']
+                else:
+                    current_version = chart_yaml['version']
             else:
                 raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(chart_yaml))
         else:
@@ -193,7 +203,10 @@ def main():
             if file_extension == '.py':
                 outfile.write(set_setup_py_version(new_version, setup_py_content))
             elif file_extension == '.yaml' or file_extension == '.yml':
-                chart_yaml['version'] = new_version
+                if args['app_version']:
+                    chart_yaml['appVersion'] = new_version
+                else:
+                    chart_yaml['version'] = new_version
                 yaml.dump(chart_yaml, outfile, default_flow_style=False)
             elif os.path.basename(filename) == 'VERSION':
                 outfile.write(new_version)
