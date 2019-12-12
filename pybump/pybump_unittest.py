@@ -70,14 +70,55 @@ invalid_version_file_2 = """
     """
 
 
-def get_version(file):
-    return run(["python", "pybump/pybump.py", "get", "--file", file],
-               stdout=PIPE, stderr=PIPE)
+def simulate_get_version(file, app_version=False):
+    """
+    execute sub process to simulate real app execution,
+    return current version from a file
+    if app_version is True, then add the --app-version flag to execution
+    :param file: string
+    :param app_version: boolean
+    :return: CompletedProcess object
+    """
+    if app_version:
+        return run(["python", "pybump/pybump.py", "get", "--file", file, "--app-versio"], stdout=PIPE, stderr=PIPE)
+    else:
+        return run(["python", "pybump/pybump.py", "get", "--file", file], stdout=PIPE, stderr=PIPE)
 
 
-def set_version(file, version):
-    return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version],
-               stdout=PIPE, stderr=PIPE)
+def simulate_set_version(file, version, app_version=False):
+    """
+    execute sub process to simulate real app execution,
+    set new version to a file
+    if app_version is True, then add the --app-version flag to execution
+    :param file: string
+    :param version: string
+    :param app_version: boolean
+    :return:
+    """
+    if app_version:
+        return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version, "--app-version"],
+                   stdout=PIPE, stderr=PIPE)
+    else:
+        return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version],
+                   stdout=PIPE, stderr=PIPE)
+
+
+def simulate_bump_version(file, level, app_version=False):
+    """
+    execute sub process to simulate real app execution,
+    bump version in file based on level
+    if app_version is True, then add the --app-version flag to execution
+    :param file: string
+    :param level: string
+    :param app_version: boolean
+    :return:
+    """
+    if app_version:
+        return run(["python", "pybump/pybump.py", "bump", "--level", level, "--file", file, "--app-version"],
+                   stdout=PIPE, stderr=PIPE)
+    else:
+        return run(["python", "pybump/pybump.py", "bump", "--level", level, "--file", file],
+                   stdout=PIPE, stderr=PIPE)
 
 
 class PyBumpTest(unittest.TestCase):
@@ -136,17 +177,13 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_patch():
-        set_version("pybump/test_valid_chart.yaml", "0.1.0")
-        completed_process_object = run(["python", "pybump/pybump.py", "bump",
-                                        "--level", "patch",
-                                        "--file", "pybump/test_valid_chart.yaml"],
-                                       stdout=PIPE,
-                                       stderr=PIPE)
+        simulate_set_version("pybump/test_valid_chart.yaml", "0.1.0")
+        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "patch")
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = get_version("pybump/test_valid_chart.yaml")
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -156,17 +193,13 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_minor():
-        set_version("pybump/test_valid_setup.py", "2.1.5")
-        completed_process_object = run(["python", "pybump/pybump.py", "bump",
-                                        "--level", "minor",
-                                        "--file", "pybump/test_valid_setup.py"],
-                                       stdout=PIPE,
-                                       stderr=PIPE)
+        simulate_set_version("pybump/test_valid_setup.py", "2.1.5")
+        completed_process_object = simulate_bump_version("pybump/test_valid_setup.py", "minor")
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = get_version("pybump/test_valid_setup.py")
+        completed_process_object = simulate_get_version("pybump/test_valid_setup.py")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -176,17 +209,12 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_major():
-        set_version("pybump/test_valid_chart.yaml", "0.5.9")
-        completed_process_object = run(["python", "pybump/pybump.py", "bump",
-                                        "--level", "major",
-                                        "--file", "pybump/test_valid_chart.yaml"],
-                                       stdout=PIPE,
-                                       stderr=PIPE)
-
+        simulate_set_version("pybump/test_valid_chart.yaml", "0.5.9")
+        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "major")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = get_version("pybump/test_valid_chart.yaml")
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -196,12 +224,9 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_invalid_bump_major():
-        set_version("pybump/test_invalid_chart.yaml", "3.5.5")
-        completed_process_object = run(["python", "pybump/pybump.py", "bump",
-                                        "--level", "major",
-                                        "--file", "pybump/test_invalid_chart.yaml"],
-                                       stdout=PIPE,
-                                       stderr=PIPE)
+        simulate_set_version("pybump/test_invalid_chart.yaml", "3.5.5")
+        completed_process_object = simulate_bump_version("pybump/test_invalid_chart.yaml", "major")
+
         if completed_process_object.returncode != 0:
             pass
         else:
