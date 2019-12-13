@@ -33,7 +33,10 @@ Usage
 **get** current version:
 ``pybump get --file PATH_TO_CHART.YAML``
 
-
+update Helm chart appVersion:
+in order to bump/get/set the Helm chart appVersion value just add the ``--app-version`` flag
+``pybump bump [-h] --file PATH_TO_CHART.YAML --level {major,minor,patch} [--quiet] [--app-version]``
+ * note that the --app-version flag is relevant only for Helm chart.yaml files and has not effect on other cases.
 Examples
 --------
 
@@ -47,3 +50,6 @@ Case: ``version: 0.1.4``
 
 Case: ``version: 0.0.1``
 ``pybump set --file Chart.yaml --set-version 1.4.0`` will set version to ``version: 1.4.0``
+
+Case: ``appVersion 2.3.2``
+``pybump bump --file Chart.yaml --level patch --app-version`` will bump appVersion to ``appVersion: 2.3.3``
