@@ -27,4 +27,4 @@ jobs:
     - name: Test with unittest
       run: |
         pip install pyyaml==5.1 argparse==1.4.
-        python -m unittest pybump/pybump_unittest.py
+        python -m unittest pybump/pybump_unittest.py -vv
