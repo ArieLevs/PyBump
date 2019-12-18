@@ -45,28 +45,35 @@ def set_setup_py_version(version, content):
 
 def is_semantic_string(semantic_string):
     """
-    Check if input string is a semantic version of type x.y.z
-    Function will validate if each of x,y,z is an integer
-    Will return [x, y, z] if True
+    Check if input string is a semantic version as defined here: https://github.com/semver/semver/blob/master/semver.md
+    Function will search a match according to the regular expresion, so for example '1.1.2-prerelease+meta' is valid,
+    then make sure there is and exact singe match and validate if each of x,y,z is an integer.
+    Will return {'version': [x, y, z], 'release': 'some-release', 'metadata': 'some-metadata'} if True
     :param semantic_string: string
-    :return: int array if True, else False
+    :return: dict if True, else False
     """
     if type(semantic_string) != str:
         return False
 
+    semver_regex = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"  # Match x.y.z
+                              # Match -sometext-12.here
+                              r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+                              r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+                              # Match +more.123.here
+                              r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$")
+    # returns a list of tuples, for example [('2', '2', '7', 'alpha', '')]
+    match = semver_regex.findall(semantic_string)
+
+    # There was no match using 'semver_regex', since if 0 or more then single match found and empty list returned
+    if len(match) == 0:
+        return False
+
     try:
-        semantic_array = [int(n) for n in semantic_string.split('.')]
+        semantic_array = [int(n) for n in match[0][:3]]
     except ValueError:
         return False
 
-    if len(semantic_array) != 3:
-        return False
-
-    for index in semantic_array:
-        if index not in range(0, 100000):
-            return False
-
-    return semantic_array
+    return {'version': semantic_array, 'release': match[0][3], 'metadata': match[0][4]}
 
 
 def bump_version(version_array, level):
@@ -108,6 +115,24 @@ def get_self_version(dist_name):
         return get_distribution(dist_name).version
     except DistributionNotFound:
         return 'version not found'
+
+
+def assemble_version_string(version_array, release, metadata):
+    """
+    reconstruct version
+    :param version_array: list of ints
+    :param release: string
+    :param metadata: sting
+    :return: string
+    """
+    result_string = '.'.join(str(x) for x in version_array)
+    if release:
+        result_string += '-' + release
+
+    if metadata:
+        result_string += '+' + metadata
+
+    return result_string
 
 
 def main():
@@ -175,8 +200,8 @@ def main():
                 raise ValueError("File name or extension not known to this app: {}{}"
                                  .format(os.path.basename(filename), file_extension))
 
-    current_version_array = is_semantic_string(current_version)
-    if not current_version_array:
+    current_version_dict = is_semantic_string(current_version)
+    if not current_version_dict:
         print("Invalid semantic version format: {}".format(current_version))
         exit(1)
 
@@ -186,14 +211,17 @@ def main():
         # Set the 'new_version' value
         if args['sub_command'] == 'set':
             set_version = args['set_version']
-            new_version = is_semantic_string(set_version)
-            if not new_version:
+            if not is_semantic_string(set_version):
                 print("Invalid semantic version format: {}".format(set_version))
                 exit(1)
             new_version = set_version
         else:  # bump version ['sub_command'] == 'bump'
-            new_version_array = bump_version(current_version_array, args['level'])
-            new_version = '.'.join(str(x) for x in new_version_array)
+            # Only bump value of the 'version' key
+            new_version_array = bump_version(current_version_dict.get('version'), args['level'])
+            # Reconstruct new version with rest dict parts if exists
+            new_version = assemble_version_string(version_array=new_version_array,
+                                                  release=current_version_dict.get('release'),
+                                                  metadata=current_version_dict.get('metadata'))
 
         # Append the 'new_version' to relevant file
         with open(args['file'], 'w') as outfile:
