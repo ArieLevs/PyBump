@@ -160,7 +160,10 @@ def main():
     parser_set.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
 
     # Sub-parser for get version command
-    subparsers.add_parser('get', parents=[base_sub_parser])
+    parser_get = subparsers.add_parser('get', parents=[base_sub_parser])
+    parser_get.add_argument('--sem-ver', action='store_true', help='Get the main version only', required=False)
+    parser_get.add_argument('--release', action='store_true', help='Get the version release only', required=False)
+    parser_get.add_argument('--metadata', action='store_true', help='Get the version metadata only', required=False)
 
     args = vars(parser.parse_args())
 
@@ -206,7 +209,15 @@ def main():
         exit(1)
 
     if args['sub_command'] == 'get':
-        print(current_version)
+        if args['sem_ver']:
+            # Join the array of current_version_dict by dots
+            print('.'.join(str(x) for x in current_version_dict.get('version')))
+        elif args['release']:
+            print(current_version_dict.get('release'))
+        elif args['metadata']:
+            print(current_version_dict.get('metadata'))
+        else:
+            print(current_version)
     else:
         # Set the 'new_version' value
         if args['sub_command'] == 'set':
