@@ -17,7 +17,7 @@ Python Version Bumper
     :target: https://pypi.org/project/pybump/
 
 Simple python code to bump kubernetes package manager Helm charts and setup.py versions.
-| Versions must match .. _semver: https://github.com/semver/semver/blob/master/semver.md
+ | Versions must match semver 2.0.0: https://github.com/semver/semver/blob/master/semver.md
 
 Install
 -------
@@ -26,13 +26,13 @@ Install
 Usage
 -----
 **bump** version:
-| ``pybump bump [-h] --file PATH_TO_CHART.YAML --level {major,minor,patch} [--quiet]``
+ | ``pybump bump [-h] --file PATH_TO_CHART.YAML --level {major,minor,patch} [--quiet]``
 
 **set** explicit version:
-| ``pybump set --file PATH_TO_CHART.YAML --set-version X.Y.Z [--quiet]``
+ | ``pybump set --file PATH_TO_CHART.YAML --set-version X.Y.Z [--quiet]``
 
 **get** current version:
-| ``pybump get --file PATH_TO_CHART.YAML``
+ | ``pybump get --file PATH_TO_CHART.YAML``
 
 update Helm chart appVersion:
 in order to bump/get/set the Helm chart appVersion value just add the ``--app-version`` flag
@@ -42,16 +42,16 @@ Examples
 --------
 
 Case: ``version: 0.0.1``
-| ``pybump bump --file Chart.yaml --level patch`` will bump version to ``version: 0.0.2``
+ | ``pybump bump --file Chart.yaml --level patch`` will bump version to ``version: 0.0.2``
 
 Case: ``version: 0.1.4-alpha+meta.data``
-| ``pybump bump --file Chart.yaml --level minor`` will bump version to ``version: 0.2.0-alpha+meta.data``
+ | ``pybump bump --file Chart.yaml --level minor`` will bump version to ``version: 0.2.0-alpha+meta.data``
 
 Case: ``version: 0.0.3``
-| ``pybump bump --file Chart.yaml --level major`` will bump version to ``version: 1.0.0``
+ | ``pybump bump --file Chart.yaml --level major`` will bump version to ``version: 1.0.0``
 
 Case: ``version: 0.0.1+some-metadata``
-| ``pybump set --file Chart.yaml --set-version 1.4.0`` will set version to ``version: 1.4.0+some-metadata``
+ | ``pybump set --file Chart.yaml --set-version 1.4.0`` will set version to ``version: 1.4.0+some-metadata``
 
 Case: ``appVersion 2.3.2``
-| ``pybump bump --file Chart.yaml --level patch --app-version`` will bump appVersion to ``appVersion: 2.3.3``
+ | ``pybump bump --file Chart.yaml --level patch --app-version`` will bump appVersion to ``appVersion: 2.3.3``
