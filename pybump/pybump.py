@@ -118,27 +118,24 @@ def main():
                         version='%(prog)s {}'.format(get_self_version('pybump')),
                         help='Print version and exit')
 
+    # Define parses that is shared, and will be used as 'parent' parser to all others
+    base_sub_parser = argparse.ArgumentParser(add_help=False)
+    base_sub_parser.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
+    base_sub_parser.add_argument('--app-version', action='store_true',
+                                 help='Bump Helm chart appVersion, relevant only for Chart.yaml files', required=False)
+
     # Sub-parser for bump version command
-    parser_bump = subparsers.add_parser('bump')
-    parser_bump.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
+    parser_bump = subparsers.add_parser('bump', parents=[base_sub_parser])
     parser_bump.add_argument('--level', choices=['major', 'minor', 'patch'], help='major|minor|patch', required=True)
     parser_bump.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
-    parser_bump.add_argument('--app-version', action='store_true',
-                             help='Bump Helm chart appVersion, relevant only for Chart.yaml files', required=False)
 
     # Sub-parser for set version command
-    parser_set = subparsers.add_parser('set')
-    parser_set.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
+    parser_set = subparsers.add_parser('set', parents=[base_sub_parser])
     parser_set.add_argument('--set-version', help='Semantic version to set as \'x.y.z\'', required=True)
     parser_set.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
-    parser_set.add_argument('--app-version', action='store_true',
-                            help='Set Helm chart appVersion, relevant only for Chart.yaml files', required=False)
 
     # Sub-parser for get version command
-    parser_get = subparsers.add_parser('get')
-    parser_get.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
-    parser_get.add_argument('--app-version', action='store_true',
-                            help='Get Helm chart appVersion, relevant only for Chart.yaml files', required=False)
+    subparsers.add_parser('get', parents=[base_sub_parser])
 
     args = vars(parser.parse_args())
 
