@@ -5,7 +5,7 @@ with open("README.rst", "r") as fh:
 
 setuptools.setup(
     name="pybump",
-    version="1.0.14",
+    version="1.1.0",
     author="Arie Lev",
     author_email="levinsonarie@gmail.com",
     description="Python version bumper",
