@@ -65,17 +65,26 @@ invalid_version_file_2 = """
     """
 
 
-def simulate_get_version(file, app_version=False):
+def simulate_get_version(file, app_version=False, sem_ver=False, release=False, metadata=False):
     """
     execute sub process to simulate real app execution,
     return current version from a file
     if app_version is True, then add the --app-version flag to execution
     :param file: string
     :param app_version: boolean
+    :param sem_ver: boolean
+    :param release: boolean
+    :param metadata: boolean
     :return: CompletedProcess object
     """
     if app_version:
         return run(["python", "pybump/pybump.py", "get", "--file", file, "--app-version"], stdout=PIPE, stderr=PIPE)
+    elif sem_ver:
+        return run(["python", "pybump/pybump.py", "get", "--file", file, "--sem-ver"], stdout=PIPE, stderr=PIPE)
+    elif release:
+        return run(["python", "pybump/pybump.py", "get", "--file", file, "--release"], stdout=PIPE, stderr=PIPE)
+    elif metadata:
+        return run(["python", "pybump/pybump.py", "get", "--file", file, "--metadata"], stdout=PIPE, stderr=PIPE)
     else:
         return run(["python", "pybump/pybump.py", "get", "--file", file], stdout=PIPE, stderr=PIPE)
 
@@ -276,6 +285,37 @@ class PyBumpTest(unittest.TestCase):
             pass
         else:
             raise Exception("test_invalid_bump_major failed, test should of fail, but passed")
+
+    @staticmethod
+    def test_get_flags():
+        simulate_set_version("pybump/test_valid_chart.yaml", "2.0.8-alpha.802+sha-256")
+
+        # Test the 'get' command with '--sem-ver' flag
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", sem_ver=True)
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "2.0.8":
+            raise Exception("test_get_flags failed, return sem-ver version should be 2.0.8 got " + stdout)
+
+        # Test the 'get' command with '--release' flag
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", release=True)
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "alpha.802":
+            raise Exception("test_get_flags failed, return release string should be alpha.802 got " + stdout)
+
+        # Test the 'get' command with '--metadata' flag
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", metadata=True)
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "sha-256":
+            raise Exception("test_get_flags failed, return metadata string should be sha-256 got " + stdout)
 
 
 if __name__ == '__main__':
