@@ -54,12 +54,7 @@ invalid_setup_py_2 = """
     """
 
 valid_version_file_1 = """0.12.4"""
-valid_version_file_2 = """
-
-    1.5.0
-
-
-    """
+valid_version_file_2 = """1.5.0-alpha+meta"""
 invalid_version_file_1 = """
     this is some text in addition to version
     1.5.0
@@ -80,7 +75,7 @@ def simulate_get_version(file, app_version=False):
     :return: CompletedProcess object
     """
     if app_version:
-        return run(["python", "pybump/pybump.py", "get", "--file", file, "--app-versio"], stdout=PIPE, stderr=PIPE)
+        return run(["python", "pybump/pybump.py", "get", "--file", file, "--app-version"], stdout=PIPE, stderr=PIPE)
     else:
         return run(["python", "pybump/pybump.py", "get", "--file", file], stdout=PIPE, stderr=PIPE)
 
@@ -127,16 +122,32 @@ class PyBumpTest(unittest.TestCase):
         pass
 
     def test_is_semantic_string(self):
-        self.assertEqual(is_semantic_string('1.2.3'), [1, 2, 3])
-        self.assertNotEqual(is_semantic_string('1.2.3'), [1, 2, 4])
+        self.assertEqual(is_semantic_string('1.2.3'), {'version': [1, 2, 3], 'release': '', 'metadata': ''})
+        self.assertEqual(is_semantic_string('1.2.6-dev'), {'version': [1, 2, 6], 'release': 'dev', 'metadata': ''})
+        self.assertEqual(
+            is_semantic_string('1.2.6-dev+some.metadata'),
+            {'version': [1, 2, 6], 'release': 'dev', 'metadata': 'some.metadata'}
+        )
+        self.assertEqual(
+            is_semantic_string('1.2.3+meta-only'), {'version': [1, 2, 3], 'release': '', 'metadata': 'meta-only'}
+        )
+        self.assertNotEqual(is_semantic_string('1.2.3'), {'version': [1, 2, 4], 'release': '', 'metadata': ''})
+        self.assertNotEqual(
+            is_semantic_string('1.2.3-ALPHA'), {'version': [1, 2, 3], 'release': '', 'metadata': 'ALPHA'}
+        )
+        self.assertNotEqual(
+            is_semantic_string('1.2.3+META.ONLY'), {'version': [1, 2, 3], 'release': 'META.ONLY', 'metadata': ''}
+        )
         self.assertTrue(is_semantic_string('0.0.0'))
         self.assertTrue(is_semantic_string('13.0.75'))
         self.assertTrue(is_semantic_string('0.5.447'))
-        self.assertTrue(is_semantic_string('1.02.3'))
-        self.assertTrue(is_semantic_string('000.000.111'))
+        self.assertTrue(is_semantic_string('3.0.1-alpha'))
+        self.assertTrue(is_semantic_string('1.1.6-alpha-beta-gama'))
+        self.assertTrue(is_semantic_string('0.5.0-alpha+meta-data.is-ok'))
+        self.assertFalse(is_semantic_string('1.02.3'))
+        self.assertFalse(is_semantic_string('000.000.111'))
         self.assertFalse(is_semantic_string('1.2.c'))
         self.assertFalse(is_semantic_string('1.2.-3'))
-        self.assertFalse(is_semantic_string('1.2.3-dev'))
         self.assertFalse(is_semantic_string('1.9'))
         self.assertFalse(is_semantic_string('text'))
 
@@ -173,7 +184,10 @@ class PyBumpTest(unittest.TestCase):
         self.assertTrue(is_semantic_string(valid_version_file_2))
         self.assertFalse(is_semantic_string(invalid_version_file_1))
         self.assertFalse(is_semantic_string(invalid_version_file_2))
-        self.assertEqual(is_semantic_string(valid_version_file_1), [0, 12, 4])
+        self.assertEqual(is_semantic_string(valid_version_file_1),
+                         {'version': [0, 12, 4], 'release': '', 'metadata': ''})
+        self.assertEqual(is_semantic_string(valid_version_file_2),
+                         {'version': [1, 5, 0], 'release': 'alpha', 'metadata': 'meta'})
 
     @staticmethod
     def test_bump_patch():
@@ -208,7 +222,7 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_minor():
-        simulate_set_version("pybump/test_valid_setup.py", "2.1.5")
+        simulate_set_version("pybump/test_valid_setup.py", "2.1.5-alpha+metadata.is.useful")
         completed_process_object = simulate_bump_version("pybump/test_valid_setup.py", "minor")
 
         if completed_process_object.returncode != 0:
@@ -219,8 +233,9 @@ class PyBumpTest(unittest.TestCase):
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
         stdout = completed_process_object.stdout.decode('utf-8').strip()
-        if stdout != "2.2.0":
-            raise Exception("test_bump_minor failed, return version should be 2.2.0 got " + stdout)
+        if stdout != "2.2.0-alpha+metadata.is.useful":
+            raise Exception("test_bump_minor failed, "
+                            "return version should be 2.2.0-alpha+metadata.is.useful got " + stdout)
 
     @staticmethod
     def test_bump_major():
