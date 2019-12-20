@@ -28,3 +28,7 @@ jobs:
       run: |
         pip install pyyaml==5.1 argparse==1.4.
         python -m unittest pybump/pybump_unittest.py -vv
+    - name: Check distribution valid
+      run: |
+        python setup.py bdist_wheel
+        twine check dist/*
