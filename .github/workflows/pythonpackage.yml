@@ -30,5 +30,6 @@ jobs:
         python -m unittest pybump/pybump_unittest.py -vv
     - name: Check distribution valid
       run: |
+        pip install wheel twine
         python setup.py bdist_wheel
         twine check dist/*
