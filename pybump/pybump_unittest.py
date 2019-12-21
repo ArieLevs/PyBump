@@ -131,31 +131,51 @@ class PyBumpTest(unittest.TestCase):
         pass
 
     def test_is_semantic_string(self):
-        self.assertEqual(is_semantic_string('1.2.3'), {'version': [1, 2, 3], 'release': '', 'metadata': ''})
-        self.assertEqual(is_semantic_string('1.2.6-dev'), {'version': [1, 2, 6], 'release': 'dev', 'metadata': ''})
+        self.assertEqual(is_semantic_string('1.2.3'),
+                         {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': ''})
+        self.assertEqual(is_semantic_string('v1.2.3'),
+                         {'prefix': True, 'version': [1, 2, 3], 'release': '', 'metadata': ''})
+        self.assertEqual(is_semantic_string('1.2.6-dev'),
+                         {'prefix': False, 'version': [1, 2, 6], 'release': 'dev', 'metadata': ''})
         self.assertEqual(
             is_semantic_string('1.2.6-dev+some.metadata'),
-            {'version': [1, 2, 6], 'release': 'dev', 'metadata': 'some.metadata'}
+            {'prefix': False, 'version': [1, 2, 6], 'release': 'dev', 'metadata': 'some.metadata'}
         )
         self.assertEqual(
-            is_semantic_string('1.2.3+meta-only'), {'version': [1, 2, 3], 'release': '', 'metadata': 'meta-only'}
+            is_semantic_string('1.2.3+meta-only'),
+            {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': 'meta-only'}
         )
-        self.assertNotEqual(is_semantic_string('1.2.3'), {'version': [1, 2, 4], 'release': '', 'metadata': ''})
+        self.assertEqual(
+            is_semantic_string('v1.2.3+meta-only'),
+            {'prefix': True, 'version': [1, 2, 3], 'release': '', 'metadata': 'meta-only'}
+        )
+        self.assertNotEqual(is_semantic_string('1.2.3'),
+                            {'prefix': False, 'version': [1, 2, 4], 'release': '', 'metadata': ''})
         self.assertNotEqual(
-            is_semantic_string('1.2.3-ALPHA'), {'version': [1, 2, 3], 'release': '', 'metadata': 'ALPHA'}
+            is_semantic_string('1.2.3-ALPHA'),
+            {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': 'ALPHA'}
         )
         self.assertNotEqual(
-            is_semantic_string('1.2.3+META.ONLY'), {'version': [1, 2, 3], 'release': 'META.ONLY', 'metadata': ''}
+            is_semantic_string('1.2.3+META.ONLY'),
+            {'prefix': False, 'version': [1, 2, 3], 'release': 'META.ONLY', 'metadata': ''}
         )
         self.assertTrue(is_semantic_string('0.0.0'))
+        self.assertTrue(is_semantic_string('v0.0.0'))
+        self.assertTrue(is_semantic_string('v1.0.11111111111111111111111111111111111111111111111'))
         self.assertTrue(is_semantic_string('13.0.75'))
         self.assertTrue(is_semantic_string('0.5.447'))
         self.assertTrue(is_semantic_string('3.0.1-alpha'))
+        self.assertTrue(is_semantic_string('v3.0.1-alpha'))
         self.assertTrue(is_semantic_string('1.1.6-alpha-beta-gama'))
         self.assertTrue(is_semantic_string('0.5.0-alpha+meta-data.is-ok'))
+        self.assertFalse(is_semantic_string(''))
+        self.assertFalse(is_semantic_string('   '))
         self.assertFalse(is_semantic_string('1.02.3'))
         self.assertFalse(is_semantic_string('000.000.111'))
         self.assertFalse(is_semantic_string('1.2.c'))
+        self.assertFalse(is_semantic_string('V1.40.2'))
+        self.assertFalse(is_semantic_string('v1.2.3.4'))
+        self.assertFalse(is_semantic_string('X-1.40.2'))
         self.assertFalse(is_semantic_string('1.2.-3'))
         self.assertFalse(is_semantic_string('1.9'))
         self.assertFalse(is_semantic_string('text'))
@@ -194,9 +214,9 @@ class PyBumpTest(unittest.TestCase):
         self.assertFalse(is_semantic_string(invalid_version_file_1))
         self.assertFalse(is_semantic_string(invalid_version_file_2))
         self.assertEqual(is_semantic_string(valid_version_file_1),
-                         {'version': [0, 12, 4], 'release': '', 'metadata': ''})
+                         {'prefix': False, 'version': [0, 12, 4], 'release': '', 'metadata': ''})
         self.assertEqual(is_semantic_string(valid_version_file_2),
-                         {'version': [1, 5, 0], 'release': 'alpha', 'metadata': 'meta'})
+                         {'prefix': False, 'version': [1, 5, 0], 'release': 'alpha', 'metadata': 'meta'})
 
     @staticmethod
     def test_bump_patch():
@@ -228,6 +248,21 @@ class PyBumpTest(unittest.TestCase):
         stdout = completed_process_object.stdout.decode('utf-8').strip()
         if stdout != "3.1.6":
             raise Exception("test_bump_patch failed, return version should be 3.1.6 got " + stdout)
+
+        # Simulate version bump with prefix
+        simulate_set_version("pybump/test_valid_chart.yaml", "v3.1.5")
+        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "patch")
+
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml")
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "v3.1.6":
+            raise Exception("test_bump_patch failed, return version should be v3.1.6 got " + stdout)
 
     @staticmethod
     def test_bump_minor():
@@ -280,11 +315,18 @@ class PyBumpTest(unittest.TestCase):
     def test_invalid_bump_major():
         simulate_set_version("pybump/test_invalid_chart.yaml", "3.5.5")
         completed_process_object = simulate_bump_version("pybump/test_invalid_chart.yaml", "major")
-
         if completed_process_object.returncode != 0:
             pass
         else:
             raise Exception("test_invalid_bump_major failed, test should of fail, but passed")
+
+    @staticmethod
+    def test_invalid_set_version():
+        completed_process_object = simulate_set_version("pybump/test_valid_setup.py", "V3.2.0")
+        if completed_process_object.returncode != 0:
+            pass
+        else:
+            raise Exception("test_invalid_set_version failed (invalid version), test should of fail, but passed")
 
     @staticmethod
     def test_get_flags():
@@ -316,6 +358,16 @@ class PyBumpTest(unittest.TestCase):
         stdout = completed_process_object.stdout.decode('utf-8').strip()
         if stdout != "sha-256":
             raise Exception("test_get_flags failed, return metadata string should be sha-256 got " + stdout)
+
+        # Test the 'get' command with version prefix
+        simulate_set_version("pybump/test_valid_chart.yaml", "v2.0.8-alpha.802+sha-256")
+        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml")
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "v2.0.8-alpha.802+sha-256":
+            raise Exception("test_get_flags failed, return string should be v2.0.8-alpha.802+sha-256 got " + stdout)
 
 
 if __name__ == '__main__':

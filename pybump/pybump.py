@@ -45,15 +45,23 @@ def set_setup_py_version(version, content):
 
 def is_semantic_string(semantic_string):
     """
-    Check if input string is a semantic version as defined here: https://github.com/semver/semver/blob/master/semver.md
+    Check if input string is a semantic version as defined here: https://github.com/semver/semver/blob/master/semver.md,
+    The version is allowed a lower case 'v' character.
     Function will search a match according to the regular expresion, so for example '1.1.2-prerelease+meta' is valid,
     then make sure there is and exact singe match and validate if each of x,y,z is an integer.
-    Will return {'version': [x, y, z], 'release': 'some-release', 'metadata': 'some-metadata'} if True
+    return {'prefix': boolean, 'version': [x, y, z], 'release': 'some-release', 'metadata': 'some-metadata'} if True
+
     :param semantic_string: string
     :return: dict if True, else False
     """
-    if type(semantic_string) != str:
+    if type(semantic_string) != str or len(semantic_string) == 0:
         return False
+
+    version_prefix = False
+    # In case the version if of type 'v2.2.5' then save 'v' prefix and cut it for further 'semver' validation
+    if semantic_string[0] == 'v':
+        semantic_string = semantic_string[1:]
+        version_prefix = True
 
     semver_regex = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"  # Match x.y.z
                               # Match -sometext-12.here
@@ -73,7 +81,7 @@ def is_semantic_string(semantic_string):
     except ValueError:
         return False
 
-    return {'version': semantic_array, 'release': match[0][3], 'metadata': match[0][4]}
+    return {'prefix': version_prefix, 'version': semantic_array, 'release': match[0][3], 'metadata': match[0][4]}
 
 
 def bump_version(version_array, level):
@@ -117,15 +125,19 @@ def get_self_version(dist_name):
         return 'version not found'
 
 
-def assemble_version_string(version_array, release, metadata):
+def assemble_version_string(prefix, version_array, release, metadata):
     """
     reconstruct version
+    :param prefix: boolean
     :param version_array: list of ints
     :param release: string
     :param metadata: sting
     :return: string
     """
-    result_string = '.'.join(str(x) for x in version_array)
+    result_string = ''
+    if prefix:
+        result_string = 'v'
+    result_string += '.'.join(str(x) for x in version_array)
     if release:
         result_string += '-' + release
 
@@ -156,7 +168,9 @@ def main():
 
     # Sub-parser for set version command
     parser_set = subparsers.add_parser('set', parents=[base_sub_parser])
-    parser_set.add_argument('--set-version', help='Semantic version to set as \'x.y.z\'', required=True)
+    parser_set.add_argument('--set-version',
+                            help='Semantic version to set as a combination of \'vX.Y.Z-release+metadata\'',
+                            required=True)
     parser_set.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
 
     # Sub-parser for get version command
@@ -230,7 +244,8 @@ def main():
             # Only bump value of the 'version' key
             new_version_array = bump_version(current_version_dict.get('version'), args['level'])
             # Reconstruct new version with rest dict parts if exists
-            new_version = assemble_version_string(version_array=new_version_array,
+            new_version = assemble_version_string(prefix=current_version_dict.get('prefix'),
+                                                  version_array=new_version_array,
                                                   release=current_version_dict.get('release'),
                                                   metadata=current_version_dict.get('metadata'))
 
