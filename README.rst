@@ -58,3 +58,9 @@ Case: ``version: 0.0.1+some-metadata``
 
 Case: ``appVersion 2.3.2``
 ``pybump bump --file Chart.yaml --level patch --app-version`` will bump appVersion to ``appVersion: 2.3.3``
+
+Case: ``version: 1.0.13``
+``pybump get --file Chart.yaml`` will return ``1.0.13``
+
+Case: ``version: 1.0.13+some-metadata``
+``pybump get --file Chart.yaml --release`` will return ``some``
