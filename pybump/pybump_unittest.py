@@ -369,6 +369,29 @@ class PyBumpTest(unittest.TestCase):
         if stdout != "v2.0.8-alpha.802+sha-256":
             raise Exception("test_get_flags failed, return string should be v2.0.8-alpha.802+sha-256 got " + stdout)
 
+    @staticmethod
+    def test_plain_text_version_file():
+        """
+        Test case when target file is a 'VERSION' file
+        """
+        completed_process_object = simulate_get_version("pybump/VERSION")
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "2.5.1+metadata.here":
+            raise Exception("test_plain_text_version_file failed, "
+                            "return version should be 2.5.1+metadata.here got " + stdout)
+
+        simulate_bump_version("pybump/VERSION", "major")
+        completed_process_object = simulate_get_version("pybump/VERSION")
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        if stdout != "3.0.0+metadata.here":
+            raise Exception("test_plain_text_version_file failed, "
+                            "return version should be 3.0.0+metadata.here got " + stdout)
+
 
 if __name__ == '__main__':
     unittest.main()

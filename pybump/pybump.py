@@ -147,6 +147,68 @@ def assemble_version_string(prefix, version_array, release, metadata):
     return result_string
 
 
+def write_version_to_file(file_path, file_content, version, app_version):
+    """
+    Write the 'version' or 'appVersion' to a given file
+    :param file_path: full path to file as string
+    :param file_content: content of the file as string
+    :param version: version to set as string
+    :param app_version: boolean, if True then set the appVersion key
+    """
+    # Append the 'new_version' to relevant file
+    with open(file_path, 'w') as outfile:
+        filename, file_extension = os.path.splitext(file_path)
+        if file_extension == '.py':
+            outfile.write(set_setup_py_version(version, file_content))
+        elif file_extension == '.yaml' or file_extension == '.yml':
+            if app_version:
+                file_content['appVersion'] = version
+            else:
+                file_content['version'] = version
+            yaml.dump(file_content, outfile, default_flow_style=False)
+        elif os.path.basename(filename) == 'VERSION':
+            outfile.write(version)
+        outfile.close()
+
+
+def read_version_from_file(file_path, app_version):
+    """
+    Read the 'version' or 'appVersion' from a given file
+    :param file_path: full path to file as string
+    :param app_version: boolean, if True return appVersion from Helm chart
+    :return: dict containing file content and version as {'file_content': file_content, 'version': current_version}
+    """
+    with open(file_path, 'r') as stream:
+        filename, file_extension = os.path.splitext(file_path)
+
+        if file_extension == '.py':  # Case setup.py files
+            file_content = stream.read()
+            current_version = get_setup_py_version(file_content)
+        elif file_extension == '.yaml' or file_extension == '.yml':  # Case Helm chart files
+            try:
+                file_content = yaml.safe_load(stream)
+            except yaml.YAMLError as exc:
+                print(exc)
+            # Make sure Helm chart is valid and contains minimal mandatory keys
+            if is_valid_helm_chart(file_content):
+                if app_version:
+                    current_version = file_content['appVersion']
+                else:
+                    current_version = file_content['version']
+            else:
+                raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(file_content))
+        else:  # Case file name is just 'VERSION'
+            if os.path.basename(filename) == 'VERSION':
+                # A version file should ONLY contain a valid semantic version string
+                file_content = None
+                current_version = stream.read()
+            else:
+                raise ValueError("File name or extension not known to this app: {}{}"
+                                 .format(os.path.basename(filename), file_extension))
+
+    return {'file_content': file_content, 'version': current_version}
+
+
 def main():
     parser = argparse.ArgumentParser(description='Python version bumper')
     subparsers = parser.add_subparsers(dest='sub_command')
@@ -186,36 +248,10 @@ def main():
         parser.print_help()
         exit(0)
 
-    current_version = ""
-    setup_py_content = ""
-    chart_yaml = {}
-
-    with open(args['file'], 'r') as stream:
-        filename, file_extension = os.path.splitext(args['file'])
-
-        if file_extension == '.py':
-            setup_py_content = stream.read()
-            current_version = get_setup_py_version(setup_py_content)
-        elif file_extension == '.yaml' or file_extension == '.yml':
-            try:
-                chart_yaml = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
-                print(exc)
-
-            if is_valid_helm_chart(chart_yaml):
-                if args['app_version']:
-                    current_version = chart_yaml['appVersion']
-                else:
-                    current_version = chart_yaml['version']
-            else:
-                raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(chart_yaml))
-        else:
-            if os.path.basename(filename) == 'VERSION':
-                # A version file should ONLY contain a valid semantic version string
-                current_version = stream.read()
-            else:
-                raise ValueError("File name or extension not known to this app: {}{}"
-                                 .format(os.path.basename(filename), file_extension))
+    # Read current version from the given file
+    file_data = read_version_from_file(args['file'], args['app_version'])
+    current_version = file_data.get('version')
+    file_content = file_data.get('file_content')
 
     current_version_dict = is_semantic_string(current_version)
     if not current_version_dict:
@@ -248,20 +284,8 @@ def main():
                                                   version_array=new_version_array,
                                                   release=current_version_dict.get('release'),
                                                   metadata=current_version_dict.get('metadata'))
-
-        # Append the 'new_version' to relevant file
-        with open(args['file'], 'w') as outfile:
-            if file_extension == '.py':
-                outfile.write(set_setup_py_version(new_version, setup_py_content))
-            elif file_extension == '.yaml' or file_extension == '.yml':
-                if args['app_version']:
-                    chart_yaml['appVersion'] = new_version
-                else:
-                    chart_yaml['version'] = new_version
-                yaml.dump(chart_yaml, outfile, default_flow_style=False)
-            elif os.path.basename(filename) == 'VERSION':
-                outfile.write(new_version)
-            outfile.close()
+        # Write the new version with relevant content back to the file
+        write_version_to_file(args['file'], file_content, new_version, args['app_version'])
 
         if args['quiet'] is False:
             print(new_version)
