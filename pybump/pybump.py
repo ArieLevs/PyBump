@@ -40,7 +40,7 @@ def set_setup_py_version(version, content):
     :param content: content of setup.py as string
     :return: content of setup.py file with 'version'
     """
-    return regex_version_pattern.sub('\g<1>{}\g<3>'.format(version), content)
+    return regex_version_pattern.sub(r'\g<1>{}\g<3>'.format(version), content)
 
 
 def is_semantic_string(semantic_string):
