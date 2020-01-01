@@ -392,6 +392,25 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_plain_text_version_file failed, "
                             "return version should be 3.0.0+metadata.here got " + stdout)
 
+    @staticmethod
+    def test_verify_flag():
+        """
+        Test case when user is verifying string
+        """
+        # Verify valid string
+        completed_process_object = run(["python", "pybump/pybump.py", "--verify", "123.45.6789+valid-version"],
+                                       stdout=PIPE, stderr=PIPE)
+        if completed_process_object.returncode != 0:
+            raise Exception(completed_process_object.stderr.decode('utf-8'))
+
+        # Verify invalid string
+        completed_process_object = run(["python", "pybump/pybump.py", "--verify", "1.1-my-feature"],
+                                       stdout=PIPE, stderr=PIPE)
+        if completed_process_object.returncode == 1:
+            pass
+        else:
+            raise Exception("test_verify_flag invalid string failed, test should of fail, but passed")
+
 
 if __name__ == '__main__':
     unittest.main()
