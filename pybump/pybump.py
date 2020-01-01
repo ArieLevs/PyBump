@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+from sys import stderr
 
 import yaml
 from pkg_resources import get_distribution, DistributionNotFound
@@ -216,6 +217,8 @@ def main():
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(get_self_version('pybump')),
                         help='Print version and exit')
+    parser.add_argument('--verify', required=False,
+                        help='Verify if input string is a valid semantic version')
 
     # Define parses that is shared, and will be used as 'parent' parser to all others
     base_sub_parser = argparse.ArgumentParser(add_help=False)
@@ -245,7 +248,14 @@ def main():
 
     # Case where no args passed, sub_command is mandatory
     if args['sub_command'] is None:
-        parser.print_help()
+        if args['verify']:
+            if is_semantic_string(args['verify']):
+                print('{} is valid'.format(args['verify']))
+            else:
+                print('invalid semantic version'.format(args['verify']), file=stderr)
+                exit(1)
+        else:
+            parser.print_help()
         exit(0)
 
     # Read current version from the given file
@@ -255,7 +265,7 @@ def main():
 
     current_version_dict = is_semantic_string(current_version)
     if not current_version_dict:
-        print("Invalid semantic version format: {}".format(current_version))
+        print("Invalid semantic version format: {}".format(current_version), file=stderr)
         exit(1)
 
     if args['sub_command'] == 'get':
@@ -273,7 +283,7 @@ def main():
         if args['sub_command'] == 'set':
             set_version = args['set_version']
             if not is_semantic_string(set_version):
-                print("Invalid semantic version format: {}".format(set_version))
+                print("Invalid semantic version format: {}".format(set_version), file=stderr)
                 exit(1)
             new_version = set_version
         else:  # bump version ['sub_command'] == 'bump'
