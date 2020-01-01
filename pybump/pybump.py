@@ -216,6 +216,8 @@ def main():
     parser.add_argument('--version', action='version',
                         version='%(prog)s {}'.format(get_self_version('pybump')),
                         help='Print version and exit')
+    parser.add_argument('--verify', required=False,
+                        help='Verify if input string is a valid semantic version')
 
     # Define parses that is shared, and will be used as 'parent' parser to all others
     base_sub_parser = argparse.ArgumentParser(add_help=False)
@@ -245,7 +247,14 @@ def main():
 
     # Case where no args passed, sub_command is mandatory
     if args['sub_command'] is None:
-        parser.print_help()
+        if args['verify']:
+            if is_semantic_string(args['verify']):
+                print('{} is valid'.format(args['verify']))
+            else:
+                print('invalid semantic version'.format(args['verify']))
+                exit(1)
+        else:
+            parser.print_help()
         exit(0)
 
     # Read current version from the given file
