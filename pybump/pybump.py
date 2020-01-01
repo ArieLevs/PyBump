@@ -1,6 +1,7 @@
 import argparse
 import os
 import re
+from sys import stderr
 
 import yaml
 from pkg_resources import get_distribution, DistributionNotFound
@@ -251,7 +252,7 @@ def main():
             if is_semantic_string(args['verify']):
                 print('{} is valid'.format(args['verify']))
             else:
-                print('invalid semantic version'.format(args['verify']))
+                print('invalid semantic version'.format(args['verify']), file=stderr)
                 exit(1)
         else:
             parser.print_help()
@@ -264,7 +265,7 @@ def main():
 
     current_version_dict = is_semantic_string(current_version)
     if not current_version_dict:
-        print("Invalid semantic version format: {}".format(current_version))
+        print("Invalid semantic version format: {}".format(current_version), file=stderr)
         exit(1)
 
     if args['sub_command'] == 'get':
@@ -282,7 +283,7 @@ def main():
         if args['sub_command'] == 'set':
             set_version = args['set_version']
             if not is_semantic_string(set_version):
-                print("Invalid semantic version format: {}".format(set_version))
+                print("Invalid semantic version format: {}".format(set_version), file=stderr)
                 exit(1)
             new_version = set_version
         else:  # bump version ['sub_command'] == 'bump'
