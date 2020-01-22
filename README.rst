@@ -16,7 +16,7 @@ Python Version Bumper
     :alt: Python Version
     :target: https://pypi.org/project/pybump/
 
-Simple python code to bump kubernetes package manager Helm charts and setup.py versions.
+Simple python code to bump kubernetes package manager Helm charts.yaml, VERSION and setup.py files versions.
 
 | Versions must match semver 2.0.0: https://github.com/semver/semver/blob/master/semver.md
 | Version is allowed a lower case 'v' character for example: ``v1.5.4-beta2``
