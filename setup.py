@@ -3,12 +3,15 @@ import setuptools
 with open("README.rst", "r") as fh:
     long_description = fh.read()
 
+keywords = ['bump', 'version', 'appVersion', 'versioning', 'helm', 'charts', 'setup.py', 'promote']
+
 setuptools.setup(
     name="pybump",
     version="1.1.4",
     author="Arie Lev",
     author_email="levinsonarie@gmail.com",
     description="Python version bumper",
+    keywords=keywords,
     long_description=long_description,
     long_description_content_type="text/x-rst",
     url="https://github.com/ArieLevs/PyBump",
