@@ -19,7 +19,6 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         'pyyaml==5.1',
-        'argparse==1.4.0',
     ],
     classifiers=(
         "Programming Language :: Python :: 3",

@@ -26,7 +26,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with unittest
       run: |
-        pip install pyyaml==5.1 argparse==1.4.
+        pip install pyyaml==5.1
         python -m unittest pybump/pybump_unittest.py -vv
     - name: Check distribution valid
       run: |
