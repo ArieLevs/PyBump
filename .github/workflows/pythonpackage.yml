@@ -1,10 +1,19 @@
 name: Python package
 
-on: [pull_request]
+on:
+  push:
+    # run only when pushed to master branch.
+    branches:
+      - master
+
+    # run on every publish tags.
+    tags:
+      - v*
+  # run on any pr.
+  pull_request:
 
 jobs:
-  build:
-
+  test:
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 2
@@ -12,11 +21,13 @@ jobs:
         python-version: [3.6, 3.7]
 
     steps:
-    - uses: actions/checkout@v1
+    - uses: actions/checkout@v2
+
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v1
       with:
         python-version: ${{ matrix.python-version }}
+
     - name: Lint with flake8
       run: |
         pip install flake8
@@ -24,19 +35,65 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
     - name: Test with unittest
       run: |
-        pip install pyyaml==5.1
+        pip install -r requirements.txt
         python -m unittest pybump/pybump_unittest.py -vv
+
     - name: Check distribution valid
       run: |
         pip install wheel twine
         python setup.py bdist_wheel
         twine check dist/*
-    - name: Build docker image
-      uses: docker/build-push-action@v1
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
-        repository: arielev/pybump
-        tags: latest
+
+  build:
+    if: github.ref == 'refs/heads/master'
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Publish to global pypi
+        run: |
+          pip install wheel twine
+          python setup.py bdist_wheel
+
+          twine upload dist/* \
+            --username ${{ secrets.PYPI_USERNAME }} \
+            --password ${{ secrets.PYPI_PASSWORD }} \
+            --repository-url https://upload.pypi.org/legacy/
+        if: github.ref == 'refs/heads/master'
+
+      - name: Build and push docker image
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          repository: arielev/pybump
+          tags: ${{ steps.app_version_bump.outputs.app_version }},latest
+        if: github.ref == 'refs/heads/master'
+
+  commit:
+    if: github.ref == 'refs/heads/master'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bump version using self app
+        id: app_version_bump
+        run: |
+          pip install pybump==1.1.6
+          pybump bump --level patch --file setup.py
+          echo "::set-output name=app_version::$(pybump bump --level patch --file setup.py)"
+
+      - name: Commit new version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Update version on git repo
+          git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
+          git config --local user.name "GitHub Action"
+          git add setup.py
+          git commit -m "update version to: ${{ steps.app_version_bump.outputs.app_version }} (github action)"
+
+          git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/ArieLevs/pybump HEAD:master
