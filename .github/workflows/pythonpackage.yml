@@ -53,6 +53,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Bump version using self app
+        id: app_version_bump
+        run: |
+          pip install pybump==1.1.6
+          pybump bump --level patch --file setup.py
+          echo "::set-output name=app_version::$(pybump bump --level patch --file setup.py)"
+
       - name: Publish to global pypi
         run: |
           pip install wheel twine
@@ -79,6 +86,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+
+      # currently there is no way of passing data between jobs except using artifact,
+      # this might be an option, but just do another bump for now,
+      # and anyway setup.py file will need to have some change since we checked out again
       - name: Bump version using self app
         id: app_version_bump
         run: |
