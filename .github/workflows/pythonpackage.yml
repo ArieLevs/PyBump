@@ -54,8 +54,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-          with:
-            python-version: '3.x'
+        with:
+          python-version: '3.x'
       - name: Bump version using self app
         id: app_version_bump
         run: |
@@ -90,8 +90,8 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-          with:
-            python-version: '3.x'
+        with:
+          python-version: '3.x'
       # currently there is no way of passing data between jobs except using artifact,
       # this might be an option, but just do another bump for now,
       # and anyway setup.py file will need to have some change since we checked out again
