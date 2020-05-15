@@ -60,7 +60,7 @@ jobs:
         run: |
           pip install pybump==1.1.6
           echo "::set-output name=app_version::$(pybump bump --level patch --file setup.py)"
-
+          echo "${{ secrets.PYPI_USERNAME }}"
       - name: Publish to global pypi
         run: |
           pip install wheel twine
@@ -70,7 +70,6 @@ jobs:
             --username ${{ secrets.PYPI_USERNAME }} \
             --password ${{ secrets.PYPI_PASSWORD }} \
             --repository-url https://upload.pypi.org/legacy/
-        if: github.ref == 'refs/heads/master'
 
       - name: Build and push docker image
         uses: docker/build-push-action@v1
