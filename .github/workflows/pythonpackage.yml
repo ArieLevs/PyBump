@@ -48,7 +48,6 @@ jobs:
         twine check dist/*
 
   build:
-    if: github.ref == 'refs/heads/master'
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -80,7 +79,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           repository: arielev/pybump
           tags: ${{ steps.app_version_bump.outputs.app_version }},latest
-        if: github.ref == 'refs/heads/master'
 
   commit:
     if: github.ref == 'refs/heads/master'
