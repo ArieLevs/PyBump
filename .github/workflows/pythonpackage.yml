@@ -71,7 +71,6 @@ jobs:
             --username ${{ secrets.PYPI_USERNAME }} \
             --password ${{ secrets.PYPI_PASSWORD }} \
             --repository-url https://upload.pypi.org/legacy/
-        if: github.ref == 'refs/heads/master'
 
       - name: Build and push docker image
         uses: docker/build-push-action@v1
@@ -80,7 +79,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
           repository: arielev/pybump
           tags: ${{ steps.app_version_bump.outputs.app_version }},latest
-        if: github.ref == 'refs/heads/master'
 
   commit:
     if: github.ref == 'refs/heads/master'

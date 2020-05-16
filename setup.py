@@ -20,12 +20,12 @@ setuptools.setup(
     install_requires=[
         'pyyaml==5.1',
     ],
-    classifiers=(
+    classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
-    ),
+    ],
     entry_points={
         'console_scripts': [
             'pybump = pybump.pybump:main'
