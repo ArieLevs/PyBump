@@ -11,7 +11,6 @@ valid_helm_chart = {'apiVersion': 'v1',
 invalid_helm_chart = {'apiVersion': 'v1',
                       'notAppVersionKeyHere': '1.0',
                       'description': 'A Helm chart for Kubernetes',
-                      'name': 'test',
                       'version': '0.1.0'}
 empty_helm_chart = {}
 
