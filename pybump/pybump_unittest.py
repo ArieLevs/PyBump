@@ -1,7 +1,8 @@
 import unittest
 from subprocess import run, PIPE
 
-from pybump.pybump import get_setup_py_version, is_semantic_string, bump_version, is_valid_helm_chart
+from pybump.pybump import get_setup_py_version, set_setup_py_version, \
+    is_semantic_string, bump_version, is_valid_helm_chart
 
 valid_helm_chart = {'apiVersion': 'v1',
                     'appVersion': '1.0',
@@ -206,6 +207,16 @@ class PyBumpTest(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             get_setup_py_version(invalid_setup_py_2)
+
+    def test_set_setup_py_version(self):
+        # test the version replacement string, in a content
+        content_pre = 'some text before version="3.17.5", and some text after'
+        # above content should be equal to below after sending to 'set_setup_py_version'
+        content_post = 'some text before version="0.1.3", and some text after'
+
+        self.assertEqual(
+            set_setup_py_version(version='0.1.3', content=content_pre), content_post
+        )
 
     def test_is_valid_version_file(self):
         self.assertTrue(is_semantic_string(valid_version_file_1))
