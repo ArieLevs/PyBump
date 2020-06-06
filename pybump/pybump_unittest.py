@@ -219,13 +219,13 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_patch():
-        simulate_set_version("pybump/test_valid_chart.yaml", "0.1.0")
-        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "patch")
+        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "0.1.0")
+        completed_process_object = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "patch")
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml")
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -234,13 +234,13 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_bump_patch failed, return version should be 0.1.1 got " + stdout)
 
         # Simulate with --app-version flag
-        simulate_set_version("pybump/test_valid_chart.yaml", "3.1.5", True)
-        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "patch", True)
+        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "3.1.5", True)
+        completed_process_object = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "patch", True)
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", True)
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", True)
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -249,13 +249,13 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_bump_patch failed, return version should be 3.1.6 got " + stdout)
 
         # Simulate version bump with prefix
-        simulate_set_version("pybump/test_valid_chart.yaml", "v3.1.5")
-        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "patch")
+        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "v3.1.5")
+        completed_process_object = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "patch")
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml")
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -265,13 +265,13 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_minor():
-        simulate_set_version("pybump/test_valid_setup.py", "2.1.5-alpha+metadata.is.useful")
-        completed_process_object = simulate_bump_version("pybump/test_valid_setup.py", "minor")
+        simulate_set_version("pybump/test_content_files/test_valid_setup.py", "2.1.5-alpha+metadata.is.useful")
+        completed_process_object = simulate_bump_version("pybump/test_content_files/test_valid_setup.py", "minor")
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = simulate_get_version("pybump/test_valid_setup.py")
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_setup.py")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -282,12 +282,12 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_bump_major():
-        simulate_set_version("pybump/test_valid_chart.yaml", "0.5.9")
-        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "major")
+        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "0.5.9")
+        completed_process_object = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "major")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml")
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -297,12 +297,12 @@ class PyBumpTest(unittest.TestCase):
 
         # Simulate with --app-version flag
         simulate_set_version("pybump/test_valid_chart.yaml", "2.2.8", True)
-        completed_process_object = simulate_bump_version("pybump/test_valid_chart.yaml", "major", True)
+        completed_process_object = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "major", True)
 
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", True)
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", True)
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -311,7 +311,7 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_bump_patch failed, return version should be 3.0.0 got " + stdout)
 
         # Simulate with --app-version flag on a chart with missing appVersion field
-        test_3 = simulate_bump_version("pybump/test_valid_chart_minimal.yaml", "major", True)
+        test_3 = simulate_bump_version("pybump/test_content_files/test_valid_chart_minimal.yaml", "major", True)
 
         if test_3.returncode == 1:
             # 'CompletedProcess' should raised exception
@@ -322,8 +322,8 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_invalid_bump_major():
-        simulate_set_version("pybump/test_invalid_chart.yaml", "3.5.5")
-        completed_process_object = simulate_bump_version("pybump/test_invalid_chart.yaml", "major")
+        simulate_set_version("pybump/test_content_files/test_invalid_chart.yaml", "3.5.5")
+        completed_process_object = simulate_bump_version("pybump/test_content_files/test_invalid_chart.yaml", "major")
         if completed_process_object.returncode != 0:
             pass
         else:
@@ -331,7 +331,7 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_invalid_set_version():
-        completed_process_object = simulate_set_version("pybump/test_valid_setup.py", "V3.2.0")
+        completed_process_object = simulate_set_version("pybump/test_content_files/test_valid_setup.py", "V3.2.0")
         if completed_process_object.returncode != 0:
             pass
         else:
@@ -339,10 +339,10 @@ class PyBumpTest(unittest.TestCase):
 
     @staticmethod
     def test_get_flags():
-        simulate_set_version("pybump/test_valid_chart.yaml", "2.0.8-alpha.802+sha-256")
+        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "2.0.8-alpha.802+sha-256")
 
         # Test the 'get' command with '--sem-ver' flag
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", sem_ver=True)
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", sem_ver=True)
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -351,7 +351,7 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_get_flags failed, return sem-ver version should be 2.0.8 got " + stdout)
 
         # Test the 'get' command with '--release' flag
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", release=True)
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", release=True)
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -360,7 +360,7 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_get_flags failed, return release string should be alpha.802 got " + stdout)
 
         # Test the 'get' command with '--metadata' flag
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml", metadata=True)
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", metadata=True)
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -369,8 +369,8 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_get_flags failed, return metadata string should be sha-256 got " + stdout)
 
         # Test the 'get' command with version prefix
-        simulate_set_version("pybump/test_valid_chart.yaml", "v2.0.8-alpha.802+sha-256")
-        completed_process_object = simulate_get_version("pybump/test_valid_chart.yaml")
+        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "v2.0.8-alpha.802+sha-256")
+        completed_process_object = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
@@ -379,7 +379,7 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_get_flags failed, return string should be v2.0.8-alpha.802+sha-256 got " + stdout)
 
         # Test the 'get' command with --app-version flag on a chart with missing appVersion field
-        test_5 = simulate_get_version("pybump/test_valid_chart_minimal.yaml", app_version=True)
+        test_5 = simulate_get_version("pybump/test_content_files/test_valid_chart_minimal.yaml", app_version=True)
         if test_5.returncode == 1:
             # 'CompletedProcess' should raised exception
             pass
@@ -392,7 +392,7 @@ class PyBumpTest(unittest.TestCase):
         """
         Test case when target file is a 'VERSION' file
         """
-        completed_process_object = simulate_get_version("pybump/VERSION")
+        completed_process_object = simulate_get_version("pybump/test_content_files/VERSION")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
         stdout = completed_process_object.stdout.decode('utf-8').strip()
@@ -400,8 +400,8 @@ class PyBumpTest(unittest.TestCase):
             raise Exception("test_plain_text_version_file failed, "
                             "return version should be 2.5.1+metadata.here got " + stdout)
 
-        simulate_bump_version("pybump/VERSION", "major")
-        completed_process_object = simulate_get_version("pybump/VERSION")
+        simulate_bump_version("pybump/test_content_files/VERSION", "major")
+        completed_process_object = simulate_get_version("pybump/test_content_files/VERSION")
         if completed_process_object.returncode != 0:
             raise Exception(completed_process_object.stderr.decode('utf-8'))
 
