@@ -4,7 +4,6 @@
 .DS_Store
 
 __pycache__
-pybump/test_*
 
 # Distribution / packaging
 .Python
