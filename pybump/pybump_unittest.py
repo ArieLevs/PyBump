@@ -2,7 +2,8 @@ import unittest
 from subprocess import run, PIPE
 
 from pybump.pybump import get_setup_py_version, set_setup_py_version, \
-    is_semantic_string, bump_version, is_valid_helm_chart, assemble_version_string
+    is_semantic_string, bump_version, is_valid_helm_chart, assemble_version_string, \
+    write_version_to_file, read_version_from_file
 
 valid_helm_chart = {'apiVersion': 'v1',
                     'appVersion': '1.0',
@@ -238,6 +239,64 @@ class PyBumpTest(unittest.TestCase):
         self.assertEqual(
             assemble_version_string(prefix=False, version_array=[0, 4, 0], release='', metadata=''),
             '0.4.0')
+
+    def test_write_read_files(self):
+        # write_version_to_file will write any text to a given file,
+        # but later when reading data from files, they will be validated.
+
+        write_version_to_file(file_path='test_write_read_file_1.yaml',
+                              file_content={'apiVersion': 'v1',
+                                            'appVersion': '2.0.3',
+                                            'name': 'test',
+                                            'version': '0.1.0'},
+                              version='1.1.2', app_version=False)
+        # write same content with app_version=True
+        write_version_to_file(file_path='test_write_read_file_2.yaml',
+                              file_content={'apiVersion': 'v1',
+                                            'appVersion': '2.0.3',
+                                            'name': 'test',
+                                            'version': '0.1.0'},
+                              version='1.1.2', app_version=True)
+
+        write_version_to_file(file_path='test_write_read_file.py',
+                              file_content='some text before version="0.17.5", and some text after',
+                              version='1.1.2', app_version=False)
+        write_version_to_file(file_path='VERSION',
+                              file_content='',
+                              version='1.1.2', app_version=False)
+        write_version_to_file(file_path='unknown.extension',
+                              file_content='some version="" here',
+                              version='1.1.2', app_version=False)
+
+        self.assertEqual(read_version_from_file(
+            file_path='test_write_read_file_1.yaml', app_version=False),
+            {'file_content': {'apiVersion': 'v1',
+                              'appVersion': '2.0.3',
+                              'name': 'test',
+                              'version': '1.1.2'},
+             'version': '1.1.2'}
+        )
+
+        self.assertEqual(read_version_from_file(
+            file_path='test_write_read_file_2.yaml', app_version=True),
+            {'file_content': {'apiVersion': 'v1',
+                              'appVersion': '1.1.2',
+                              'name': 'test',
+                              'version': '0.1.0'},
+             'version': '1.1.2'}
+        )
+
+        self.assertEqual(read_version_from_file(
+            file_path='test_write_read_file.py', app_version=False),
+            {'file_content': 'some text before version="1.1.2", and some text after',
+             'version': '1.1.2'}
+        )
+
+        self.assertEqual(read_version_from_file(
+            file_path='VERSION', app_version=False),
+            {'file_content': None,
+             'version': '1.1.2'}
+        )
 
     @staticmethod
     def test_bump_patch():
