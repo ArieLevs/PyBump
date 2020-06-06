@@ -2,7 +2,7 @@ import unittest
 from subprocess import run, PIPE
 
 from pybump.pybump import get_setup_py_version, set_setup_py_version, \
-    is_semantic_string, bump_version, is_valid_helm_chart
+    is_semantic_string, bump_version, is_valid_helm_chart, assemble_version_string
 
 valid_helm_chart = {'apiVersion': 'v1',
                     'appVersion': '1.0',
@@ -227,6 +227,17 @@ class PyBumpTest(unittest.TestCase):
                          {'prefix': False, 'version': [0, 12, 4], 'release': '', 'metadata': ''})
         self.assertEqual(is_semantic_string(valid_version_file_2),
                          {'prefix': False, 'version': [1, 5, 0], 'release': 'alpha', 'metadata': 'meta'})
+
+    def test_assemble_version_string(self):
+        self.assertEqual(
+            assemble_version_string(prefix=True, version_array=[1, 4, 0], release='release_text', metadata='meta_text'),
+            'v1.4.0-release_text+meta_text')
+        self.assertEqual(
+            assemble_version_string(prefix=False, version_array=[1, 4, 0], release='', metadata='meta_text'),
+            '1.4.0+meta_text')
+        self.assertEqual(
+            assemble_version_string(prefix=False, version_array=[0, 4, 0], release='', metadata=''),
+            '0.4.0')
 
     @staticmethod
     def test_bump_patch():
