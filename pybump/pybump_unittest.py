@@ -310,6 +310,16 @@ class PyBumpTest(unittest.TestCase):
         if stdout != "3.0.0":
             raise Exception("test_bump_patch failed, return version should be 3.0.0 got " + stdout)
 
+        # Simulate with --app-version flag on a chart with missing appVersion field
+        test_3 = simulate_bump_version("pybump/test_valid_chart_minimal.yaml", "major", True)
+
+        if test_3.returncode == 1:
+            # 'CompletedProcess' should raised exception
+            pass
+        else:
+            raise Exception("test_bump_major with missing appVersion failed, "
+                            "test should of fail with ValueError, but it passed passed")
+
     @staticmethod
     def test_invalid_bump_major():
         simulate_set_version("pybump/test_invalid_chart.yaml", "3.5.5")
@@ -367,6 +377,15 @@ class PyBumpTest(unittest.TestCase):
         stdout = completed_process_object.stdout.decode('utf-8').strip()
         if stdout != "v2.0.8-alpha.802+sha-256":
             raise Exception("test_get_flags failed, return string should be v2.0.8-alpha.802+sha-256 got " + stdout)
+
+        # Test the 'get' command with --app-version flag on a chart with missing appVersion field
+        test_5 = simulate_get_version("pybump/test_valid_chart_minimal.yaml", app_version=True)
+        if test_5.returncode == 1:
+            # 'CompletedProcess' should raised exception
+            pass
+        else:
+            raise Exception("test_get_flags with missing appVersion failed, "
+                            "test should of fail with ValueError, but it passed passed")
 
     @staticmethod
     def test_plain_text_version_file():
