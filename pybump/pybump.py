@@ -11,11 +11,12 @@ regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'
 
 def is_valid_helm_chart(content):
     """
-    Check if input dictionary contains mandatory keys of a Helm Chart.yaml file
+    Check if input dictionary contains mandatory keys of a Helm Chart.yaml file,
+    as documented here https://helm.sh/docs/topics/charts/#the-chartyaml-file
     :param content: parsed YAML file as dictionary of key values
     :return: True if dict contains mandatory values, else False
     """
-    return all(x in content for x in ['apiVersion', 'appVersion', 'description', 'name', 'version'])
+    return all(x in content for x in ['apiVersion', 'name', 'version'])
 
 
 def get_setup_py_version(content):
@@ -193,7 +194,13 @@ def read_version_from_file(file_path, app_version):
             # Make sure Helm chart is valid and contains minimal mandatory keys
             if is_valid_helm_chart(file_content):
                 if app_version:
-                    current_version = file_content['appVersion']
+                    current_version = file_content.get('appVersion', None)
+
+                    # user passed the 'app-version' flag, but helm chart file does not contain the 'appVersion' field
+                    if not current_version:
+                        raise ValueError(
+                            "Could not find 'appVersion' field in helm chart.yaml file: {}".format(file_content)
+                        )
                 else:
                     current_version = file_content['version']
             else:
