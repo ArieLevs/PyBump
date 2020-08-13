@@ -217,6 +217,11 @@ def read_version_from_file(file_path, app_version):
     return {'file_content': file_content, 'version': current_version}
 
 
+def print_invalid_version(version):
+    print("Invalid semantic version format: {}\n"
+          "Make sure to comply with https://semver.org/ (lower case 'v' prefix is allowed)".format(version), file=stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Python version bumper')
     subparsers = parser.add_subparsers(dest='sub_command')
@@ -264,7 +269,7 @@ def main():
             if is_semantic_string(args['verify']):
                 print('{} is valid'.format(args['verify']))
             else:
-                print('invalid semantic version'.format(args['verify']), file=stderr)
+                print_invalid_version(args['verify'])
                 exit(1)
         else:
             parser.print_help()
@@ -277,7 +282,7 @@ def main():
 
     current_version_dict = is_semantic_string(current_version)
     if not current_version_dict:
-        print("Invalid semantic version format: {}".format(current_version), file=stderr)
+        print_invalid_version(current_version)
         exit(1)
 
     if args['sub_command'] == 'get':
@@ -317,7 +322,7 @@ def main():
                                                   release=current_version_dict.get('release'),
                                                   metadata=current_version_dict.get('metadata'))
         if not is_semantic_string(new_version):
-            print("Invalid semantic version format: {}".format(new_version), file=stderr)
+            print_invalid_version(new_version)
             exit(1)
         # Write the new version with relevant content back to the file
         write_version_to_file(args['file'], file_content, new_version, args['app_version'])
