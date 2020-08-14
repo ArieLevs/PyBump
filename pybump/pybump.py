@@ -219,7 +219,8 @@ def read_version_from_file(file_path, app_version):
 
 def print_invalid_version(version):
     print("Invalid semantic version format: {}\n"
-          "Make sure to comply with https://semver.org/ (lower case 'v' prefix is allowed)".format(version), file=stderr)
+          "Make sure to comply with https://semver.org/ (lower case 'v' prefix is allowed)".format(version),
+          file=stderr)
 
 
 def main():
@@ -304,7 +305,8 @@ def main():
             # Case the 'auto' flag was set, set release with current git branch name and metadata with hash
             elif args['auto']:
                 import git
-                repo = git.Repo(search_parent_directories=True)
+                # get the directory path of current working file
+                repo = git.Repo(path=os.path.dirname(args['file']))
                 new_version = assemble_version_string(prefix=current_version_dict.get('prefix'),
                                                       version_array=current_version_dict.get('version'),
                                                       release=repo.active_branch.name,
