@@ -31,8 +31,12 @@ Usage
 | ``pybump bump [-h] --file PATH_TO_CHART.YAML --level {major,minor,patch} [--quiet]``
 |
 
-| **set** explicit version:
+| **set** explicit version or set auto release+metadata:
 | ``pybump set --file PATH_TO_CHART.YAML --set-version X.Y.Z [--quiet]``
+|
+| the auto flag is mainly intended for pull request CIs, by using:
+| ``pybump set --file PATH_TO_CHART.YAML --auto [--quiet]``
+| pybump will add git branch name as prerelease and git hash as metadata
 |
 
 | **get** current version:
@@ -62,6 +66,10 @@ Examples
 
 | Case: ``version: 0.0.1+some-metadata``
 | ``pybump set --file Chart.yaml --set-version 1.4.0`` will set version to ``version: 1.4.0+some-metadata``
+|
+
+| Case: ``version: v7.0.2``
+| ``pybump set --file setup.py --auto`` will set version to ``version: v7.0.2-fix-minor-bug-5a51e0e1d9894d3c5d4201619f10be242320cb59``
 |
 
 | Case: ``appVersion 2.3.2``
