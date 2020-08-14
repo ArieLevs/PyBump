@@ -19,6 +19,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         'pyyaml==5.1',
+        'GitPython==3.1.7',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",
