@@ -297,6 +297,9 @@ def main():
         else:
             print(current_version)
     else:
+        # Set new_version to be invalid first
+        new_version = ''
+
         # Set the 'new_version' value
         if args['sub_command'] == 'set':
             # Case set-version argument passed, just set the new version with its value
@@ -304,17 +307,22 @@ def main():
                 new_version = args['set_version']
             # Case the 'auto' flag was set, set release with current git branch name and metadata with hash
             elif args['auto']:
-                import git
+                from git import Repo, InvalidGitRepositoryError
                 # get the directory path of current working file
-                repo = git.Repo(path=os.path.dirname(args['file']))
-                new_version = assemble_version_string(prefix=current_version_dict.get('prefix'),
-                                                      version_array=current_version_dict.get('version'),
-                                                      release=repo.active_branch.name,
-                                                      metadata=str(repo.active_branch.commit))
+                file_dirname_path = os.path.dirname(args['file'])
+                try:
+                    repo = Repo(path=file_dirname_path)
+                    new_version = assemble_version_string(prefix=current_version_dict.get('prefix'),
+                                                          version_array=current_version_dict.get('version'),
+                                                          release=repo.active_branch.name,
+                                                          metadata=str(repo.active_branch.commit))
+                except InvalidGitRepositoryError:
+                    print("{} is not a valid git repo".format(file_dirname_path), file=stderr)
+                    exit(1)
             # Should never reach this point due to argparse mutual exclusion, but set safety if statement anyway
             else:
-                # This new version will always be invalid
-                new_version = ''
+                print("set-version or auto flags are mandatory", file=stderr)
+                exit(1)
         else:  # bump version ['sub_command'] == 'bump'
             # Only bump value of the 'version' key
             new_version_array = bump_version(current_version_dict.get('version'), args['level'])
