@@ -90,22 +90,32 @@ def simulate_get_version(file, app_version=False, sem_ver=False, release=False, 
         return run(["python", "pybump/pybump.py", "get", "--file", file], stdout=PIPE, stderr=PIPE)
 
 
-def simulate_set_version(file, version, app_version=False):
+def simulate_set_version(file, version='', app_version=False, auto=False):
     """
     execute sub process to simulate real app execution,
     set new version to a file
+    if auto is True, auto add git branch / hash
     if app_version is True, then add the --app-version flag to execution
     :param file: string
     :param version: string
     :param app_version: boolean
-    :return:
+    :param auto: boolean
+    :return: CompletedProcess object
     """
-    if app_version:
-        return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version, "--app-version"],
-                   stdout=PIPE, stderr=PIPE)
+    if auto:
+        if app_version:
+            return run(["python", "pybump/pybump.py", "set", "--file", file, "--auto", "--app-version"],
+                       stdout=PIPE, stderr=PIPE)
+        else:
+            return run(["python", "pybump/pybump.py", "set", "--file", file, "--auto"],
+                       stdout=PIPE, stderr=PIPE)
     else:
-        return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version],
-                   stdout=PIPE, stderr=PIPE)
+        if app_version:
+            return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version, "--app-version"],
+                       stdout=PIPE, stderr=PIPE)
+        else:
+            return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version],
+                       stdout=PIPE, stderr=PIPE)
 
 
 def simulate_bump_version(file, level, app_version=False):
@@ -496,6 +506,18 @@ class PyBumpTest(unittest.TestCase):
         else:
             raise Exception("test_get_flags with missing appVersion failed, "
                             "test should of fail with ValueError, but it passed passed")
+
+    def test_set_flags(self):
+        ################################################
+        # simulate the 'get' command with version prefix
+        ################################################
+        # this path pybump/test_content_files/ is not a valid git repo (its parent is),
+        # so it should fail with relevant error
+        test_set_auto = simulate_set_version("pybump/test_content_files/test_valid_setup.py", auto=True)
+        self.assertEqual('pybump/test_content_files is not a valid git repo',
+                         test_set_auto.stderr.decode('utf-8').strip())
+
+        # Currently not testing success with auto flag since git branch / hash is dynamic
 
     @staticmethod
     def test_plain_text_version_file():
