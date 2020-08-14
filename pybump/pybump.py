@@ -217,6 +217,12 @@ def read_version_from_file(file_path, app_version):
     return {'file_content': file_content, 'version': current_version}
 
 
+def print_invalid_version(version):
+    print("Invalid semantic version format: {}\n"
+          "Make sure to comply with https://semver.org/ (lower case 'v' prefix is allowed)".format(version),
+          file=stderr)
+
+
 def main():
     parser = argparse.ArgumentParser(description='Python version bumper')
     subparsers = parser.add_subparsers(dest='sub_command')
@@ -240,9 +246,14 @@ def main():
 
     # Sub-parser for set version command
     parser_set = subparsers.add_parser('set', parents=[base_sub_parser])
-    parser_set.add_argument('--set-version',
-                            help='Semantic version to set as a combination of \'vX.Y.Z-release+metadata\'',
-                            required=True)
+
+    # Set mutual exclusion https://docs.python.org/3/library/argparse.html#mutual-exclusion,
+    # To make sure that at least one of the mutually exclusive arguments is required
+    set_group = parser_set.add_mutually_exclusive_group(required=True)
+    set_group.add_argument('--auto', action='store_true',
+                           help='Set automatic release / metadata from current git branch for current version')
+    set_group.add_argument('--set-version',
+                           help='Semantic version to set as a combination of \'vX.Y.Z-release+metadata\'')
     parser_set.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
 
     # Sub-parser for get version command
@@ -259,7 +270,7 @@ def main():
             if is_semantic_string(args['verify']):
                 print('{} is valid'.format(args['verify']))
             else:
-                print('invalid semantic version'.format(args['verify']), file=stderr)
+                print_invalid_version(args['verify'])
                 exit(1)
         else:
             parser.print_help()
@@ -272,7 +283,7 @@ def main():
 
     current_version_dict = is_semantic_string(current_version)
     if not current_version_dict:
-        print("Invalid semantic version format: {}".format(current_version), file=stderr)
+        print_invalid_version(current_version)
         exit(1)
 
     if args['sub_command'] == 'get':
@@ -286,13 +297,32 @@ def main():
         else:
             print(current_version)
     else:
+        # Set new_version to be invalid first
+        new_version = ''
+
         # Set the 'new_version' value
         if args['sub_command'] == 'set':
-            set_version = args['set_version']
-            if not is_semantic_string(set_version):
-                print("Invalid semantic version format: {}".format(set_version), file=stderr)
+            # Case set-version argument passed, just set the new version with its value
+            if args['set_version']:
+                new_version = args['set_version']
+            # Case the 'auto' flag was set, set release with current git branch name and metadata with hash
+            elif args['auto']:
+                from git import Repo, InvalidGitRepositoryError
+                # get the directory path of current working file
+                file_dirname_path = os.path.dirname(args['file'])
+                try:
+                    repo = Repo(path=file_dirname_path)
+                    new_version = assemble_version_string(prefix=current_version_dict.get('prefix'),
+                                                          version_array=current_version_dict.get('version'),
+                                                          release=repo.active_branch.name,
+                                                          metadata=str(repo.active_branch.commit))
+                except InvalidGitRepositoryError:
+                    print("{} is not a valid git repo".format(file_dirname_path), file=stderr)
+                    exit(1)
+            # Should never reach this point due to argparse mutual exclusion, but set safety if statement anyway
+            else:
+                print("set-version or auto flags are mandatory", file=stderr)
                 exit(1)
-            new_version = set_version
         else:  # bump version ['sub_command'] == 'bump'
             # Only bump value of the 'version' key
             new_version_array = bump_version(current_version_dict.get('version'), args['level'])
@@ -301,6 +331,9 @@ def main():
                                                   version_array=new_version_array,
                                                   release=current_version_dict.get('release'),
                                                   metadata=current_version_dict.get('metadata'))
+        if not is_semantic_string(new_version):
+            print_invalid_version(new_version)
+            exit(1)
         # Write the new version with relevant content back to the file
         write_version_to_file(args['file'], file_content, new_version, args['app_version'])
 
