@@ -312,11 +312,11 @@ class PyBumpTest(unittest.TestCase):
         #####################
         # simulate patch bump
         #####################
-        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "0.1.0")
-        test_patch_1 = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "patch")
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "0.1.0")
+        test_patch_1 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "patch")
         self.assertEqual(test_patch_1.returncode, 0)
 
-        test_patch_1 = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml")
+        test_patch_1 = simulate_get_version("test/test_content_files/test_valid_chart.yaml")
         self.assertEqual(test_patch_1.returncode, 0)
 
         stdout = test_patch_1.stdout.decode('utf-8').strip()
@@ -325,11 +325,11 @@ class PyBumpTest(unittest.TestCase):
         #############################################
         # simulate patch bump with --app-version flag
         #############################################
-        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "3.1.5", True)
-        test_patch_2 = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "patch", True)
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "3.1.5", True)
+        test_patch_2 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "patch", True)
         self.assertEqual(test_patch_2.returncode, 0)
 
-        test_patch_2 = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", True)
+        test_patch_2 = simulate_get_version("test/test_content_files/test_valid_chart.yaml", True)
         self.assertEqual(test_patch_2.returncode, 0)
 
         stdout = test_patch_2.stdout.decode('utf-8').strip()
@@ -338,11 +338,11 @@ class PyBumpTest(unittest.TestCase):
         #################################
         # simulate patch bump with prefix
         #################################
-        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "v3.1.5")
-        test_patch_3 = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "patch")
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "v3.1.5")
+        test_patch_3 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "patch")
         self.assertEqual(test_patch_3.returncode, 0)
 
-        test_patch_3 = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml")
+        test_patch_3 = simulate_get_version("test/test_content_files/test_valid_chart.yaml")
         self.assertEqual(test_patch_3.returncode, 0)
 
         stdout = test_patch_3.stdout.decode('utf-8').strip()
@@ -352,11 +352,11 @@ class PyBumpTest(unittest.TestCase):
         #####################
         # simulate minor bump
         #####################
-        simulate_set_version("pybump/test_content_files/test_valid_setup.py", "2.1.5-alpha+metadata.is.useful")
-        test_minor_1 = simulate_bump_version("pybump/test_content_files/test_valid_setup.py", "minor")
+        simulate_set_version("test/test_content_files/test_valid_setup.py", "2.1.5-alpha+metadata.is.useful")
+        test_minor_1 = simulate_bump_version("test/test_content_files/test_valid_setup.py", "minor")
         self.assertEqual(test_minor_1.returncode, 0)
 
-        test_minor_1 = simulate_get_version("pybump/test_content_files/test_valid_setup.py")
+        test_minor_1 = simulate_get_version("test/test_content_files/test_valid_setup.py")
         self.assertEqual(test_minor_1.returncode, 0)
 
         stdout = test_minor_1.stdout.decode('utf-8').strip()
@@ -367,11 +367,11 @@ class PyBumpTest(unittest.TestCase):
         #####################
         # simulate major bump
         #####################
-        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "0.5.9")
-        test_major_1 = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "major")
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "0.5.9")
+        test_major_1 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "major")
         self.assertEqual(test_major_1.returncode, 0)
 
-        test_major_1 = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml")
+        test_major_1 = simulate_get_version("test/test_content_files/test_valid_chart.yaml")
         self.assertEqual(test_major_1.returncode, 0)
 
         stdout = test_major_1.stdout.decode('utf-8').strip()
@@ -381,10 +381,10 @@ class PyBumpTest(unittest.TestCase):
         # simulate major bump with --app-version flag
         #############################################
         simulate_set_version("pybump/test_valid_chart.yaml", "2.2.8", True)
-        test_major_2 = simulate_bump_version("pybump/test_content_files/test_valid_chart.yaml", "major", True)
+        test_major_2 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "major", True)
         self.assertEqual(test_major_2.returncode, 0)
 
-        test_major_2 = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", True)
+        test_major_2 = simulate_get_version("test/test_content_files/test_valid_chart.yaml", True)
         self.assertEqual(test_major_2.returncode, 0)
 
         stdout = test_major_2.stdout.decode('utf-8').strip()
@@ -393,28 +393,28 @@ class PyBumpTest(unittest.TestCase):
         ######################################################################################
         # simulate major bump with --app-version flag on a chart with missing appVersion field
         ######################################################################################
-        test_major_3 = simulate_bump_version("pybump/test_content_files/test_valid_chart_minimal.yaml", "major", True)
+        test_major_3 = simulate_bump_version("test/test_content_files/test_valid_chart_minimal.yaml", "major", True)
         self.assertEqual(test_major_3.returncode, 1,
                          msg="returned 0 exist code, but tested bump against a chart file with missing appVersion key")
 
     def test_invalid_bump_major(self):
-        simulate_set_version("pybump/test_content_files/test_invalid_chart.yaml", "3.5.5")
-        completed_process_object = simulate_bump_version("pybump/test_content_files/test_invalid_chart.yaml", "major")
+        simulate_set_version("test/test_content_files/test_invalid_chart.yaml", "3.5.5")
+        completed_process_object = simulate_bump_version("test/test_content_files/test_invalid_chart.yaml", "major")
         self.assertNotEqual(completed_process_object.returncode, 0,
                             msg="returned a 0 exist code, but tested bump version against a non valid chart file")
 
     def test_invalid_set_version(self):
-        completed_process_object = simulate_set_version("pybump/test_content_files/test_valid_setup.py", "V3.2.0")
+        completed_process_object = simulate_set_version("test/test_content_files/test_valid_setup.py", "V3.2.0")
         self.assertNotEqual(completed_process_object.returncode, 0,
                             msg="returned a 0 exist code, but tested set version against a non valid semver")
 
     def test_get_flags(self):
-        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "2.0.8-alpha.802+sha-256")
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "2.0.8-alpha.802+sha-256")
 
         ##################################################
         # simulate the 'get' command with '--sem-ver' flag
         ##################################################
-        test_get_sem_ver = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", sem_ver=True)
+        test_get_sem_ver = simulate_get_version("test/test_content_files/test_valid_chart.yaml", sem_ver=True)
         self.assertEqual(test_get_sem_ver.returncode, 0,
                          msg="returned a non 0 exist code, but tested get version against a valid chart file")
 
@@ -425,7 +425,7 @@ class PyBumpTest(unittest.TestCase):
         ##################################################
         # simulate the 'get' command with '--release' flag
         ##################################################
-        test_get_release = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", release=True)
+        test_get_release = simulate_get_version("test/test_content_files/test_valid_chart.yaml", release=True)
         self.assertEqual(test_get_release.returncode, 0,
                          msg="returned a non 0 exist code, but tested get version against a valid chart file")
 
@@ -436,7 +436,7 @@ class PyBumpTest(unittest.TestCase):
         ###################################################
         # simulate the 'get' command with '--metadata' flag
         ###################################################
-        test_get_metadata = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml", metadata=True)
+        test_get_metadata = simulate_get_version("test/test_content_files/test_valid_chart.yaml", metadata=True)
         self.assertEqual(test_get_metadata.returncode, 0,
                          msg="returned a non 0 exist code, but tested get version against a valid chart file")
 
@@ -447,8 +447,8 @@ class PyBumpTest(unittest.TestCase):
         ################################################
         # simulate the 'get' command with version prefix
         ################################################
-        simulate_set_version("pybump/test_content_files/test_valid_chart.yaml", "v2.0.8-alpha.802+sha-256")
-        test_get_prefix = simulate_get_version("pybump/test_content_files/test_valid_chart.yaml")
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "v2.0.8-alpha.802+sha-256")
+        test_get_prefix = simulate_get_version("test/test_content_files/test_valid_chart.yaml")
         self.assertEqual(test_get_prefix.returncode, 0,
                          msg="returned a non 0 exist code, but tested get version against a valid chart file")
 
@@ -462,7 +462,7 @@ class PyBumpTest(unittest.TestCase):
         # simulate the 'get' command with --app-version flag on a chart with missing appVersion field
         #############################################################################################
         test_get_missing_app_version = simulate_get_version(
-            "pybump/test_content_files/test_valid_chart_minimal.yaml", app_version=True
+            "test/test_content_files/test_valid_chart_minimal.yaml", app_version=True
         )
         self.assertEqual(test_get_missing_app_version.returncode, 1,
                          msg="returned a 0 exist code, "
@@ -472,10 +472,10 @@ class PyBumpTest(unittest.TestCase):
         ################################################
         # simulate the 'get' command with version prefix
         ################################################
-        # this path pybump/test_content_files/ is not a valid git repo (its parent is),
+        # this path test/test_content_files/ is not a valid git repo (its parent is),
         # so it should fail with relevant error
-        test_set_auto = simulate_set_version("pybump/test_content_files/test_valid_setup.py", auto=True)
-        self.assertEqual('pybump/test_content_files is not a valid git repo',
+        test_set_auto = simulate_set_version("test/test_content_files/test_valid_setup.py", auto=True)
+        self.assertEqual('test/test_content_files is not a valid git repo',
                          test_set_auto.stderr.decode('utf-8').strip())
 
         # Currently not testing success with auto flag since git branch / hash is dynamic
@@ -484,15 +484,15 @@ class PyBumpTest(unittest.TestCase):
         """
         Test case when target file is a 'VERSION' file
         """
-        completed_process_object = simulate_get_version("pybump/test_content_files/VERSION")
+        completed_process_object = simulate_get_version("test/test_content_files/VERSION")
         self.assertEqual(completed_process_object.returncode, 0,
                          msg="returned a non 0 exist code, but tested get version against a valid VERSION file")
 
         stdout = completed_process_object.stdout.decode('utf-8').strip()
         self.assertEqual(stdout, '2.5.1+metadata.here', msg="return version should be 2.5.1+metadata.here")
 
-        simulate_bump_version("pybump/test_content_files/VERSION", "major")
-        completed_process_object = simulate_get_version("pybump/test_content_files/VERSION")
+        simulate_bump_version("test/test_content_files/VERSION", "major")
+        completed_process_object = simulate_get_version("test/test_content_files/VERSION")
         self.assertEqual(completed_process_object.returncode, 0,
                          msg="returned a non 0 exist code, but tested bump version against a valid VERSION file")
 

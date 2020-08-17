@@ -39,7 +39,7 @@ jobs:
     - name: Test with unittest
       run: |
         pip install -r requirements.txt
-        python -m unittest pybump/pybump_unittest.py -vv
+        python -m unittest test/test_pybump.py -vv
 
     - name: Check distribution valid
       run: |
