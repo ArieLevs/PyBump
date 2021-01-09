@@ -18,7 +18,7 @@ setuptools.setup(
     license='Apache License 2.0',
     packages=setuptools.find_packages(),
     install_requires=[
-        'pyyaml==5.1',
+        'pyyaml==5.3.1',
         'GitPython==3.1.7',
     ],
     classifiers=[
