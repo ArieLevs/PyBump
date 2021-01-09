@@ -284,7 +284,8 @@ class PyBumpTest(unittest.TestCase):
                               'appVersion': '2.0.3',
                               'name': 'test',
                               'version': '1.1.2'},
-             'version': '1.1.2'}
+             'version': '1.1.2',
+             'file_type': 'helm_chart'}
         )
 
         self.assertEqual(read_version_from_file(
@@ -293,19 +294,22 @@ class PyBumpTest(unittest.TestCase):
                               'appVersion': '1.1.2',
                               'name': 'test',
                               'version': '0.1.0'},
-             'version': '1.1.2'}
+             'version': '1.1.2',
+             'file_type': 'helm_chart'}
         )
 
         self.assertEqual(read_version_from_file(
             file_path='test_write_read_file.py', app_version=False),
             {'file_content': 'some text before version="1.1.2", and some text after',
-             'version': '1.1.2'}
+             'version': '1.1.2',
+             'file_type': 'python'}
         )
 
         self.assertEqual(read_version_from_file(
             file_path='VERSION', app_version=False),
             {'file_content': None,
-             'version': '1.1.2'}
+             'version': '1.1.2',
+             'file_type': 'plain_version'}
         )
 
     def test_bump_patch(self):

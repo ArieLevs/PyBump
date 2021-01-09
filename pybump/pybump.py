@@ -175,10 +175,15 @@ def write_version_to_file(file_path, file_content, version, app_version):
 
 def read_version_from_file(file_path, app_version):
     """
-    Read the 'version' or 'appVersion' from a given file
+    Read the 'version' or 'appVersion' from a given file,
+    note for return values for file_type are:
+        python for .py file
+        helm_chart for .yaml/.yml files
+        plain_version for VERSION files
     :param file_path: full path to file as string
     :param app_version: boolean, if True return appVersion from Helm chart
-    :return: dict containing file content and version as {'file_content': file_content, 'version': current_version}
+    :return: dict containing file content, version and type as:
+     {'file_content': file_content, 'version': current_version, 'file_type': file_type}
     """
     with open(file_path, 'r') as stream:
         filename, file_extension = os.path.splitext(file_path)
@@ -186,6 +191,7 @@ def read_version_from_file(file_path, app_version):
         if file_extension == '.py':  # Case setup.py files
             file_content = stream.read()
             current_version = get_setup_py_version(file_content)
+            file_type = 'python'
         elif file_extension == '.yaml' or file_extension == '.yml':  # Case Helm chart files
             try:
                 file_content = yaml.safe_load(stream)
@@ -193,6 +199,7 @@ def read_version_from_file(file_path, app_version):
                 print(exc)
             # Make sure Helm chart is valid and contains minimal mandatory keys
             if is_valid_helm_chart(file_content):
+                file_type = 'helm_chart'
                 if app_version:
                     current_version = file_content.get('appVersion', None)
 
@@ -210,11 +217,12 @@ def read_version_from_file(file_path, app_version):
                 # A version file should ONLY contain a valid semantic version string
                 file_content = None
                 current_version = stream.read()
+                file_type = 'plain_version'
             else:
                 raise ValueError("File name or extension not known to this app: {}{}"
                                  .format(os.path.basename(filename), file_extension))
 
-    return {'file_content': file_content, 'version': current_version}
+    return {'file_content': file_content, 'version': current_version, 'file_type': file_type}
 
 
 def print_invalid_version(version):
