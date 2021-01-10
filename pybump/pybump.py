@@ -9,6 +9,30 @@ from pkg_resources import get_distribution, DistributionNotFound
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
 
+def get_setup_py_install_requires(content):
+    """
+    Extract 'install_requires' value using regex from 'content'
+    :param content: the content of a setup.py file
+    :return: install_requires values as array
+    """
+    # use DOTALL https://docs.python.org/3/library/re.html#re.DOTALL to include new lines
+    regex_install_requires_pattern = re.compile(r"install_requires=(.*?)],", flags=re.DOTALL)
+    version_match = regex_install_requires_pattern.findall(content)
+
+    if len(version_match) > 1:
+        raise RuntimeError("More than one 'install_requires' found: {0}".format(version_match))
+    if not version_match:
+        # 'install_requires' missing from setup.py file, just return empty array
+        return []
+
+    # add ending ']' since regex will not include it
+    found_install_requires = version_match[0] + ']'
+
+    # convert found_install_requires values into an array and return
+    from ast import literal_eval
+    return literal_eval(found_install_requires)
+
+
 def is_valid_helm_chart(content):
     """
     Check if input dictionary contains mandatory keys of a Helm Chart.yaml file,
