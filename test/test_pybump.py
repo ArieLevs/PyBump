@@ -5,65 +5,9 @@ from pybump.pybump import get_setup_py_version, set_setup_py_version, \
     is_semantic_string, bump_version, is_valid_helm_chart, assemble_version_string, \
     write_version_to_file, read_version_from_file
 
-valid_helm_chart = {'apiVersion': 'v1',
-                    'appVersion': '1.0',
-                    'description': 'A Helm chart for Kubernetes',
-                    'name': 'test',
-                    'version': '0.1.0'}
-invalid_helm_chart = {'apiVersion': 'v1',
-                      'notAppVersionKeyHere': '1.0',
-                      'description': 'A Helm chart for Kubernetes',
-                      'version': '0.1.0'}
-empty_helm_chart = {}
-
-valid_setup_py = """
-    setuptools.setup(
-        name="pybump",
-        version="0.1.3",
-        author="Arie Lev",
-        author_email="levinsonarie@gmail.com",
-        description="Python version bumper",
-        long_description=long_description,
-        long_description_content_type="text/markdown",
-        url="https://github.com/ArieLevs/PyBump",
-        license='Apache License 2.0',
-        packages=setuptools.find_packages(),
-    )
-    """
-
-# This setup.py content is missing 'version' key
-invalid_setup_py_1 = """
-    setuptools.setup(
-        name="pybump",
-        invalid_version_string="0.1.3",
-        author="Arie Lev",
-        author_email="levinsonarie@gmail.com",
-        description="Python version bumper",
-    )
-    """
-# This setup.py content 'version' key declared 3 times
-invalid_setup_py_2 = """
-    setuptools.setup(
-        name="pybump",
-        version="0.1.3",
-        version="0.1.2",
-        __version__="12356"
-        author="Arie Lev",
-        author_email="levinsonarie@gmail.com",
-        description="Python version bumper",
-    )
-    """
-
-valid_version_file_1 = """0.12.4"""
-valid_version_file_2 = """1.5.0-alpha+meta"""
-invalid_version_file_1 = """
-    this is some text in addition to version
-    1.5.0
-    nothing except semantic version should be in this file
-    """
-invalid_version_file_2 = """
-    version=1.5.0
-    """
+from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
+    valid_setup_py, invalid_setup_py_1, invalid_setup_py_2, \
+    valid_version_file_1, valid_version_file_2, invalid_version_file_1, invalid_version_file_2
 
 
 def simulate_get_version(file, app_version=False, sem_ver=False, release=False, metadata=False):
