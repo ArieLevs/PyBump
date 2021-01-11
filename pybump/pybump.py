@@ -33,6 +33,45 @@ def get_setup_py_install_requires(content):
     return literal_eval(found_install_requires)
 
 
+def get_versions_from_requirements(requirements_array):
+    """
+    brake python requirements array, in the form of ['package_1==version', 'package_2', ], for example
+    ['pyyaml==5.3.1', 'pybump']
+    into more detailed dictionary containing package name and 'is_semantic_string' result
+    :param requirements_array: array of strings
+    :return: array of dicts in the form of:
+        [
+            {
+                'package_name': 'pyyaml',
+                'package_version': {'prefix': False, 'version': [5, 3, 1], 'release': '', 'metadata': ''}
+            },
+            {
+                'package_name': 'pybump',
+                'package_version': {'prefix': False, 'version': [1, 3, 3], 'release': '', 'metadata': ''}
+            }
+        ]
+    """
+    dependencies = []
+    for req in requirements_array:
+        # python packages may be locked to specific version by using 'pack==0.1.2'
+        package_array = req.split('==')
+        package_name = package_array[0]
+        if len(package_array) == 1:
+            # there is no locked version for current package, it will use latest
+            package_version = 'latest'
+        else:
+            package_version = is_semantic_string(package_array[1])
+            # in case the string after '==' is not semantic version return error
+            if not package_version:
+                raise RuntimeError("Current package '{0}', is not set with semantic version: '{1}', cannot promote"
+                                   .format(package_name, package_array[1]))
+
+        # append current package
+        dependencies.append({'package_name': package_name, 'package_version': package_version})
+
+    return dependencies
+
+
 def is_valid_helm_chart(content):
     """
     Check if input dictionary contains mandatory keys of a Helm Chart.yaml file,
