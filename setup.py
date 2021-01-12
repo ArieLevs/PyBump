@@ -31,7 +31,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'pybump = pybump.pybump:main'
+            'pybump = src.pybump:main'
         ],
     },
 )

@@ -1,7 +1,7 @@
 import unittest
 from subprocess import run, PIPE
 
-from pybump.pybump import get_setup_py_version, set_setup_py_version, \
+from src.pybump import get_setup_py_version, set_setup_py_version, \
     is_semantic_string, bump_version, is_valid_helm_chart, assemble_version_string, \
     write_version_to_file, read_version_from_file
 
@@ -23,15 +23,15 @@ def simulate_get_version(file, app_version=False, sem_ver=False, release=False, 
     :return: CompletedProcess object
     """
     if app_version:
-        return run(["python", "pybump/pybump.py", "get", "--file", file, "--app-version"], stdout=PIPE, stderr=PIPE)
+        return run(["python", "src/pybump.py", "get", "--file", file, "--app-version"], stdout=PIPE, stderr=PIPE)
     elif sem_ver:
-        return run(["python", "pybump/pybump.py", "get", "--file", file, "--sem-ver"], stdout=PIPE, stderr=PIPE)
+        return run(["python", "src/pybump.py", "get", "--file", file, "--sem-ver"], stdout=PIPE, stderr=PIPE)
     elif release:
-        return run(["python", "pybump/pybump.py", "get", "--file", file, "--release"], stdout=PIPE, stderr=PIPE)
+        return run(["python", "src/pybump.py", "get", "--file", file, "--release"], stdout=PIPE, stderr=PIPE)
     elif metadata:
-        return run(["python", "pybump/pybump.py", "get", "--file", file, "--metadata"], stdout=PIPE, stderr=PIPE)
+        return run(["python", "src/pybump.py", "get", "--file", file, "--metadata"], stdout=PIPE, stderr=PIPE)
     else:
-        return run(["python", "pybump/pybump.py", "get", "--file", file], stdout=PIPE, stderr=PIPE)
+        return run(["python", "src/pybump.py", "get", "--file", file], stdout=PIPE, stderr=PIPE)
 
 
 def simulate_set_version(file, version='', app_version=False, auto=False):
@@ -48,17 +48,17 @@ def simulate_set_version(file, version='', app_version=False, auto=False):
     """
     if auto:
         if app_version:
-            return run(["python", "pybump/pybump.py", "set", "--file", file, "--auto", "--app-version"],
+            return run(["python", "src/pybump.py", "set", "--file", file, "--auto", "--app-version"],
                        stdout=PIPE, stderr=PIPE)
         else:
-            return run(["python", "pybump/pybump.py", "set", "--file", file, "--auto"],
+            return run(["python", "src/pybump.py", "set", "--file", file, "--auto"],
                        stdout=PIPE, stderr=PIPE)
     else:
         if app_version:
-            return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version, "--app-version"],
+            return run(["python", "src/pybump.py", "set", "--file", file, "--set-version", version, "--app-version"],
                        stdout=PIPE, stderr=PIPE)
         else:
-            return run(["python", "pybump/pybump.py", "set", "--file", file, "--set-version", version],
+            return run(["python", "src/pybump.py", "set", "--file", file, "--set-version", version],
                        stdout=PIPE, stderr=PIPE)
 
 
@@ -73,10 +73,10 @@ def simulate_bump_version(file, level, app_version=False):
     :return:
     """
     if app_version:
-        return run(["python", "pybump/pybump.py", "bump", "--level", level, "--file", file, "--app-version"],
+        return run(["python", "src/pybump.py", "bump", "--level", level, "--file", file, "--app-version"],
                    stdout=PIPE, stderr=PIPE)
     else:
-        return run(["python", "pybump/pybump.py", "bump", "--level", level, "--file", file],
+        return run(["python", "src/pybump.py", "bump", "--level", level, "--file", file],
                    stdout=PIPE, stderr=PIPE)
 
 
@@ -452,13 +452,13 @@ class PyBumpTest(unittest.TestCase):
         Test case when user is verifying string
         """
         # Verify valid string
-        completed_process_object = run(["python", "pybump/pybump.py", "--verify", "123.45.6789+valid-version"],
+        completed_process_object = run(["python", "src/pybump.py", "--verify", "123.45.6789+valid-version"],
                                        stdout=PIPE, stderr=PIPE)
         self.assertIs(completed_process_object.returncode, 0,
                       msg="returned a non 0 exist code, but tested 'verify' flag against a valid semver string")
 
         # Verify invalid string
-        completed_process_object = run(["python", "pybump/pybump.py", "--verify", "1.1-my-feature"],
+        completed_process_object = run(["python", "src/pybump.py", "--verify", "1.1-my-feature"],
                                        stdout=PIPE, stderr=PIPE)
         self.assertIs(completed_process_object.returncode, 1,
                       msg="returned a 0 exist code, but tested 'verify' flag against a non valid semver string")
