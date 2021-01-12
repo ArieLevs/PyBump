@@ -150,7 +150,6 @@ def check_available_python_patches(setup_py_content=None):
     patchable_packages_array = []
     for req in requirements_versions:
         if not req.get('package_version') == 'latest':
-            print('checking patch for package: {}'.format(req.get('package_name')))
             # get current package info (as json) from pypi api
             package_releases = get_pypi_package_releases(req.get('package_name'))
 
