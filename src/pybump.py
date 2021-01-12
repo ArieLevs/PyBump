@@ -469,7 +469,7 @@ def main():
     elif args['sub_command'] == 'get':
         if args['sem_ver']:
             # Join the array of current_version_dict by dots
-            print('.'.join(str(x) for x in current_version_dict))
+            print('.'.join(str(x) for x in current_version_dict.get('version')))
         elif args['release']:
             print(current_version_dict.get('release'))
         elif args['metadata']:
