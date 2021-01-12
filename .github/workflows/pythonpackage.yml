@@ -40,7 +40,7 @@ jobs:
       run: |
         pip install -r requirements.txt
         # discover all tests in the test directory
-        python -m unittest discover test -vv
+        python -m unittest discover test -vv -t .
 
     - name: Check distribution valid
       run: |
