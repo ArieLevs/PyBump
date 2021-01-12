@@ -1,6 +1,7 @@
 import unittest
 
-from src.pybump import get_setup_py_install_requires, get_versions_from_requirements, identify_possible_patch
+from src.pybump import get_setup_py_install_requires, get_versions_from_requirements, identify_possible_patch, \
+    is_patchable
 
 from . import valid_setup_py, valid_setup_py_2, invalid_setup_py_1, invalid_setup_py_2
 
@@ -48,20 +49,51 @@ class PyBumpPatcherTest(unittest.TestCase):
             get_versions_from_requirements('str')
 
     def test_identify_possible_patch(self):
+        # test most simple case when version is patchable
         self.assertEqual(
             identify_possible_patch(['0.1.2', '0.1.3', '0.3.1', '0.3.2'], [0, 3, 0]),
             {'current_patch': [0, 3, 0], 'latest_patch': [0, 3, 2], 'patchable': True}
         )
 
+        # test most simple NOT sorted list case
         self.assertEqual(
-            identify_possible_patch([], []),
-            {'current_patch': [], 'latest_patch': [0, 0, 0], 'patchable': False}
+            identify_possible_patch(['0.3.2', '0.1.2', '0.1.3', '0.3.1'], [0, 3, 1]),
+            {'current_patch': [0, 3, 1], 'latest_patch': [0, 3, 2], 'patchable': True}
         )
 
+        # test most simple NOT sorted list case
+        self.assertEqual(
+            identify_possible_patch(['4.2.2', '0.3.8', '0.1.2', '0.1.3', '0.3.1'], [0, 3, 1]),
+            {'current_patch': [0, 3, 1], 'latest_patch': [0, 3, 8], 'patchable': True}
+        )
+
+        # test simple list case with
+        self.assertEqual(
+            identify_possible_patch(['0.3.2', 'text', None], [0, 3, 1]),
+            {'current_patch': [0, 3, 1], 'latest_patch': [0, 3, 2], 'patchable': True}
+        )
+
+        # pass both empty lists
+        with self.assertRaises(ValueError):
+            identify_possible_patch([], [])
+
+        # test version that is already latest
         self.assertEqual(
             identify_possible_patch(['0.1.2', '0.1.3', '0.3.1', '0.3.2'], [0, 3, 2]),
             {'current_patch': [0, 3, 2], 'latest_patch': [0, 3, 2], 'patchable': False}
         )
+
+        # test not patchable version
+        self.assertEqual(
+            identify_possible_patch(['0.1.2', '0.1.3', '0.3.1', '0.3.2'], [0, 4, 2]),
+            {'current_patch': [0, 4, 2], 'latest_patch': [0, 4, 2], 'patchable': False}
+        )
+
+    def test_is_patchable(self):
+        self.assertTrue(is_patchable([0, 4, 5], [0, 4, 1]))
+        self.assertFalse(is_patchable([2, 1, 2], [2, 4, 2]))
+        self.assertFalse(is_patchable([0, 4, 5], [0, 4, 6]))
+        self.assertFalse(is_patchable([0, 0, 1], [0, 0, 1]))
 
 
 if __name__ == '__main__':
