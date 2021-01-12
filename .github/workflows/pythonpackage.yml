@@ -39,7 +39,8 @@ jobs:
     - name: Test with unittest
       run: |
         pip install -r requirements.txt
-        python -m unittest test/test_pybump.py -vv
+        # discover all tests in the test directory
+        python -m unittest discover test -vv -t .
 
     - name: Check distribution valid
       run: |

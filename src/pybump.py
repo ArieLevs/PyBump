@@ -9,6 +9,166 @@ from pkg_resources import get_distribution, DistributionNotFound
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
 
+def get_pypi_package_releases(package_name):
+    """
+    calls PYPI json api as described here
+    https://wiki.python.org/moin/PyPIJSON
+    https://warehouse.readthedocs.io/api-reference/json.html
+    :param package_name: string, pypi project name
+    :return: json with pypi project response
+    """
+    import requests
+
+    result = requests.get('https://pypi.org/pypi/{}/json'.format(package_name))
+    if result.status_code != 200:
+        raise requests.exceptions.RequestException
+    return result.json()
+
+
+def is_patchable(x, y):
+    """
+    takes two lists, and checks if second list is patchable,
+    a version is patchable only if major and minor values equal but patch value is higher in first version, for example:
+    x = [0, 4, 8] y = [0, 4, 6] returns True
+    x = [0, 4, 5] y = [0, 4, 6] returns False
+    x = [2, 1, 1] y = [2, 4, 1] returns False
+    :param x: list of ints
+    :param y: list of ints
+    :return: boolean
+    """
+    return x[0] == y[0] and x[1] == y[1] and x[2] > y[2]
+
+
+def identify_possible_patch(releases_list, version_to_patch):
+    """
+    check if there is a possible patch version newer then the patch version of current_version_dict,
+    get list of semantic versions,
+    for example ['0.1.2', '0.1.3', '0.3.1', '0.3.2'] and 'version_to_patch' with '0.3.1'
+    :param releases_list: list of semantic versions as strings
+    :param version_to_patch: is_semantic_string output
+    :return: dict in the for of:
+        {'current_patch': version_to_patch, 'latest_patch': patchable_version_str, 'patchable': patchable}
+    """
+    if not releases_list or not version_to_patch:
+        raise ValueError('one of the lists empty')
+
+    # assume version_to_patch is the latest version
+    latest_patch_version = version_to_patch
+    patchable = False
+
+    for release in releases_list:
+        release_patch_candidate = is_semantic_string(release)
+        # if 'False' returned
+        if not release_patch_candidate:
+            # current 'release' does not meet semantic version, skip
+            continue
+
+        # check if version_to_patch is patchable
+        if not is_patchable(release_patch_candidate.get('version', None), version_to_patch):
+            continue
+
+        # at this point possible patch version found, so if version_to_patch is [0, 3, 1],
+        # and current iteration over releases_list is [0, 3, 2] then it matches for a patch,
+        # but there also might be a release with version [0, 3, 3] and even newer, we need to find most recent.
+        # calculate highest value found for patch (for cases when the 'releases' is not sorted)
+        if release_patch_candidate.get('version')[2] > latest_patch_version[2]:
+            latest_patch_version = release_patch_candidate.get('version')
+
+    if latest_patch_version > version_to_patch:
+        patchable = True
+
+    return {'current_patch': version_to_patch, 'latest_patch': latest_patch_version, 'patchable': patchable}
+
+
+def get_setup_py_install_requires(content):
+    """
+    Extract 'install_requires' value using regex from 'content'
+    :param content: the content of a setup.py file
+    :return: install_requires values as array
+    """
+    # use DOTALL https://docs.python.org/3/library/re.html#re.DOTALL to include new lines
+    regex_install_requires_pattern = re.compile(r"install_requires=(.*?)],", flags=re.DOTALL)
+    version_match = regex_install_requires_pattern.findall(content)
+
+    if len(version_match) > 1:
+        raise RuntimeError("More than one 'install_requires' found: {0}".format(version_match))
+    if not version_match:
+        # 'install_requires' missing from setup.py file, just return empty array
+        return []
+
+    # add ending ']' since regex will not include it
+    found_install_requires = version_match[0] + ']'
+
+    # convert found_install_requires values into an array and return
+    from ast import literal_eval
+    return literal_eval(found_install_requires)
+
+
+def get_versions_from_requirements(requirements_array):
+    """
+    brake python requirements array, in the form of ['package_1==version', 'package_2', ], for example
+    ['pyyaml==5.3.1', 'pybump']
+    into more detailed dictionary containing package name and 'is_semantic_string' result
+    :param requirements_array: array of strings
+    :return: array of dicts in the form of:
+        [
+            {
+                'package_name': 'pyyaml',
+                'package_version': {'prefix': False, 'version': [5, 3, 1], 'release': '', 'metadata': ''}
+            },
+            {
+                'package_name': 'pybump',
+                'package_version': 'latest'
+            }
+        ]
+    """
+    dependencies = []
+    for req in requirements_array:
+        # python packages may be locked to specific version by using 'pack==0.1.2'
+        package_array = req.split('==')
+        package_name = package_array[0]
+        if len(package_array) == 1:
+            # there is no locked version for current package, it will use latest
+            package_version = 'latest'
+        else:
+            package_version = is_semantic_string(package_array[1])
+            # in case the string after '==' is not semantic version return error
+            if not package_version:
+                raise RuntimeError("Current package '{0}', is not set with semantic version: '{1}', cannot promote"
+                                   .format(package_name, package_array[1]))
+
+        # append current package
+        dependencies.append({'package_name': package_name, 'package_version': package_version})
+
+    return dependencies
+
+
+def check_available_python_patches(setup_py_content=None):
+    requirements_array = get_setup_py_install_requires(setup_py_content)
+    requirements_versions = get_versions_from_requirements(requirements_array)
+
+    patchable_packages_array = []
+    for req in requirements_versions:
+        if not req.get('package_version') == 'latest':
+            # get current package info (as json) from pypi api
+            package_releases = get_pypi_package_releases(req.get('package_name'))
+
+            # convert keys of the 'releases' dict, into a list (only version numbers),
+            releases_list = package_releases.get('releases').keys()
+            # fetch just the version of current package as is_semantic_string output
+            version_to_patch = req.get('package_version').get('version', None)
+
+            patchable_packages_array.append(
+                {
+                    'package_name': req.get('package_name'),
+                    'version': identify_possible_patch(releases_list, version_to_patch)  # check for possible patch
+                }
+            )
+
+    import json
+    return json.dumps(patchable_packages_array)
+
+
 def is_valid_helm_chart(content):
     """
     Check if input dictionary contains mandatory keys of a Helm Chart.yaml file,
@@ -175,10 +335,15 @@ def write_version_to_file(file_path, file_content, version, app_version):
 
 def read_version_from_file(file_path, app_version):
     """
-    Read the 'version' or 'appVersion' from a given file
+    Read the 'version' or 'appVersion' from a given file,
+    note for return values for file_type are:
+        python for .py file
+        helm_chart for .yaml/.yml files
+        plain_version for VERSION files
     :param file_path: full path to file as string
     :param app_version: boolean, if True return appVersion from Helm chart
-    :return: dict containing file content and version as {'file_content': file_content, 'version': current_version}
+    :return: dict containing file content, version and type as:
+     {'file_content': file_content, 'version': current_version, 'file_type': file_type}
     """
     with open(file_path, 'r') as stream:
         filename, file_extension = os.path.splitext(file_path)
@@ -186,6 +351,7 @@ def read_version_from_file(file_path, app_version):
         if file_extension == '.py':  # Case setup.py files
             file_content = stream.read()
             current_version = get_setup_py_version(file_content)
+            file_type = 'python'
         elif file_extension == '.yaml' or file_extension == '.yml':  # Case Helm chart files
             try:
                 file_content = yaml.safe_load(stream)
@@ -193,6 +359,7 @@ def read_version_from_file(file_path, app_version):
                 print(exc)
             # Make sure Helm chart is valid and contains minimal mandatory keys
             if is_valid_helm_chart(file_content):
+                file_type = 'helm_chart'
                 if app_version:
                     current_version = file_content.get('appVersion', None)
 
@@ -210,11 +377,12 @@ def read_version_from_file(file_path, app_version):
                 # A version file should ONLY contain a valid semantic version string
                 file_content = None
                 current_version = stream.read()
+                file_type = 'plain_version'
             else:
                 raise ValueError("File name or extension not known to this app: {}{}"
                                  .format(os.path.basename(filename), file_extension))
 
-    return {'file_content': file_content, 'version': current_version}
+    return {'file_content': file_content, 'version': current_version, 'file_type': file_type}
 
 
 def print_invalid_version(version):
@@ -262,6 +430,9 @@ def main():
     parser_get.add_argument('--release', action='store_true', help='Get the version release only', required=False)
     parser_get.add_argument('--metadata', action='store_true', help='Get the version metadata only', required=False)
 
+    # Sub-parser for version latest patch verification command
+    subparsers.add_parser('patch-verification', parents=[base_sub_parser])
+
     args = vars(parser.parse_args())
 
     # Case where no args passed, sub_command is mandatory
@@ -280,13 +451,21 @@ def main():
     file_data = read_version_from_file(args['file'], args['app_version'])
     current_version = file_data.get('version')
     file_content = file_data.get('file_content')
+    file_type = file_data.get('file_type')
 
     current_version_dict = is_semantic_string(current_version)
     if not current_version_dict:
         print_invalid_version(current_version)
         exit(1)
 
-    if args['sub_command'] == 'get':
+    if args['sub_command'] == 'patch-verification':
+        if file_type == 'python':
+            print(check_available_python_patches(setup_py_content=file_content))
+        else:
+            print('currently only python pypi packages supported for latest patch verifications')
+            exit(1)
+
+    elif args['sub_command'] == 'get':
         if args['sem_ver']:
             # Join the array of current_version_dict by dots
             print('.'.join(str(x) for x in current_version_dict.get('version')))

@@ -5,7 +5,7 @@ LABEL maintainer="Arie Lev <levinsonarie@gmail.com>" \
 
 WORKDIR package
 
-COPY pybump pybump
+COPY src pybump
 COPY setup.py .
 COPY LICENSE .
 COPY README.rst .

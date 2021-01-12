@@ -7,7 +7,7 @@ keywords = ['bump', 'version', 'appVersion', 'versioning', 'helm', 'charts', 'se
 
 setuptools.setup(
     name="pybump",
-    version="1.3.5",
+    version="1.4.0",
     author="Arie Lev",
     author_email="levinsonarie@gmail.com",
     description="Python version bumper",
@@ -31,7 +31,7 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'pybump = pybump.pybump:main'
+            'pybump = src.pybump:main'
         ],
     },
 )
