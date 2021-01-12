@@ -328,7 +328,7 @@ class PyBumpTest(unittest.TestCase):
         #############################################
         # simulate major bump with --app-version flag
         #############################################
-        simulate_set_version("pybump/test_valid_chart.yaml", "2.2.8", True)
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "2.2.8", True)
         test_major_2 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "major", True)
         self.assertEqual(test_major_2.returncode, 0)
 
