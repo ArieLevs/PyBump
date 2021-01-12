@@ -75,11 +75,7 @@ def identify_possible_patch(releases_list, version_to_patch):
             latest_patch_version = release_patch_candidate.get('version')
 
     if latest_patch_version > version_to_patch:
-        print('latest version is {}, while current version is {}, upgrade possible'
-              .format(latest_patch_version, version_to_patch))
         patchable = True
-    else:
-        print('latest patch version possible is already {}, no patch available'.format(version_to_patch))
 
     return {'current_patch': version_to_patch, 'latest_patch': latest_patch_version, 'patchable': patchable}
 
