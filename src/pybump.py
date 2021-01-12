@@ -9,6 +9,66 @@ from pkg_resources import get_distribution, DistributionNotFound
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
 
+def get_pypi_package_releases(package_name):
+    import requests
+
+    result = requests.get('https://pypi.org/pypi/{}/json'.format(package_name))
+    if result.status_code != 200:
+        raise requests.exceptions.RequestException
+    return result.json()
+
+
+def identify_possible_patch(releases_list, version_to_patch):
+    """
+    check if there is a possible patch version newer then the patch version of current_version_dict,
+    get list of semantic versions,
+    for example ['0.1.2', '0.1.3', '0.3.1', '0.3.2'] and 'version_to_patch' with '0.3.1'
+    :param releases_list: list of semantic versions as strings
+    :param version_to_patch: is_semantic_string output
+    :return: dict in the for of:
+        {'current_patch': version_to_patch, 'latest_patch': patchable_version_str, 'patchable': patchable}
+    """
+    if not releases_list or not version_to_patch:
+        raise ValueError('one of the lists empty')
+
+    latest_patch_version = [0, 0, 0]
+    patchable = False
+
+    for release in releases_list:
+        release_patch_candidate = is_semantic_string(release)
+        # if 'False' returned
+        if not release_patch_candidate:
+            # current 'release' returned from pypi does not meet semantic version, skip
+            continue
+        # fetch just the version list of ints, release_patch_candidate will be of type [0, 1, 3]
+        release_patch_candidate = release_patch_candidate.get('version', None)
+        if release_patch_candidate[0] != version_to_patch[0]:
+            # if release major do not match current major, then this version not suitable for patch, skip
+            continue
+        if release_patch_candidate[1] != version_to_patch[1]:
+            # if release minor do not match current major, then this version not suitable for patch, skip
+            continue
+        if release_patch_candidate[2] < version_to_patch[2]:
+            # if release patch is smaller then current patch, then this version not suitable for patch
+            continue
+
+        # at this point possible patch version found, so if version_to_patch is [0, 3, 1],
+        # and current iteration over releases_list is [0, 3, 2] then it matches for a patch,
+        # but there also might be a release with version [0, 3, 3] and even newer, we need to find most recent.
+        # calculate highest value found for patch (for cases when the 'releases' is not sorted)
+        if release_patch_candidate[2] > latest_patch_version[2]:
+            latest_patch_version = release_patch_candidate
+
+    if latest_patch_version > version_to_patch:
+        print('latest version is {}, while current version is {}, upgrade possible'
+              .format(latest_patch_version, version_to_patch))
+        patchable = True
+    else:
+        print('latest patch version possible is already {}, no patch available'.format(version_to_patch))
+
+    return {'current_patch': version_to_patch, 'latest_patch': latest_patch_version, 'patchable': patchable}
+
+
 def get_setup_py_install_requires(content):
     """
     Extract 'install_requires' value using regex from 'content'
@@ -47,7 +107,7 @@ def get_versions_from_requirements(requirements_array):
             },
             {
                 'package_name': 'pybump',
-                'package_version': {'prefix': False, 'version': [1, 3, 3], 'release': '', 'metadata': ''}
+                'package_version': 'latest'
             }
         ]
     """
@@ -70,6 +130,33 @@ def get_versions_from_requirements(requirements_array):
         dependencies.append({'package_name': package_name, 'package_version': package_version})
 
     return dependencies
+
+
+def check_available_python_patches(setup_py_content=None):
+    requirements_array = get_setup_py_install_requires(setup_py_content)
+    requirements_versions = get_versions_from_requirements(requirements_array)
+
+    patchable_packages_array = []
+    for req in requirements_versions:
+        if not req.get('package_version') == 'latest':
+            print('checking patch for package: {}'.format(req.get('package_name')))
+            # get current package info (as json) from pypi api
+            package_releases = get_pypi_package_releases(req.get('package_name'))
+
+            # convert keys of the 'releases' dict, into a list (only version numbers),
+            releases_list = package_releases.get('releases').keys()
+            # fetch just the version of current package as is_semantic_string output
+            version_to_patch = req.get('package_version').get('version', None)
+
+            patchable_packages_array.append(
+                {
+                    'package_name': req.get('package_name'),
+                    'version': identify_possible_patch(releases_list, version_to_patch)  # check for possible patch
+                }
+            )
+
+    import json
+    print(json.dumps(patchable_packages_array))
 
 
 def is_valid_helm_chart(content):
