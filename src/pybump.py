@@ -10,12 +10,33 @@ regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'
 
 
 def get_pypi_package_releases(package_name):
+    """
+    calls PYPI json api as described here
+    https://wiki.python.org/moin/PyPIJSON
+    https://warehouse.readthedocs.io/api-reference/json.html
+    :param package_name: string, pypi project name
+    :return: json with pypi project response
+    """
     import requests
 
     result = requests.get('https://pypi.org/pypi/{}/json'.format(package_name))
     if result.status_code != 200:
         raise requests.exceptions.RequestException
     return result.json()
+
+
+def is_patchable(x, y):
+    """
+    takes two lists, and checks if second list is patchable,
+    a version is patchable only if major and minor values equal but patch value is higher in first version, for example:
+    x = [0, 4, 8] y = [0, 4, 6] returns True
+    x = [0, 4, 5] y = [0, 4, 6] returns False
+    x = [2, 1, 1] y = [2, 4, 1] returns False
+    :param x: list of ints
+    :param y: list of ints
+    :return: boolean
+    """
+    return x[0] == y[0] and x[1] == y[1] and x[2] > y[2]
 
 
 def identify_possible_patch(releases_list, version_to_patch):
@@ -31,33 +52,27 @@ def identify_possible_patch(releases_list, version_to_patch):
     if not releases_list or not version_to_patch:
         raise ValueError('one of the lists empty')
 
-    latest_patch_version = [0, 0, 0]
+    # assume version_to_patch is the latest version
+    latest_patch_version = version_to_patch
     patchable = False
 
     for release in releases_list:
         release_patch_candidate = is_semantic_string(release)
         # if 'False' returned
         if not release_patch_candidate:
-            # current 'release' returned from pypi does not meet semantic version, skip
+            # current 'release' does not meet semantic version, skip
             continue
-        # fetch just the version list of ints, release_patch_candidate will be of type [0, 1, 3]
-        release_patch_candidate = release_patch_candidate.get('version', None)
-        if release_patch_candidate[0] != version_to_patch[0]:
-            # if release major do not match current major, then this version not suitable for patch, skip
-            continue
-        if release_patch_candidate[1] != version_to_patch[1]:
-            # if release minor do not match current major, then this version not suitable for patch, skip
-            continue
-        if release_patch_candidate[2] < version_to_patch[2]:
-            # if release patch is smaller then current patch, then this version not suitable for patch
+
+        # check if version_to_patch is patchable
+        if not is_patchable(release_patch_candidate.get('version', None), version_to_patch):
             continue
 
         # at this point possible patch version found, so if version_to_patch is [0, 3, 1],
         # and current iteration over releases_list is [0, 3, 2] then it matches for a patch,
         # but there also might be a release with version [0, 3, 3] and even newer, we need to find most recent.
         # calculate highest value found for patch (for cases when the 'releases' is not sorted)
-        if release_patch_candidate[2] > latest_patch_version[2]:
-            latest_patch_version = release_patch_candidate
+        if release_patch_candidate.get('version')[2] > latest_patch_version[2]:
+            latest_patch_version = release_patch_candidate.get('version')
 
     if latest_patch_version > version_to_patch:
         print('latest version is {}, while current version is {}, upgrade possible'
@@ -156,7 +171,7 @@ def check_available_python_patches(setup_py_content=None):
             )
 
     import json
-    print(json.dumps(patchable_packages_array))
+    return json.dumps(patchable_packages_array)
 
 
 def is_valid_helm_chart(content):
@@ -420,6 +435,9 @@ def main():
     parser_get.add_argument('--release', action='store_true', help='Get the version release only', required=False)
     parser_get.add_argument('--metadata', action='store_true', help='Get the version metadata only', required=False)
 
+    # Sub-parser for version latest patch verification command
+    subparsers.add_parser('patch-verification', parents=[base_sub_parser])
+
     args = vars(parser.parse_args())
 
     # Case where no args passed, sub_command is mandatory
@@ -438,16 +456,24 @@ def main():
     file_data = read_version_from_file(args['file'], args['app_version'])
     current_version = file_data.get('version')
     file_content = file_data.get('file_content')
+    file_type = file_data.get('file_type')
 
     current_version_dict = is_semantic_string(current_version)
     if not current_version_dict:
         print_invalid_version(current_version)
         exit(1)
 
-    if args['sub_command'] == 'get':
+    if args['sub_command'] == 'patch-verification':
+        if file_type == 'python':
+            print(check_available_python_patches(setup_py_content=file_content))
+        else:
+            print('currently only python pypi packages supported for latest patch verifications')
+            exit(1)
+
+    elif args['sub_command'] == 'get':
         if args['sem_ver']:
             # Join the array of current_version_dict by dots
-            print('.'.join(str(x) for x in current_version_dict.get('version')))
+            print('.'.join(str(x) for x in current_version_dict))
         elif args['release']:
             print(current_version_dict.get('release'))
         elif args['metadata']:
