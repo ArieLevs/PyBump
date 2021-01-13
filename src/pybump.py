@@ -22,6 +22,8 @@ def get_pypi_package_releases(package_name):
 
     result = requests.get('https://pypi.org/pypi/{}/json'.format(package_name))
     if result.status_code != 200:
+        print('error occurred fetching package {} from PYPI.\n'
+              'response is: {}'.format(package_name, result.reason))
         raise requests.exceptions.RequestException
     return result.json()
 
@@ -166,8 +168,7 @@ def check_available_python_patches(setup_py_content=None):
                 }
             )
 
-    import json
-    return json.dumps(patchable_packages_array)
+    return patchable_packages_array
 
 
 def is_valid_helm_chart(content):
