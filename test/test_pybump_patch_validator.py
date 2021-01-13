@@ -2,7 +2,6 @@ import unittest
 
 from src.pybump import get_setup_py_install_requires, get_versions_from_requirements, identify_possible_patch, \
     is_patchable
-from src.pyver_class import PybumpVersion
 
 from . import valid_setup_py, valid_setup_py_2, invalid_setup_py_1, invalid_setup_py_2
 
@@ -10,51 +9,7 @@ from . import valid_setup_py, valid_setup_py_2, invalid_setup_py_1, invalid_setu
 class PyBumpPatcherTest(unittest.TestCase):
 
     def setUp(self):
-        self.version_a = PybumpVersion(
-            prefix=False,
-            version_array=[9, 0, 7],
-            release='release_text',
-            metadata='meta_text'
-        )
-        self.version_b = PybumpVersion(
-            prefix=True,
-            version_array=[1, 2, 3],
-            release=False,
-            metadata=False
-        )
-        self.version_c = PybumpVersion(
-            prefix=False,
-            version_array=[0, 4, 0],
-            release=False,
-            metadata='meta_text-with-some-num-123123'
-        )
-
-    def test_assemble_version_string(self):
-        self.assertEqual(
-            self.version_a.__str__(),
-            '9.0.7-release_text+meta_text'
-        )
-        self.assertEqual(
-            self.version_b.__str__(),
-            'v1.2.3'
-        )
-        self.assertEqual(
-            self.version_c.__str__(),
-            '0.4.0+meta_text-with-some-num-123123'
-        )
-
-    def test_bump_version(self):
-        self.assertEqual(self.version_a.bump_version('major'), [10, 0, 0])
-        self.assertEqual(self.version_a.version, [10, 0, 0])
-
-        self.assertEqual(self.version_b.bump_version('patch'), [1, 2, 4])
-        self.assertEqual(self.version_b.bump_version('patch'), [1, 2, 5])
-        self.assertEqual(self.version_b.bump_version('minor'), [1, 3, 0])
-        self.assertEqual(self.version_b.bump_version('major'), [2, 0, 0])
-        self.assertEqual(self.version_b.version, [2, 0, 0])
-
-        self.assertRaises(ValueError, self.version_b.bump_version, None)
-        self.assertRaises(ValueError, self.version_b.bump_version, 'not_patch')
+        pass
 
     def test_get_setup_py_install_requires(self):
         # should return empty list since valid_setup_py missing the install_requires=[] key
