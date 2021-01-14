@@ -5,7 +5,7 @@ LABEL maintainer="Arie Lev <levinsonarie@gmail.com>" \
 
 WORKDIR package
 
-COPY src pybump
+COPY src src
 COPY setup.py .
 COPY LICENSE .
 COPY README.rst .
@@ -15,4 +15,7 @@ WORKDIR /
 
 # clean package files
 RUN rm -rf /package
+
+# execute simle version test
+RUN pybump --version
 ENTRYPOINT ["pybump"]
