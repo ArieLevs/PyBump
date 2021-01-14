@@ -1,10 +1,10 @@
 import unittest
 from subprocess import run, PIPE
 
-from src.pybump import get_setup_py_version, set_setup_py_version, \
+from src.pybump import PybumpVersion, get_setup_py_version, set_setup_py_version, \
     is_semantic_string, is_valid_helm_chart, \
     write_version_to_file, read_version_from_file
-from src.pyver_class import PybumpVersion
+
 from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
     valid_setup_py, invalid_setup_py_1, invalid_setup_py_2, \
     valid_version_file_1, valid_version_file_2, invalid_version_file_1, invalid_version_file_2
