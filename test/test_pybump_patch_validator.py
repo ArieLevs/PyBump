@@ -1,9 +1,48 @@
+import json
 import unittest
+from unittest import mock
+from subprocess import run, PIPE
 
 from src.pybump import get_setup_py_install_requires, get_versions_from_requirements, identify_possible_patch, \
-    is_patchable
+    is_patchable, get_pypi_package_releases, check_available_python_patches
 
 from . import valid_setup_py, valid_setup_py_2, invalid_setup_py_1, invalid_setup_py_2
+
+
+def mocked__pypi_requests(*args):
+    class MockResponse:
+        def __init__(self, json_data, status_code, reason='OK'):
+            self.json_data = json_data
+            self.status_code = status_code
+            self.reason = reason
+
+        def json(self):
+            return self.json_data
+
+    if args[0] == 'https://pypi.org/pypi/pybump/json':
+        with open('test/test_content_files/pypi_mocks/pypi_pybump_api_result.json') as json_file:
+            data = json.load(json_file)
+        return MockResponse(data, 200)
+
+    if args[0] == 'https://pypi.org/pypi/GitPython/json':
+        with open('test/test_content_files/pypi_mocks/pypi_gitpython_api_result.json') as json_file:
+            data = json.load(json_file)
+        return MockResponse(data, 200)
+
+    if args[0] == 'https://pypi.org/pypi/SOME_not_ex1st1ng_pypi_package/json':
+        return MockResponse(None, 404, 'Not Found')
+
+    return MockResponse(None, 404)
+
+
+def simulate_patch_verification(file):
+    """
+    execute sub process to simulate real app patch-verification execution,
+    :param file: string
+    :return: CompletedProcess object
+    """
+
+    return run(["python", "src/pybump.py", "patch-verification", "--file", file], stdout=PIPE, stderr=PIPE)
 
 
 class PyBumpPatcherTest(unittest.TestCase):
@@ -94,6 +133,40 @@ class PyBumpPatcherTest(unittest.TestCase):
         self.assertFalse(is_patchable([2, 1, 2], [2, 4, 2]))
         self.assertFalse(is_patchable([0, 4, 5], [0, 4, 6]))
         self.assertFalse(is_patchable([0, 0, 1], [0, 0, 1]))
+
+    @mock.patch('requests.get', side_effect=mocked__pypi_requests)
+    def test_get_pypi_package_releases(self, mock_get):
+        # mock request to https://pypi.org/pypi/pybump/json
+        json_data = get_pypi_package_releases('pybump')
+
+        with open('test/test_content_files/pypi_mocks/pypi_pybump_api_result.json') as json_file:
+            data = json.load(json_file)
+        self.assertEqual(json_data, data)
+
+        # test request to https://pypi.org/pypi/SOME_not_ex1st1ng_pypi_package/json
+        from requests.exceptions import RequestException
+        with self.assertRaises(RequestException):
+            get_pypi_package_releases('SOME_not_ex1st1ng_pypi_package')
+
+        # make sure we mocked 3 tests
+        self.assertEqual(len(mock_get.call_args_list), 2)
+
+    @mock.patch('requests.get', side_effect=mocked__pypi_requests)
+    def test_check_available_python_patches(self, mock_get):
+        # the test_valid_setup.py file contains 2 dependencies
+        with open('test/test_content_files/test_valid_setup.py') as py_content:
+            setup_py_content = py_content.read()
+        self.assertEqual(
+            check_available_python_patches(setup_py_content),
+            [
+                {'package_name': 'pybump',
+                 'version': {'current_patch': [1, 3, 1], 'latest_patch': [1, 3, 8], 'patchable': True}},
+                {'package_name': 'GitPython',
+                 'version': {'current_patch': [3, 1, 7], 'latest_patch': [3, 1, 12], 'patchable': True}}
+            ])
+
+        # make sure we mocked 1 tests
+        self.assertEqual(len(mock_get.call_args_list), 2)
 
 
 if __name__ == '__main__':

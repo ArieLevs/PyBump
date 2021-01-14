@@ -9,6 +9,66 @@ from pkg_resources import get_distribution, DistributionNotFound
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
 
+class PybumpVersion(object):
+    prefix = False
+    version = [0, 0, 0]
+    release = None
+    metadata = None
+
+    def __init__(self, version_array, prefix=False, release=None, metadata=None):
+        self.prefix = prefix
+        self.version = version_array
+        self.release = release
+        self.metadata = metadata
+
+    def __str__(self):
+        """
+        reconstruct version to string, if releases or metadata passed, override the one that is part of object
+        :return: string
+        """
+        result_string = ''
+        if self.prefix:
+            result_string = 'v'
+        result_string += '.'.join(str(x) for x in self.version)
+
+        if self.release:
+            result_string += '-' + self.release
+
+        if self.metadata:
+            result_string += '+' + self.metadata
+
+        return result_string
+
+    def bump_version(self, level):
+        """
+        Perform ++1 action on the array [x, y, z] cell,
+        :param level: string represents major|minor|patch
+        :return: int array with new value
+        """
+        if level == 'major':
+            self.version[0] += 1
+            self.version[1] = 0
+            self.version[2] = 0
+        elif level == 'minor':
+            self.version[1] += 1
+            self.version[2] = 0
+        elif level == 'patch':
+            self.version[2] += 1
+        else:
+            raise ValueError("Error, invalid level: '{}', "
+                             "should be major|minor|patch.".format(level))
+
+        return self.version
+
+    def is_larger_then(self, other_version):
+        """
+        return True if current version is higher the 'other',
+        :param other_version: PybumpVersion object
+        :return: boolean
+        """
+        return self.version > other_version.version
+
+
 def get_pypi_package_releases(package_name):
     """
     calls PYPI json api as described here
@@ -21,6 +81,8 @@ def get_pypi_package_releases(package_name):
 
     result = requests.get('https://pypi.org/pypi/{}/json'.format(package_name))
     if result.status_code != 200:
+        print('error occurred fetching package {} from PYPI.\n'
+              'response is: {}'.format(package_name, result.reason))
         raise requests.exceptions.RequestException
     return result.json()
 
@@ -110,7 +172,7 @@ def get_versions_from_requirements(requirements_array):
     ['pyyaml==5.3.1', 'pybump']
     into more detailed dictionary containing package name and 'is_semantic_string' result
     :param requirements_array: array of strings
-    :return: array of dicts in the form of:
+    :return: array of PybumpVersion objects in the form of:
         [
             {
                 'package_name': 'pyyaml',
@@ -165,8 +227,7 @@ def check_available_python_patches(setup_py_content=None):
                 }
             )
 
-    import json
-    return json.dumps(patchable_packages_array)
+    return patchable_packages_array
 
 
 def is_valid_helm_chart(content):
@@ -210,7 +271,7 @@ def is_semantic_string(semantic_string):
     Check if input string is a semantic version as defined here: https://github.com/semver/semver/blob/master/semver.md,
     The version is allowed a lower case 'v' character.
     Function will search a match according to the regular expresion, so for example '1.1.2-prerelease+meta' is valid,
-    then make sure there is and exact singe match and validate if each of x,y,z is an integer.
+    then make sure there is and exact single match and validate if each of x,y,z is an integer.
     return {'prefix': boolean, 'version': [x, y, z], 'release': 'some-release', 'metadata': 'some-metadata'} if True
 
     :param semantic_string: string
@@ -246,34 +307,6 @@ def is_semantic_string(semantic_string):
     return {'prefix': version_prefix, 'version': semantic_array, 'release': match[0][3], 'metadata': match[0][4]}
 
 
-def bump_version(version_array, level):
-    """
-    Perform ++1 action on the array [x, y, z] cell,
-    Input values are assumed to be validated
-    :param version_array: int array of [x, y, z] validated array
-    :param level: string represents major|minor|patch
-    :return: int array with new value
-    """
-    if type(version_array) != list:
-        raise ValueError("Error, invalid version_array: '{}', "
-                         "should be [x, y, z].".format(version_array))
-
-    if level == 'major':
-        version_array[0] += 1
-        version_array[1] = 0
-        version_array[2] = 0
-    elif level == 'minor':
-        version_array[1] += 1
-        version_array[2] = 0
-    elif level == 'patch':
-        version_array[2] += 1
-    else:
-        raise ValueError("Error, invalid level: '{}', "
-                         "should be major|minor|patch.".format(level))
-
-    return version_array
-
-
 def get_self_version(dist_name):
     """
     Return version number of input distribution name,
@@ -285,28 +318,6 @@ def get_self_version(dist_name):
         return get_distribution(dist_name).version
     except DistributionNotFound:
         return 'version not found'
-
-
-def assemble_version_string(prefix, version_array, release, metadata):
-    """
-    reconstruct version
-    :param prefix: boolean
-    :param version_array: list of ints
-    :param release: string
-    :param metadata: sting
-    :return: string
-    """
-    result_string = ''
-    if prefix:
-        result_string = 'v'
-    result_string += '.'.join(str(x) for x in version_array)
-    if release:
-        result_string += '-' + release
-
-    if metadata:
-        result_string += '+' + metadata
-
-    return result_string
 
 
 def write_version_to_file(file_path, file_content, version, app_version):
@@ -449,14 +460,21 @@ def main():
 
     # Read current version from the given file
     file_data = read_version_from_file(args['file'], args['app_version'])
-    current_version = file_data.get('version')
     file_content = file_data.get('file_content')
     file_type = file_data.get('file_type')
 
-    current_version_dict = is_semantic_string(current_version)
+    current_version_dict = is_semantic_string(file_data.get('version'))
+
     if not current_version_dict:
-        print_invalid_version(current_version)
+        print_invalid_version(file_data.get('version'))
         exit(1)
+
+    current_pybump_version = PybumpVersion(
+        prefix=current_version_dict.get('prefix'),
+        version_array=current_version_dict.get('version'),
+        release=current_version_dict.get('release'),
+        metadata=current_version_dict.get('metadata')
+    )
 
     if args['sub_command'] == 'patch-verification':
         if file_type == 'python':
@@ -464,17 +482,16 @@ def main():
         else:
             print('currently only python pypi packages supported for latest patch verifications')
             exit(1)
-
     elif args['sub_command'] == 'get':
         if args['sem_ver']:
             # Join the array of current_version_dict by dots
-            print('.'.join(str(x) for x in current_version_dict.get('version')))
+            print('.'.join(str(x) for x in current_pybump_version.version))
         elif args['release']:
-            print(current_version_dict.get('release'))
+            print(current_pybump_version.release)
         elif args['metadata']:
-            print(current_version_dict.get('metadata'))
+            print(current_pybump_version.metadata)
         else:
-            print(current_version)
+            print(file_data.get('version'))
     else:
         # Set new_version to be invalid first
         new_version = ''
@@ -491,10 +508,10 @@ def main():
                 file_dirname_path = os.path.dirname(args['file'])
                 try:
                     repo = Repo(path=file_dirname_path)
-                    new_version = assemble_version_string(prefix=current_version_dict.get('prefix'),
-                                                          version_array=current_version_dict.get('version'),
-                                                          release=repo.active_branch.name,
-                                                          metadata=str(repo.active_branch.commit))
+                    # update current version release and metadata with relevant git values
+                    current_pybump_version.release = repo.active_branch.name
+                    current_pybump_version.metadata = str(repo.active_branch.commit)
+                    new_version = current_pybump_version.__str__()
                 except InvalidGitRepositoryError:
                     print("{} is not a valid git repo".format(file_dirname_path), file=stderr)
                     exit(1)
@@ -504,12 +521,8 @@ def main():
                 exit(1)
         else:  # bump version ['sub_command'] == 'bump'
             # Only bump value of the 'version' key
-            new_version_array = bump_version(current_version_dict.get('version'), args['level'])
-            # Reconstruct new version with rest dict parts if exists
-            new_version = assemble_version_string(prefix=current_version_dict.get('prefix'),
-                                                  version_array=new_version_array,
-                                                  release=current_version_dict.get('release'),
-                                                  metadata=current_version_dict.get('metadata'))
+            current_pybump_version.bump_version(args['level'])
+            new_version = current_pybump_version.__str__()
         if not is_semantic_string(new_version):
             print_invalid_version(new_version)
             exit(1)

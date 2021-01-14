@@ -1,0 +1,1045 @@
+{
+  "info": {
+    "author": "Sebastian Thiel, Michael Trier",
+    "author_email": "byronimo@gmail.com, mtrier@gmail.com",
+    "bugtrack_url": null,
+    "classifiers": [
+      "Development Status :: 5 - Production/Stable",
+      "Environment :: Console",
+      "Intended Audience :: Developers",
+      "License :: OSI Approved :: BSD License",
+      "Operating System :: MacOS :: MacOS X",
+      "Operating System :: Microsoft :: Windows",
+      "Operating System :: OS Independent",
+      "Operating System :: POSIX",
+      "Programming Language :: Python",
+      "Programming Language :: Python :: 3",
+      "Programming Language :: Python :: 3.4",
+      "Programming Language :: Python :: 3.5",
+      "Programming Language :: Python :: 3.6",
+      "Programming Language :: Python :: 3.7",
+      "Programming Language :: Python :: 3.8"
+    ],
+    "description": "GitPython is a python library used to interact with Git repositories\n\n\n",
+    "description_content_type": "",
+    "docs_url": "https://pythonhosted.org/GitPython/",
+    "download_url": "",
+    "downloads": {
+      "last_day": -1,
+      "last_month": -1,
+      "last_week": -1
+    },
+    "home_page": "https://github.com/gitpython-developers/GitPython",
+    "keywords": "",
+    "license": "",
+    "maintainer": "",
+    "maintainer_email": "",
+    "name": "GitPython",
+    "package_url": "https://pypi.org/project/GitPython/",
+    "platform": "",
+    "project_url": "https://pypi.org/project/GitPython/",
+    "project_urls": {
+      "Homepage": "https://github.com/gitpython-developers/GitPython"
+    },
+    "release_url": "https://pypi.org/project/GitPython/3.1.12/",
+    "requires_dist": [
+      "gitdb (<5,>=4.0.1)"
+    ],
+    "requires_python": ">=3.4",
+    "summary": "Python Git Library",
+    "version": "3.1.12",
+    "yanked": false,
+    "yanked_reason": null
+  },
+  "last_serial": 9064465,
+  "releases": {
+    "3.0.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "92c7d91bc8f39c45bfd8fe2c1323e139",
+          "sha256": "556b64796c5e268b35e3b431a429e813ad54aa178e1baaec2a9ba82e8575a89e"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.0-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "92c7d91bc8f39c45bfd8fe2c1323e139",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 452909,
+        "upload_time": "2019-08-12T03:19:35",
+        "upload_time_iso_8601": "2019-08-12T03:19:35.029720Z",
+        "url": "https://files.pythonhosted.org/packages/45/f6/b44846937803bfa63eb5c2aaaffe0d1d424365c3122761bc3c4de45aec3a/GitPython-3.0.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "9412ae9665fd29328f2afc6df887ae81",
+          "sha256": "629867ebf609cef21bb9d849039e281e25963fb7d714a2f6bacc1ecce4800293"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.0.tar.gz",
+        "has_sig": true,
+        "md5_digest": "9412ae9665fd29328f2afc6df887ae81",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 431467,
+        "upload_time": "2019-08-12T03:19:40",
+        "upload_time_iso_8601": "2019-08-12T03:19:40.034270Z",
+        "url": "https://files.pythonhosted.org/packages/da/87/9dbf6d3d2a10c41a6c2fc3d32255fff3413e1ce197997a7ba9d5578d4f0d/GitPython-3.0.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "1a4342d9158a05b36f48f7287a204378",
+          "sha256": "259a8b6d6a4a118738c4a65fa990f8c8c91525bb43970aed2868952ebb86ceb8"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.1-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "1a4342d9158a05b36f48f7287a204378",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 453079,
+        "upload_time": "2019-08-15T02:50:00",
+        "upload_time_iso_8601": "2019-08-15T02:50:00.033071Z",
+        "url": "https://files.pythonhosted.org/packages/7e/c9/418ec7a9575f58c3670bab5caebc2cb28d6ac4cd6f52074bf75ab3ef2a28/GitPython-3.0.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "fbf07c2fe761f2a0ff4f7616d648e857",
+          "sha256": "73aa7b59e58dd3435121421c33c284e5ef51bc7b2f4373e1a1e4cc06e9c928ec"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.1.tar.gz",
+        "has_sig": true,
+        "md5_digest": "fbf07c2fe761f2a0ff4f7616d648e857",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 431754,
+        "upload_time": "2019-08-15T02:50:04",
+        "upload_time_iso_8601": "2019-08-15T02:50:04.436560Z",
+        "url": "https://files.pythonhosted.org/packages/07/3a/6174cc68e6961d21949f61013a84c38563f69685749c39b4b14ff979fdbe/GitPython-3.0.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "48e1814a3317f97aad7945e20e992a40",
+          "sha256": "947cc75913e7b6da108458136607e2ee0e40c20be1e12d4284e7c6c12956c276"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.2-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "48e1814a3317f97aad7945e20e992a40",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 453070,
+        "upload_time": "2019-08-22T03:29:03",
+        "upload_time_iso_8601": "2019-08-22T03:29:03.146272Z",
+        "url": "https://files.pythonhosted.org/packages/8e/c7/70bd352e8a561a9b6d1cde9aa313b9d7c871b0c94c3821f44c01f3187e1d/GitPython-3.0.2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "ccec14a5c9f18702406122983d80032c",
+          "sha256": "d2f4945f8260f6981d724f5957bc076398ada55cb5d25aaee10108bcdc894100"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.2.tar.gz",
+        "has_sig": true,
+        "md5_digest": "ccec14a5c9f18702406122983d80032c",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 431756,
+        "upload_time": "2019-08-22T03:29:07",
+        "upload_time_iso_8601": "2019-08-22T03:29:07.123444Z",
+        "url": "https://files.pythonhosted.org/packages/51/46/993beca52f3b609d148071e129235b866626eeb6056f2faffb41d9d727a7/GitPython-3.0.2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.3": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "7bd5ec0510b0cdd0b269a312e26b0e9c",
+          "sha256": "6e97b9f0954807f30c2dd8e3165731ed6c477a1b365f194b69d81d7940a08332"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.3-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "7bd5ec0510b0cdd0b269a312e26b0e9c",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 453140,
+        "upload_time": "2019-10-02T18:41:44",
+        "upload_time_iso_8601": "2019-10-02T18:41:44.500652Z",
+        "url": "https://files.pythonhosted.org/packages/ff/f8/05f58bd7852dad7edcf70a8de953b4fa39f61cdc13812ae62118be6ffa23/GitPython-3.0.3-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "b35eefc2dd0eb5a1716d57b23b1bb935",
+          "sha256": "631263cc670aa56ce3d3c414cf0fe2e840f2e913514b138ea28d88a477bbcd21"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.3.tar.gz",
+        "has_sig": true,
+        "md5_digest": "b35eefc2dd0eb5a1716d57b23b1bb935",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 431719,
+        "upload_time": "2019-10-02T18:41:52",
+        "upload_time_iso_8601": "2019-10-02T18:41:52.866786Z",
+        "url": "https://files.pythonhosted.org/packages/9f/a9/3fa7c55de07ce3cd809726e453d9c44a64a1ea6999940995e15547583820/GitPython-3.0.3.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.4": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "cf9b234202f17c1145e9b8017779107c",
+          "sha256": "a7d6bef0775f66ba47f25911d285bcd692ce9053837ff48a120c2b8cf3a71389"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.4-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "cf9b234202f17c1145e9b8017779107c",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 454575,
+        "upload_time": "2019-10-22T10:43:15",
+        "upload_time_iso_8601": "2019-10-22T10:43:15.451148Z",
+        "url": "https://files.pythonhosted.org/packages/aa/25/9fd9f0b05408021736a22ae73f837152c132e4ea85cdd71d186e24efec31/GitPython-3.0.4-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "3827e7c2024770fd27923347c65f933d",
+          "sha256": "3237caca1139d0a7aa072f6735f5fd2520de52195e0fa1d8b83a9b212a2498b2"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.4.tar.gz",
+        "has_sig": true,
+        "md5_digest": "3827e7c2024770fd27923347c65f933d",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 432758,
+        "upload_time": "2019-10-22T10:43:21",
+        "upload_time_iso_8601": "2019-10-22T10:43:21.482775Z",
+        "url": "https://files.pythonhosted.org/packages/be/0f/b180ddaf91429d6ebd7d46d022c31522e05ce7631b41da3901d9e4338c64/GitPython-3.0.4.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.5": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "5a48ee13088ef56b3b0a3a4e1abbb1fe",
+          "sha256": "c155c6a2653593ccb300462f6ef533583a913e17857cfef8fc617c246b6dc245"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.5-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "5a48ee13088ef56b3b0a3a4e1abbb1fe",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 455281,
+        "upload_time": "2019-11-14T01:01:31",
+        "upload_time_iso_8601": "2019-11-14T01:01:31.939449Z",
+        "url": "https://files.pythonhosted.org/packages/20/8c/4543981439d23c4ff65b2e62dddd767ebc84a8e664a9b67e840d1e2730d3/GitPython-3.0.5-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "7555ad89a22f663c25cced5f623bdef0",
+          "sha256": "9c2398ffc3dcb3c40b27324b316f08a4f93ad646d5a6328cafbb871aa79f5e42"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.5.tar.gz",
+        "has_sig": true,
+        "md5_digest": "7555ad89a22f663c25cced5f623bdef0",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.0, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*",
+        "size": 433208,
+        "upload_time": "2019-11-14T01:01:36",
+        "upload_time_iso_8601": "2019-11-14T01:01:36.958563Z",
+        "url": "https://files.pythonhosted.org/packages/d2/e8/0bd80cc9e1422f5449d663479459c3c032ff7acaf6609a63324d23bde9ac/GitPython-3.0.5.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.6": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "d59a29618a29aa14545f24c9fc081a3b",
+          "sha256": "5b5b7b29baa27680a7dff85f171a251d48ac37c5f04cba15d381b56991cc7a48"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.6-py3-none-any.whl",
+        "has_sig": false,
+        "md5_digest": "d59a29618a29aa14545f24c9fc081a3b",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 451830,
+        "upload_time": "2020-02-08T03:22:52",
+        "upload_time_iso_8601": "2020-02-08T03:22:52.642310Z",
+        "url": "https://files.pythonhosted.org/packages/3e/aa/b0b6ee23f72a1255ba8aaffa38459d17e884f7056189bd733adee4f9a1e2/GitPython-3.0.6-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.7": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "6814f574500dd93ad77887e6fca96918",
+          "sha256": "99c77677f31f255e130f3fed4c8e0eebb35f1a09df98ff965fff6774f71688cf"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.7-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "6814f574500dd93ad77887e6fca96918",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 451831,
+        "upload_time": "2020-02-08T03:29:49",
+        "upload_time_iso_8601": "2020-02-08T03:29:49.116250Z",
+        "url": "https://files.pythonhosted.org/packages/85/d2/5b44bbfea118bd97d94549b8a0eb2fd60e619c8fdeead4fa7cf666738cbd/GitPython-3.0.7-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "c3e8bc89e92706356473b9485ffd9e67",
+          "sha256": "99cd0403cecd8a13b95d2e045b9fcaa7837137fcc5ec3105f2c413305d82c143"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.7.tar.gz",
+        "has_sig": true,
+        "md5_digest": "c3e8bc89e92706356473b9485ffd9e67",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 430665,
+        "upload_time": "2020-02-08T03:29:52",
+        "upload_time_iso_8601": "2020-02-08T03:29:52.364167Z",
+        "url": "https://files.pythonhosted.org/packages/c7/6b/ba961c8a9d1dfdadcb2f860fe33ee17a2d16c6f77732a6105b718630dfdf/GitPython-3.0.7.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.8": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "e651480454e73d50536db8ff766d5bde",
+          "sha256": "a43a5d88a5bbc3cf32bb5223e4b4e68fd716db5e9996cad6e561bbfee6e5f4af"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.8-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "e651480454e73d50536db8ff766d5bde",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 450685,
+        "upload_time": "2020-02-17T01:27:06",
+        "upload_time_iso_8601": "2020-02-17T01:27:06.694124Z",
+        "url": "https://files.pythonhosted.org/packages/9d/38/e11e9376a91d55502ad153ce9391b06fa59741357b9e9d5cc2fc9c23ce93/GitPython-3.0.8-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "c88f72320972d3a93cd9d07a543f8be6",
+          "sha256": "620b3c729bbc143b498cfea77e302999deedc55faec5b1067086c9ef90e101bc"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.8.tar.gz",
+        "has_sig": true,
+        "md5_digest": "c88f72320972d3a93cd9d07a543f8be6",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 429875,
+        "upload_time": "2020-02-17T01:27:09",
+        "upload_time_iso_8601": "2020-02-17T01:27:09.587275Z",
+        "url": "https://files.pythonhosted.org/packages/fd/b2/dcd6b5003e7f6dad48b565ee0f0063ec6b22e3c15bebe4de5801b360202f/GitPython-3.0.8.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.0.9": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "f4c710b85e85155f3389460e5c9f15ff",
+          "sha256": "ecf785b0b23bb6d28f5fff3d67cc4a07cb607e94476495d2a943d2e57d9fd473"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.9-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "f4c710b85e85155f3389460e5c9f15ff",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 450712,
+        "upload_time": "2020-02-24T11:39:06",
+        "upload_time_iso_8601": "2020-02-24T11:39:06.827875Z",
+        "url": "https://files.pythonhosted.org/packages/b5/b6/b56e9fa46e592769b00ba5402e570474829736db6ae869c70a1f7fa36d96/GitPython-3.0.9-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "c55d2f6a0243486cea8796e1fa178076",
+          "sha256": "7e5df21bfef38505115ad92544fb379e6fedb2753f3b709174c4358cecd0cb97"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.0.9.tar.gz",
+        "has_sig": true,
+        "md5_digest": "c55d2f6a0243486cea8796e1fa178076",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 430045,
+        "upload_time": "2020-02-24T11:39:16",
+        "upload_time_iso_8601": "2020-02-24T11:39:16.982633Z",
+        "url": "https://files.pythonhosted.org/packages/22/b1/f5a930bf89fcf9eee87f48e6dfa17106f319a316612714a0b7156ded5e84/GitPython-3.0.9.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.0": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "618d0fa0df1b3eb168fe153b05813167",
+          "sha256": "43da89427bdf18bf07f1164c6d415750693b4d50e28fc9b68de706245147b9dd"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.0-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "618d0fa0df1b3eb168fe153b05813167",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 450716,
+        "upload_time": "2020-02-24T11:43:41",
+        "upload_time_iso_8601": "2020-02-24T11:43:41.076594Z",
+        "url": "https://files.pythonhosted.org/packages/d3/2f/6a366d56c9b1355b0880be9ea66b166cb3536392638d8d91413ec66305ad/GitPython-3.1.0-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "52d249d66cf37817971d7d678f63947a",
+          "sha256": "e426c3b587bd58c482f0b7fe6145ff4ac7ae6c82673fc656f489719abca6f4cb"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.0.tar.gz",
+        "has_sig": true,
+        "md5_digest": "52d249d66cf37817971d7d678f63947a",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 430079,
+        "upload_time": "2020-02-24T11:43:46",
+        "upload_time_iso_8601": "2020-02-24T11:43:46.827806Z",
+        "url": "https://files.pythonhosted.org/packages/ee/bc/c8b6bc8b81b94f50bd46ed690e2677beec0071228e7f153981cb51f4d59a/GitPython-3.1.0.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.1": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "b48eb4f03c0dadc6f1524b83ed137402",
+          "sha256": "71b8dad7409efbdae4930f2b0b646aaeccce292484ffa0bc74f1195582578b3d"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.1-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "b48eb4f03c0dadc6f1524b83ed137402",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 450839,
+        "upload_time": "2020-04-11T07:47:02",
+        "upload_time_iso_8601": "2020-04-11T07:47:02.254929Z",
+        "url": "https://files.pythonhosted.org/packages/19/1a/0df85d2bddbca33665d2148173d3281b290ac054b5f50163ea735740ac7b/GitPython-3.1.1-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "321e1b431f28a2157dbd72dce8932ff7",
+          "sha256": "6d4f10e2aaad1864bb0f17ec06a2c2831534140e5883c350d58b4e85189dab74"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.1.tar.gz",
+        "has_sig": true,
+        "md5_digest": "321e1b431f28a2157dbd72dce8932ff7",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 430310,
+        "upload_time": "2020-04-11T07:47:05",
+        "upload_time_iso_8601": "2020-04-11T07:47:05.265615Z",
+        "url": "https://files.pythonhosted.org/packages/ac/3d/9fe11d9cf14b49553e8e35a4dce360e18f25f964638b631dc5b9ca23a88f/GitPython-3.1.1.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.10": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "5617307ec6e3d018ef94b2caa3526844",
+          "sha256": "58483ad99811321e3c0b52c8b2229ff517499229a4854752b7d128005986e409"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.10-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "5617307ec6e3d018ef94b2caa3526844",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 159263,
+        "upload_time": "2020-10-23T02:21:19",
+        "upload_time_iso_8601": "2020-10-23T02:21:19.423301Z",
+        "url": "https://files.pythonhosted.org/packages/08/5c/2edb73fec5bf7e0bc4507c548ce408655c9ad03ffc6a66c7e278d75cfb5d/GitPython-3.1.10-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "9ab677ec7fe28c0329fbe0afe7029ebb",
+          "sha256": "f488d43600d7299567b59fe41497d313e7c1253a9f2a8ebd2df8af2a1151c71d"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.10.tar.gz",
+        "has_sig": true,
+        "md5_digest": "9ab677ec7fe28c0329fbe0afe7029ebb",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 170905,
+        "upload_time": "2020-10-23T02:21:22",
+        "upload_time_iso_8601": "2020-10-23T02:21:22.691460Z",
+        "url": "https://files.pythonhosted.org/packages/bd/8a/0cfbc4b9f7b535891fe5c6592ee4233c296f2f0ec2542aa638ebaaaf949d/GitPython-3.1.10.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.11": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "a4921b65e7d8e7aa193368d3e570ad6e",
+          "sha256": "6eea89b655917b500437e9668e4a12eabdcf00229a0df1762aabd692ef9b746b"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.11-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "a4921b65e7d8e7aa193368d3e570ad6e",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 159261,
+        "upload_time": "2020-10-23T11:38:56",
+        "upload_time_iso_8601": "2020-10-23T11:38:56.862393Z",
+        "url": "https://files.pythonhosted.org/packages/24/d1/a7f8fe3df258549b303415157328bfcc63e9b11d06a7ad7a3327f3d32606/GitPython-3.1.11-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "05113e0e57ed409a6ead7f52d348be54",
+          "sha256": "befa4d101f91bad1b632df4308ec64555db684c360bd7d2130b4807d49ce86b8"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.11.tar.gz",
+        "has_sig": true,
+        "md5_digest": "05113e0e57ed409a6ead7f52d348be54",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 170908,
+        "upload_time": "2020-10-23T11:38:58",
+        "upload_time_iso_8601": "2020-10-23T11:38:58.893726Z",
+        "url": "https://files.pythonhosted.org/packages/85/3d/ee9aa9c77a3c0e9074461d2d8da86c3564ed96abd28fa099dc3e05338a72/GitPython-3.1.11.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.12": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "fc0fadcb3738a72a74e6566c1ae143e6",
+          "sha256": "867ec3dfb126aac0f8296b19fb63b8c4a399f32b4b6fafe84c4b10af5fa9f7b5"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.12-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "fc0fadcb3738a72a74e6566c1ae143e6",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 159472,
+        "upload_time": "2021-01-06T06:33:44",
+        "upload_time_iso_8601": "2021-01-06T06:33:44.030384Z",
+        "url": "https://files.pythonhosted.org/packages/d7/cb/ec98155c501b68dcb11314c7992cd3df6dce193fd763084338a117967d53/GitPython-3.1.12-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "e961473bda9ffd00f87591ec5a748d80",
+          "sha256": "42dbefd8d9e2576c496ed0059f3103dcef7125b9ce16f9d5f9c834aed44a1dac"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.12.tar.gz",
+        "has_sig": true,
+        "md5_digest": "e961473bda9ffd00f87591ec5a748d80",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 171126,
+        "upload_time": "2021-01-06T06:33:46",
+        "upload_time_iso_8601": "2021-01-06T06:33:46.788683Z",
+        "url": "https://files.pythonhosted.org/packages/ec/4d/e6553122c85ec7c4c3e702142cc0f5ed02e5cf1b4d7ecea86a07e45725a0/GitPython-3.1.12.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.2": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "7b56b076df97477f2d5136e055a0b25a",
+          "sha256": "da3b2cf819974789da34f95ac218ef99f515a928685db141327c09b73dd69c09"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.2-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "7b56b076df97477f2d5136e055a0b25a",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 451056,
+        "upload_time": "2020-05-05T06:14:29",
+        "upload_time_iso_8601": "2020-05-05T06:14:29.016819Z",
+        "url": "https://files.pythonhosted.org/packages/44/33/917e6fde1cad13daa7053f39b7c8af3be287314f75f1b1ea8d3fe37a8571/GitPython-3.1.2-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "2397bea2d7c36ef9f874ab6355abae59",
+          "sha256": "864a47472548f3ba716ca202e034c1900f197c0fb3a08f641c20c3cafd15ed94"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.2.tar.gz",
+        "has_sig": true,
+        "md5_digest": "2397bea2d7c36ef9f874ab6355abae59",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 430474,
+        "upload_time": "2020-05-05T06:14:32",
+        "upload_time_iso_8601": "2020-05-05T06:14:32.225519Z",
+        "url": "https://files.pythonhosted.org/packages/36/5d/23c3f9a527a1e1c79e8622c7bb74704f6468351cd756e20f65f2ea7aba44/GitPython-3.1.2.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.3": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "e30aa19bc8b443a8abe1f8d913b766a2",
+          "sha256": "ef1d60b01b5ce0040ad3ec20bc64f783362d41fa0822a2742d3586e1f49bb8ac"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.3-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "e30aa19bc8b443a8abe1f8d913b766a2",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 451101,
+        "upload_time": "2020-05-31T03:25:14",
+        "upload_time_iso_8601": "2020-05-31T03:25:14.994704Z",
+        "url": "https://files.pythonhosted.org/packages/8c/f9/c315aa88e51fabdc08e91b333cfefb255aff04a2ee96d632c32cb19180c9/GitPython-3.1.3-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "d434385cef71d71b7cf69af52f5e4cb3",
+          "sha256": "e107af4d873daed64648b4f4beb89f89f0cfbe3ef558fc7821ed2331c2f8da1a"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.3.tar.gz",
+        "has_sig": true,
+        "md5_digest": "d434385cef71d71b7cf69af52f5e4cb3",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 430558,
+        "upload_time": "2020-05-31T03:25:18",
+        "upload_time_iso_8601": "2020-05-31T03:25:18.205493Z",
+        "url": "https://files.pythonhosted.org/packages/5b/ef/96dd6b06400821bbad3f7e275f4a4f88af324124c5c04958e2f2c14ce2c8/GitPython-3.1.3.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.4": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "8e5745f0554b9cc16c93e095a32b2d28",
+          "sha256": "c23663f44f05d8a54d6623c70b4b3a831afbde892128b932eace35eb3fad8f99"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.4-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "8e5745f0554b9cc16c93e095a32b2d28",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 55894,
+        "upload_time": "2020-07-12T09:21:05",
+        "upload_time_iso_8601": "2020-07-12T09:21:05.307889Z",
+        "url": "https://files.pythonhosted.org/packages/14/9c/b08d717ca4361d5e3e778beb88d3eb3a723aa4671446a14eaa6895aebeed/GitPython-3.1.4-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "5fdea96f68a4b9e6cf3929ece14dd73b",
+          "sha256": "fa98ce1f05805d59bbc3adb16c0780e5ca43b5ea9422feecf1cd0949a61d947e"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.4.tar.gz",
+        "has_sig": true,
+        "md5_digest": "5fdea96f68a4b9e6cf3929ece14dd73b",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 168859,
+        "upload_time": "2020-07-12T09:21:09",
+        "upload_time_iso_8601": "2020-07-12T09:21:09.371685Z",
+        "url": "https://files.pythonhosted.org/packages/c4/10/855388aefec6b54f2ebba13929c524c0168dc8cbc02098078c9a379b7eda/GitPython-3.1.4.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.5": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "a8ca086136be53bb20cb9b24babd4004",
+          "sha256": "39ae158ee8c360ee5a872fc411705430d4875cbe894654edbe39e246e38e4d64"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.5-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "a8ca086136be53bb20cb9b24babd4004",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 451250,
+        "upload_time": "2020-07-12T10:07:36",
+        "upload_time_iso_8601": "2020-07-12T10:07:36.549295Z",
+        "url": "https://files.pythonhosted.org/packages/ef/bc/574a066bd8b61ae3c01ce5cd3eeb89aa0b1b4c0eb9fb137cd5b1cf8596be/GitPython-3.1.5-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "290b012d902d5b70dd7a35f37b81fb2e",
+          "sha256": "90400ecfa87bac36ac75dfa7b62e83a02017b51759f6eef4494e4de775b2b4be"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.5.tar.gz",
+        "has_sig": true,
+        "md5_digest": "290b012d902d5b70dd7a35f37b81fb2e",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 435408,
+        "upload_time": "2020-07-12T10:07:38",
+        "upload_time_iso_8601": "2020-07-12T10:07:38.644342Z",
+        "url": "https://files.pythonhosted.org/packages/41/5d/acc4f00a53d6b5383bc04517bc8f7eed16df4a9c55db49abfcacbcd931de/GitPython-3.1.5.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.6": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "fbf29edad08a53ce45d45b9edd6b8a5c",
+          "sha256": "b742bc5010d9b69fc027f1be21443bc2ad87ffc81a365e958dbc275f3fe0475b"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.6-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "fbf29edad08a53ce45d45b9edd6b8a5c",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 158318,
+        "upload_time": "2020-07-13T02:12:31",
+        "upload_time_iso_8601": "2020-07-13T02:12:31.841788Z",
+        "url": "https://files.pythonhosted.org/packages/24/74/4ce5de2e0182da3c90a29dc1ee44871ec3926abe6e3b2a99b5474985a30d/GitPython-3.1.6-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "08946676816e9c1abb1c9497df1ca9a9",
+          "sha256": "b54969b3262d4647f80ace8e9dd4e3f99ac30cc0f3e766415b349208f810908f"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.6.tar.gz",
+        "has_sig": true,
+        "md5_digest": "08946676816e9c1abb1c9497df1ca9a9",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 169100,
+        "upload_time": "2020-07-13T02:12:34",
+        "upload_time_iso_8601": "2020-07-13T02:12:34.109349Z",
+        "url": "https://files.pythonhosted.org/packages/a8/4f/31fcb591d71eb5aa7e6e65ece4f80320e48d0fa18f6fd687502780919439/GitPython-3.1.6.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.7": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "998457ebeef87f5a4253475d7378dfd9",
+          "sha256": "fa3b92da728a457dd75d62bb5f3eb2816d99a7fe6c67398e260637a40e3fafb5"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.7-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "998457ebeef87f5a4253475d7378dfd9",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 158318,
+        "upload_time": "2020-07-13T06:23:25",
+        "upload_time_iso_8601": "2020-07-13T06:23:25.822851Z",
+        "url": "https://files.pythonhosted.org/packages/f9/1e/a45320cab182bf1c8656107b3d4c042e659742822fc6bff150d769a984dd/GitPython-3.1.7-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "ee379ff06c1fe36aa9f1123582e706c3",
+          "sha256": "2db287d71a284e22e5c2846042d0602465c7434d910406990d5b74df4afb0858"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.7.tar.gz",
+        "has_sig": true,
+        "md5_digest": "ee379ff06c1fe36aa9f1123582e706c3",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 169134,
+        "upload_time": "2020-07-13T06:23:27",
+        "upload_time_iso_8601": "2020-07-13T06:23:27.872152Z",
+        "url": "https://files.pythonhosted.org/packages/53/ea/fc34cddaa30bfc5e283f13e754fb3e2648ccd9f7019eaa3518fb5350ae51/GitPython-3.1.7.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.8": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "65a79d8110e1b0f33b6a4e2ba48c2010",
+          "sha256": "1858f4fd089abe92ae465f01d5aaaf55e937eca565fb2c1fce35a51b5f85c910"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.8-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "65a79d8110e1b0f33b6a4e2ba48c2010",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 159034,
+        "upload_time": "2020-09-04T02:05:03",
+        "upload_time_iso_8601": "2020-09-04T02:05:03.487331Z",
+        "url": "https://files.pythonhosted.org/packages/09/bc/ae32e07e89cc25b9e5c793d19a1e5454d30a8e37d95040991160f942519e/GitPython-3.1.8-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "84c2e13519693c7fe8a127630edf32d0",
+          "sha256": "080bf8e2cf1a2b907634761c2eaefbe83b69930c94c66ad11b65a8252959f912"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.8.tar.gz",
+        "has_sig": true,
+        "md5_digest": "84c2e13519693c7fe8a127630edf32d0",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 170582,
+        "upload_time": "2020-09-04T02:05:07",
+        "upload_time_iso_8601": "2020-09-04T02:05:07.096179Z",
+        "url": "https://files.pythonhosted.org/packages/63/c7/639d7965f5c860ba0fec323fd3b80ba57f7c3eb90e58ca5b4ea467e50ba9/GitPython-3.1.8.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ],
+    "3.1.9": [
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "61a6808acf953bcba6a971fe8fd3d311",
+          "sha256": "138016d519bf4dd55b22c682c904ed2fd0235c3612b2f8f65ce218ff358deed8"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.9-py3-none-any.whl",
+        "has_sig": true,
+        "md5_digest": "61a6808acf953bcba6a971fe8fd3d311",
+        "packagetype": "bdist_wheel",
+        "python_version": "py3",
+        "requires_python": ">=3.4",
+        "size": 159186,
+        "upload_time": "2020-10-01T03:19:55",
+        "upload_time_iso_8601": "2020-10-01T03:19:55.421959Z",
+        "url": "https://files.pythonhosted.org/packages/c0/d7/b2b0672e0331567157adf9281f41ee731c412ee518ca5e6552c27fa73c91/GitPython-3.1.9-py3-none-any.whl",
+        "yanked": false,
+        "yanked_reason": null
+      },
+      {
+        "comment_text": "",
+        "digests": {
+          "md5": "6efdc926f4e363a3c732ca7633e8c957",
+          "sha256": "a03f728b49ce9597a6655793207c6ab0da55519368ff5961e4a74ae475b9fa8e"
+        },
+        "downloads": -1,
+        "filename": "GitPython-3.1.9.tar.gz",
+        "has_sig": true,
+        "md5_digest": "6efdc926f4e363a3c732ca7633e8c957",
+        "packagetype": "sdist",
+        "python_version": "source",
+        "requires_python": ">=3.4",
+        "size": 170817,
+        "upload_time": "2020-10-01T03:19:57",
+        "upload_time_iso_8601": "2020-10-01T03:19:57.478204Z",
+        "url": "https://files.pythonhosted.org/packages/72/ad/5cf16fd1307e0ec17fc2347475e732f64d396649c64ed358a29186f4ce74/GitPython-3.1.9.tar.gz",
+        "yanked": false,
+        "yanked_reason": null
+      }
+    ]
+  },
+  "urls": [
+    {
+      "comment_text": "",
+      "digests": {
+        "md5": "fc0fadcb3738a72a74e6566c1ae143e6",
+        "sha256": "867ec3dfb126aac0f8296b19fb63b8c4a399f32b4b6fafe84c4b10af5fa9f7b5"
+      },
+      "downloads": -1,
+      "filename": "GitPython-3.1.12-py3-none-any.whl",
+      "has_sig": true,
+      "md5_digest": "fc0fadcb3738a72a74e6566c1ae143e6",
+      "packagetype": "bdist_wheel",
+      "python_version": "py3",
+      "requires_python": ">=3.4",
+      "size": 159472,
+      "upload_time": "2021-01-06T06:33:44",
+      "upload_time_iso_8601": "2021-01-06T06:33:44.030384Z",
+      "url": "https://files.pythonhosted.org/packages/d7/cb/ec98155c501b68dcb11314c7992cd3df6dce193fd763084338a117967d53/GitPython-3.1.12-py3-none-any.whl",
+      "yanked": false,
+      "yanked_reason": null
+    },
+    {
+      "comment_text": "",
+      "digests": {
+        "md5": "e961473bda9ffd00f87591ec5a748d80",
+        "sha256": "42dbefd8d9e2576c496ed0059f3103dcef7125b9ce16f9d5f9c834aed44a1dac"
+      },
+      "downloads": -1,
+      "filename": "GitPython-3.1.12.tar.gz",
+      "has_sig": true,
+      "md5_digest": "e961473bda9ffd00f87591ec5a748d80",
+      "packagetype": "sdist",
+      "python_version": "source",
+      "requires_python": ">=3.4",
+      "size": 171126,
+      "upload_time": "2021-01-06T06:33:46",
+      "upload_time_iso_8601": "2021-01-06T06:33:46.788683Z",
+      "url": "https://files.pythonhosted.org/packages/ec/4d/e6553122c85ec7c4c3e702142cc0f5ed02e5cf1b4d7ecea86a07e45725a0/GitPython-3.1.12.tar.gz",
+      "yanked": false,
+      "yanked_reason": null
+    }
+  ]
+}

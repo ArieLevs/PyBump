@@ -11,4 +11,8 @@ setuptools.setup(
     url="https://github.com/ArieLevs/PyBump",
     license='Apache License 2.0',
     packages=setuptools.find_packages(),
+    install_requires=[
+        'pybump==1.3.1',
+        'GitPython==3.1.7',
+    ],
 )

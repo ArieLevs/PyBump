@@ -1,8 +1,8 @@
 import unittest
 from subprocess import run, PIPE
 
-from src.pybump import get_setup_py_version, set_setup_py_version, \
-    is_semantic_string, bump_version, is_valid_helm_chart, assemble_version_string, \
+from src.pybump import PybumpVersion, get_setup_py_version, set_setup_py_version, \
+    is_semantic_string, is_valid_helm_chart, \
     write_version_to_file, read_version_from_file
 
 from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
@@ -83,7 +83,51 @@ def simulate_bump_version(file, level, app_version=False):
 class PyBumpTest(unittest.TestCase):
 
     def setUp(self):
-        pass
+        self.version_a = PybumpVersion(
+            prefix=False,
+            version_array=[9, 0, 7],
+            release='release_text',
+            metadata='meta_text'
+        )
+        self.version_b = PybumpVersion(
+            prefix=True,
+            version_array=[1, 2, 3],
+            release=False,
+            metadata=False
+        )
+        self.version_c = PybumpVersion(
+            prefix=False,
+            version_array=[0, 4, 0],
+            release=False,
+            metadata='meta_text-with-some-num-123123'
+        )
+
+    def test_assemble_version_string(self):
+        self.assertEqual(
+            self.version_a.__str__(),
+            '9.0.7-release_text+meta_text'
+        )
+        self.assertEqual(
+            self.version_b.__str__(),
+            'v1.2.3'
+        )
+        self.assertEqual(
+            self.version_c.__str__(),
+            '0.4.0+meta_text-with-some-num-123123'
+        )
+
+    def test_bump_version(self):
+        self.assertEqual(self.version_a.bump_version('major'), [10, 0, 0])
+        self.assertEqual(self.version_a.version, [10, 0, 0])
+
+        self.assertEqual(self.version_b.bump_version('patch'), [1, 2, 4])
+        self.assertEqual(self.version_b.bump_version('patch'), [1, 2, 5])
+        self.assertEqual(self.version_b.bump_version('minor'), [1, 3, 0])
+        self.assertEqual(self.version_b.bump_version('major'), [2, 0, 0])
+        self.assertEqual(self.version_b.version, [2, 0, 0])
+
+        self.assertRaises(ValueError, self.version_b.bump_version, None)
+        self.assertRaises(ValueError, self.version_b.bump_version, 'not_patch')
 
     def test_is_semantic_string(self):
         self.assertEqual(is_semantic_string('1.2.3'),
@@ -144,16 +188,6 @@ class PyBumpTest(unittest.TestCase):
         self.assertFalse(is_valid_helm_chart(invalid_helm_chart))
         self.assertFalse(is_valid_helm_chart(empty_helm_chart))
 
-    def test_bump_version(self):
-        self.assertEqual(bump_version([9, 0, 7], 'major'), [10, 0, 0])
-        self.assertEqual(bump_version([1, 2, 3], 'major'), [2, 0, 0])
-        self.assertEqual(bump_version([1, 2, 3], 'minor'), [1, 3, 0])
-        self.assertEqual(bump_version([1, 2, 3], 'patch'), [1, 2, 4])
-        self.assertEqual(bump_version([0, 0, 9], 'patch'), [0, 0, 10])
-
-        self.assertRaises(ValueError, bump_version, None, 'patch')
-        self.assertRaises(ValueError, bump_version, [1, 2, 3], 'not_patch')
-
     def test_get_setup_py_version(self):
         self.assertEqual(get_setup_py_version(valid_setup_py), '0.1.3')
 
@@ -182,17 +216,6 @@ class PyBumpTest(unittest.TestCase):
                          {'prefix': False, 'version': [0, 12, 4], 'release': '', 'metadata': ''})
         self.assertEqual(is_semantic_string(valid_version_file_2),
                          {'prefix': False, 'version': [1, 5, 0], 'release': 'alpha', 'metadata': 'meta'})
-
-    def test_assemble_version_string(self):
-        self.assertEqual(
-            assemble_version_string(prefix=True, version_array=[1, 4, 0], release='release_text', metadata='meta_text'),
-            'v1.4.0-release_text+meta_text')
-        self.assertEqual(
-            assemble_version_string(prefix=False, version_array=[1, 4, 0], release='', metadata='meta_text'),
-            '1.4.0+meta_text')
-        self.assertEqual(
-            assemble_version_string(prefix=False, version_array=[0, 4, 0], release='', metadata=''),
-            '0.4.0')
 
     def test_write_read_files(self):
         # write_version_to_file will write any text to a given file,
