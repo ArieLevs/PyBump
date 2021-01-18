@@ -181,13 +181,14 @@ def is_patchable(x, y):
 
 def identify_possible_patch(releases_list, version_to_patch):
     """
-    check if there is a possible patch version newer then the patch version of current_version_dict,
+    check if there is a possible patch version (in releases_list) newer then version_to_patch,
     get list of semantic versions,
-    for example ['0.1.2', '0.1.3', '0.3.1', '0.3.2'] and 'version_to_patch' with '0.3.1'
-    :param releases_list: list of semantic versions as strings
-    :param version_to_patch: is_semantic_string output
-    :return: dict in the for of:
-        {'current_patch': version_to_patch, 'latest_patch': patchable_version_str, 'patchable': patchable}
+    for example ['0.1.2', '0.1.3', '0.3.1', '0.3.2'] and 'version_to_patch' with PybumpVersion object
+
+    :param releases_list: list of strings
+    :param version_to_patch: PybumpVersion object
+    :return: dict in the form of:
+        {'patchable': boolean, 'latest_patch': 'string'}
     """
     if not releases_list or not version_to_patch:
         raise ValueError('one of the lists empty')
@@ -197,34 +198,37 @@ def identify_possible_patch(releases_list, version_to_patch):
     patchable = False
 
     for release in releases_list:
-        release_patch_candidate = is_semantic_string(release)
-        # if 'False' returned
-        if not release_patch_candidate:
+        release_patch_candidate = PybumpVersion(release)
+
+        if not release_patch_candidate.is_valid_semantic_version():
             # current 'release' does not meet semantic version, skip
             continue
 
         # check if version_to_patch is patchable
-        if not is_patchable(release_patch_candidate.get('version', None), version_to_patch):
+        if not is_patchable(release_patch_candidate.version, version_to_patch.version):
             continue
 
         # at this point possible patch version found, so if version_to_patch is [0, 3, 1],
         # and current iteration over releases_list is [0, 3, 2] then it matches for a patch,
         # but there also might be a release with version [0, 3, 3] and even newer, we need to find most recent.
         # calculate highest value found for patch (for cases when the 'releases' is not sorted)
-        if release_patch_candidate.get('version')[2] > latest_patch_version[2]:
-            latest_patch_version = release_patch_candidate.get('version')
+        if release_patch_candidate.version[2] > latest_patch_version.version[2]:
+            latest_patch_version = release_patch_candidate
 
-    if latest_patch_version > version_to_patch:
+    if latest_patch_version.is_larger_then(version_to_patch):
         patchable = True
 
-    return {'current_patch': version_to_patch, 'latest_patch': latest_patch_version, 'patchable': patchable}
+    return {'patchable': patchable, 'latest_patch': latest_patch_version.__str__()}
 
 
 def get_setup_py_install_requires(content):
     """
-    Extract 'install_requires' value using regex from 'content'
+    Extract 'install_requires' value using regex from 'content',
+    function will return a list of python packages:
+    ['package_a', 'package_b==1.5.6', 'package_c>=3.0']
+
     :param content: the content of a setup.py file
-    :return: install_requires values as array
+    :return: list on strings, install_requires values as list
     """
     # use DOTALL https://docs.python.org/3/library/re.html#re.DOTALL to include new lines
     regex_install_requires_pattern = re.compile(r"install_requires=(.*?)],", flags=re.DOTALL)
@@ -244,64 +248,90 @@ def get_setup_py_install_requires(content):
     return literal_eval(found_install_requires)
 
 
-def get_versions_from_requirements(requirements_array):
+def get_versions_from_requirements(requirements_list):
     """
-    brake python requirements array, in the form of ['package_1==version', 'package_2', ], for example
-    ['pyyaml==5.3.1', 'pybump']
-    into more detailed dictionary containing package name and 'is_semantic_string' result
-    :param requirements_array: array of strings
-    :return: array of PybumpVersion objects in the form of:
+    as described here https://pip.pypa.io/en/stable/reference/pip_install/#example-requirements-file
+    python versions requirement may appear in the form of:
+    docopt == 0.6.1             # Version Matching. Must be version 0.6.1
+    keyring >= 4.1.1            # Minimum version 4.1.1
+    coverage != 3.5             # Version Exclusion. Anything except version 3.5
+    Mopidy-Dirble ~= 1.1        # Compatible release. Same as >= 1.1, == 1.*
+
+    the function is interested only in exact version match (case '==')
+    brake python requirements list, in the form of ['package_a', 'package_b==1.5.6', 'package_c>=3.0'],
+    for example
+    ['pyyaml==5.3.1', 'pybump', 'GitPython>=3.1']
+    into more detailed dictionary containing package name and PybumpVersion
+    :param requirements_list: list of strings
+    :return: list of dicts in the form of:
         [
             {
                 'package_name': 'pyyaml',
-                'package_version': {'prefix': False, 'version': [5, 3, 1], 'release': '', 'metadata': ''}
+                'package_version': PybumpVersion
             },
             {
                 'package_name': 'pybump',
-                'package_version': 'latest'
+                'package_version': PybumpVersion
             }
         ]
     """
     dependencies = []
-    for req in requirements_array:
-        # python packages may be locked to specific version by using 'pack==0.1.2'
-        package_array = req.split('==')
-        package_name = package_array[0]
+    for req in requirements_list:
+        # split name from version by all allowed operators
+        package_array = re.split("==|>=|!=|~=", req)
+
+        package_name = package_array[0].strip()
         if len(package_array) == 1:
-            # there is no locked version for current package, it will use latest
-            package_version = 'latest'
-        else:
-            package_version = is_semantic_string(package_array[1])
+            # if package has no locked version or has >= type for current package, of type 'package>=2.7' its invalid
+            version = PybumpVersion('latest')
+        else:  # else the object will have a (probably) valid semantic version
+            version = PybumpVersion(package_array[1].strip())
+
             # in case the string after '==' is not semantic version return error
-            if not package_version:
-                raise RuntimeError("Current package '{0}', is not set with semantic version: '{1}', cannot promote"
-                                   .format(package_name, package_array[1]))
+            # if not version.is_valid_semantic_version():
+            #     raise RuntimeError("Current package '{0}', is not set with semantic version: '{1}', cannot promote"
+            #                        .format(package_name, package_array[1]))
 
         # append current package
-        dependencies.append({'package_name': package_name, 'package_version': package_version})
+        dependencies.append({'package_name': package_name, 'package_version': version})
 
     return dependencies
 
 
 def check_available_python_patches(setup_py_content=None):
-    requirements_array = get_setup_py_install_requires(setup_py_content)
-    requirements_versions = get_versions_from_requirements(requirements_array)
+    """
+    get the content of setup.py file and return a list of dicts with possible patchable dependancies versions,
+    return will be in the form of:
+    [
+        {'package_name': 'pyyaml', 'version': '5.3.1', 'patchable': False, 'latest_patch': '5.3.1'},
+        {'package_name': 'GitPython', 'version': '3.1.7', 'patchable': True, 'latest_patch': '3.1.12'}
+    ]
+    :param setup_py_content: content of setup.py file
+    :return: list of dicts
+    """
+    requirements_list = get_setup_py_install_requires(setup_py_content)
+    requirements_versions = get_versions_from_requirements(requirements_list)
 
     patchable_packages_array = []
-    for req in requirements_versions:
-        if not req.get('package_version') == 'latest':
+    for requirement in requirements_versions:
+        if requirement.get('package_version').is_valid_semantic_version():
+            package_name = requirement.get('package_name')
             # get current package info (as json) from pypi api
-            package_releases = get_pypi_package_releases(req.get('package_name'))
+            package_releases = get_pypi_package_releases(package_name)
+            # version_to_patch is a PybumpVersion object
+            version_to_patch = requirement.get('package_version')
 
             # convert keys of the 'releases' dict, into a list (only version numbers),
-            releases_list = package_releases.get('releases').keys()
-            # fetch just the version of current package as is_semantic_string output
-            version_to_patch = req.get('package_version').get('version', None)
+            releases_list = package_releases.get('releases').keys()  # releases_list is a list of strings
+
+            res = identify_possible_patch(releases_list, version_to_patch)  # check for possible patch
 
             patchable_packages_array.append(
                 {
-                    'package_name': req.get('package_name'),
-                    'version': identify_possible_patch(releases_list, version_to_patch)  # check for possible patch
+                    'package_name': package_name,
+                    'version': str(version_to_patch),
+                    'patchable': res.get('patchable'),
+                    'latest_patch': res.get('latest_patch')
                 }
             )
 
