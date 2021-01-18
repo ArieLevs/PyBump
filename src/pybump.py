@@ -15,7 +15,7 @@ class PybumpVersion(object):
     __release = None
     __metadata = None
     valid_sem_ver = False
-    invalid_version_string = None
+    invalid_version = None
 
     def __init__(self, version):
         self.validate_semantic_string(version)
@@ -33,6 +33,7 @@ class PybumpVersion(object):
 
         :param version: string
         """
+        orig_version = version
         # only if passed version is non empty string
         if type(version) == str and len(version) != 0:
             # In case the version if of type 'v2.2.5' then save 'v' prefix and cut it for further 'semver' validation
@@ -58,12 +59,12 @@ class PybumpVersion(object):
                     self.__metadata = match[0][4]
 
                     self.valid_sem_ver = True
-                    self.invalid_version_string = None
+                    self.invalid_version = None
                     return True
                 except ValueError:
                     pass
         self.valid_sem_ver = False
-        self.invalid_version_string = version
+        self.invalid_version = orig_version
         return False
 
     @property
@@ -143,7 +144,7 @@ class PybumpVersion(object):
     def print_invalid_version(self):
         print("Invalid semantic version format: {}\n"
               "Make sure to comply with https://semver.org/ "
-              "(lower case 'v' prefix is allowed)".format(self.invalid_version_string),
+              "(lower case 'v' prefix is allowed)".format(self.invalid_version),
               file=stderr)
 
 
@@ -372,47 +373,6 @@ def set_setup_py_version(version, content):
     :return: content of setup.py file with 'version'
     """
     return regex_version_pattern.sub(r'\g<1>{}\g<3>'.format(version), content)
-
-
-def is_semantic_string(semantic_string):
-    """
-    Check if input string is a semantic version as defined here: https://github.com/semver/semver/blob/master/semver.md,
-    The version is allowed a lower case 'v' character.
-    Function will search a match according to the regular expresion, so for example '1.1.2-prerelease+meta' is valid,
-    then make sure there is and exact single match and validate if each of x,y,z is an integer.
-    return {'prefix': boolean, 'version': [x, y, z], 'release': 'some-release', 'metadata': 'some-metadata'} if True
-
-    :param semantic_string: string
-    :return: dict if True, else False
-    """
-    if type(semantic_string) != str or len(semantic_string) == 0:
-        return False
-
-    version_prefix = False
-    # In case the version if of type 'v2.2.5' then save 'v' prefix and cut it for further 'semver' validation
-    if semantic_string[0] == 'v':
-        semantic_string = semantic_string[1:]
-        version_prefix = True
-
-    semver_regex = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"  # Match x.y.z
-                              # Match -sometext-12.here
-                              r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
-                              r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
-                              # Match +more.123.here
-                              r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$")
-    # returns a list of tuples, for example [('2', '2', '7', 'alpha', '')]
-    match = semver_regex.findall(semantic_string)
-
-    # There was no match using 'semver_regex', since if 0 or more then single match found and empty list returned
-    if len(match) == 0:
-        return False
-
-    try:
-        semantic_array = [int(n) for n in match[0][:3]]
-    except ValueError:
-        return False
-
-    return {'prefix': version_prefix, 'version': semantic_array, 'release': match[0][3], 'metadata': match[0][4]}
 
 
 def get_self_version(dist_name):
