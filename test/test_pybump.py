@@ -1,8 +1,7 @@
 import unittest
 
 from src.pybump import PybumpVersion, get_setup_py_version, set_setup_py_version, \
-    is_semantic_string, is_valid_helm_chart, \
-    write_version_to_file, read_version_from_file
+    is_valid_helm_chart, write_version_to_file, read_version_from_file
 
 from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
     valid_setup_py, invalid_setup_py_1, invalid_setup_py_2, \
@@ -16,14 +15,110 @@ class PyBumpTest(unittest.TestCase):
         self.version_b = PybumpVersion('v1.2.3')
         self.version_c = PybumpVersion('0.4.0+meta.text-with-some-num-123123')
 
-        # init invalid object
         self.version_d = PybumpVersion('1.5.invalid')
+        self.version_e = PybumpVersion('0.0.0')
+        self.version_f = PybumpVersion('v0.0.0')
+        self.version_g = PybumpVersion('v1.0.11111111111111111111111111111111111111111111111')
+        self.version_h = PybumpVersion('13.0.75')
+        self.version_i = PybumpVersion('0.5.447')
+        self.version_j = PybumpVersion('v3.0.1-alpha')
+        self.version_k = PybumpVersion('1.1.6-alpha-beta-gama')
+        self.version_l = PybumpVersion('0.5.0-alpha+meta-data.is-ok')
+        self.version_m = PybumpVersion('')
+        self.version_n = PybumpVersion('      ')
+        self.version_o = PybumpVersion('1.02.3')
+        self.version_p = PybumpVersion('000.000.111')
+        self.version_q = PybumpVersion('1.2.c')
+        self.version_r = PybumpVersion('V1.40.2')
+        self.version_s = PybumpVersion('v1.2.3.4')
+        self.version_t = PybumpVersion('1.2.-3')
+        self.version_u = PybumpVersion('1.9')
+        self.version_v = PybumpVersion('text')
+
+        self.version_x = PybumpVersion(4)
+        self.version_y = PybumpVersion(True)
+        self.version_z = PybumpVersion(None)
+
+        self.valid_version_1 = PybumpVersion(valid_version_file_1)
+        self.valid_version_2 = PybumpVersion(valid_version_file_2)
+        self.invalid_version_1 = PybumpVersion(invalid_version_file_1)
+        self.invalid_version_2 = PybumpVersion(invalid_version_file_2)
 
     def test_validate_semantic_string(self):
+        """
+        validate_semantic_string() function is called every time objects inited
+        """
         self.assertTrue(self.version_a.validate_semantic_string(self.version_a.__str__()))
         # update version_a with non valid metadata
         self.version_a.metadata = 'non_valid@meta$strings'
         self.assertFalse(self.version_a.validate_semantic_string(self.version_a.__str__()))
+
+        # test created object since they have already passed via validate_semantic_string function at init
+        self.assertFalse(self.version_d.is_valid_semantic_version())
+        self.assertEqual(self.version_d.invalid_version, '1.5.invalid')
+
+        self.assertTrue(self.version_e.is_valid_semantic_version())
+        self.assertEqual(self.version_e.version, [0, 0, 0])
+        self.assertFalse(self.version_e.prefix)
+
+        self.assertTrue(self.version_f.is_valid_semantic_version())
+        self.assertEqual(self.version_f.version, [0, 0, 0])
+        self.assertTrue(self.version_f.prefix)
+
+        self.assertTrue(self.version_g.is_valid_semantic_version())
+        self.assertEqual(self.version_g.version, [1, 0, 11111111111111111111111111111111111111111111111])
+        self.assertTrue(self.version_g.prefix)
+
+        self.assertTrue(self.version_h.is_valid_semantic_version())
+        self.assertEqual(self.version_h.version, [13, 0, 75])
+        self.assertFalse(self.version_h.prefix)
+
+        self.assertTrue(self.version_j.is_valid_semantic_version())
+        self.assertEqual(self.version_j.version, [3, 0, 1])
+        self.assertTrue(self.version_j.prefix)
+        self.assertEqual(self.version_j.release, 'alpha')
+
+        self.assertTrue(self.version_l.is_valid_semantic_version())
+        self.assertEqual(self.version_l.version, [0, 5, 0])
+        self.assertFalse(self.version_l.prefix)
+        self.assertEqual(self.version_l.release, 'alpha')
+        self.assertEqual(self.version_l.metadata, 'meta-data.is-ok')
+
+        self.assertFalse(self.version_n.is_valid_semantic_version())
+        self.assertEqual(self.version_n.invalid_version, '      ')
+
+        self.assertFalse(self.version_o.is_valid_semantic_version())
+        self.assertEqual(self.version_o.invalid_version, '1.02.3')
+
+        self.assertFalse(self.version_p.is_valid_semantic_version())
+        self.assertEqual(self.version_p.invalid_version, '000.000.111')
+
+        self.assertFalse(self.version_q.is_valid_semantic_version())
+        self.assertEqual(self.version_q.invalid_version, '1.2.c')
+
+        self.assertFalse(self.version_r.is_valid_semantic_version())
+        self.assertEqual(self.version_r.invalid_version, 'V1.40.2')
+
+        self.assertFalse(self.version_s.is_valid_semantic_version())
+        self.assertEqual(self.version_s.invalid_version, 'v1.2.3.4')
+
+        self.assertFalse(self.version_t.is_valid_semantic_version())
+        self.assertEqual(self.version_t.invalid_version, '1.2.-3')
+
+        self.assertFalse(self.version_u.is_valid_semantic_version())
+        self.assertEqual(self.version_u.invalid_version, '1.9')
+
+        self.assertFalse(self.version_v.is_valid_semantic_version())
+        self.assertEqual(self.version_v.invalid_version, 'text')
+
+        self.assertFalse(self.version_x.is_valid_semantic_version())
+        self.assertEqual(self.version_x.invalid_version, 4)
+
+        self.assertFalse(self.version_y.is_valid_semantic_version())
+        self.assertEqual(self.version_y.invalid_version, True)
+
+        self.assertFalse(self.version_z.is_valid_semantic_version())
+        self.assertEqual(self.version_z.invalid_version, None)
 
     def test_is_larger_then(self):
         self.assertTrue(self.version_a.is_larger_then(self.version_b))
@@ -61,60 +156,6 @@ class PyBumpTest(unittest.TestCase):
         self.assertRaises(ValueError, self.version_b.bump_version, None)
         self.assertRaises(ValueError, self.version_b.bump_version, 'not_patch')
 
-    def test_is_semantic_string(self):
-        self.assertEqual(is_semantic_string('1.2.3'),
-                         {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': ''})
-        self.assertEqual(is_semantic_string('v1.2.3'),
-                         {'prefix': True, 'version': [1, 2, 3], 'release': '', 'metadata': ''})
-        self.assertEqual(is_semantic_string('1.2.6-dev'),
-                         {'prefix': False, 'version': [1, 2, 6], 'release': 'dev', 'metadata': ''})
-        self.assertEqual(
-            is_semantic_string('1.2.6-dev+some.metadata'),
-            {'prefix': False, 'version': [1, 2, 6], 'release': 'dev', 'metadata': 'some.metadata'}
-        )
-        self.assertEqual(
-            is_semantic_string('1.2.3+meta-only'),
-            {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': 'meta-only'}
-        )
-        self.assertEqual(
-            is_semantic_string('v1.2.3+meta-only'),
-            {'prefix': True, 'version': [1, 2, 3], 'release': '', 'metadata': 'meta-only'}
-        )
-        self.assertNotEqual(is_semantic_string('1.2.3'),
-                            {'prefix': False, 'version': [1, 2, 4], 'release': '', 'metadata': ''})
-        self.assertNotEqual(
-            is_semantic_string('1.2.3-ALPHA'),
-            {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': 'ALPHA'}
-        )
-        self.assertNotEqual(
-            is_semantic_string('1.2.3+META.ONLY'),
-            {'prefix': False, 'version': [1, 2, 3], 'release': 'META.ONLY', 'metadata': ''}
-        )
-        self.assertTrue(is_semantic_string('0.0.0'))
-        self.assertTrue(is_semantic_string('v0.0.0'))
-        self.assertTrue(is_semantic_string('v1.0.11111111111111111111111111111111111111111111111'))
-        self.assertTrue(is_semantic_string('13.0.75'))
-        self.assertTrue(is_semantic_string('0.5.447'))
-        self.assertTrue(is_semantic_string('3.0.1-alpha'))
-        self.assertTrue(is_semantic_string('v3.0.1-alpha'))
-        self.assertTrue(is_semantic_string('1.1.6-alpha-beta-gama'))
-        self.assertTrue(is_semantic_string('0.5.0-alpha+meta-data.is-ok'))
-        self.assertFalse(is_semantic_string(''))
-        self.assertFalse(is_semantic_string('   '))
-        self.assertFalse(is_semantic_string('1.02.3'))
-        self.assertFalse(is_semantic_string('000.000.111'))
-        self.assertFalse(is_semantic_string('1.2.c'))
-        self.assertFalse(is_semantic_string('V1.40.2'))
-        self.assertFalse(is_semantic_string('v1.2.3.4'))
-        self.assertFalse(is_semantic_string('X-1.40.2'))
-        self.assertFalse(is_semantic_string('1.2.-3'))
-        self.assertFalse(is_semantic_string('1.9'))
-        self.assertFalse(is_semantic_string('text'))
-
-        self.assertFalse(is_semantic_string(4))
-        self.assertFalse(is_semantic_string(True))
-        self.assertFalse(is_semantic_string(None))
-
     def test_is_valid_helm_chart(self):
         self.assertTrue(is_valid_helm_chart(valid_helm_chart))
         self.assertFalse(is_valid_helm_chart(invalid_helm_chart))
@@ -140,14 +181,21 @@ class PyBumpTest(unittest.TestCase):
         )
 
     def test_is_valid_version_file(self):
-        self.assertTrue(is_semantic_string(valid_version_file_1))
-        self.assertTrue(is_semantic_string(valid_version_file_2))
-        self.assertFalse(is_semantic_string(invalid_version_file_1))
-        self.assertFalse(is_semantic_string(invalid_version_file_2))
-        self.assertEqual(is_semantic_string(valid_version_file_1),
-                         {'prefix': False, 'version': [0, 12, 4], 'release': '', 'metadata': ''})
-        self.assertEqual(is_semantic_string(valid_version_file_2),
-                         {'prefix': False, 'version': [1, 5, 0], 'release': 'alpha', 'metadata': 'meta'})
+        self.assertTrue(self.valid_version_1.is_valid_semantic_version())
+        self.assertEqual(self.valid_version_1.version, [0, 12, 4])
+        self.assertEqual(self.valid_version_1.prefix, False)
+        self.assertEqual(self.valid_version_1.release, '')
+        self.assertEqual(self.valid_version_1.metadata, '')
+
+        self.assertTrue(self.valid_version_2.is_valid_semantic_version())
+        self.assertEqual(self.valid_version_2.version, [1, 5, 0])
+        self.assertEqual(self.valid_version_2.prefix, False)
+        self.assertEqual(self.valid_version_2.release, 'alpha')
+        self.assertEqual(self.valid_version_2.metadata, 'meta')
+
+        self.assertFalse(self.invalid_version_1.is_valid_semantic_version())
+        self.assertFalse(self.invalid_version_2.is_valid_semantic_version())
+        self.assertEqual(self.invalid_version_2.invalid_version, '\n    version=1.5.0\n    ')
 
     def test_write_read_files(self):
         # write_version_to_file will write any text to a given file,
