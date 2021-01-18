@@ -1,111 +1,138 @@
 import unittest
-from subprocess import run, PIPE
 
 from src.pybump import PybumpVersion, get_setup_py_version, set_setup_py_version, \
-    is_semantic_string, is_valid_helm_chart, \
-    write_version_to_file, read_version_from_file
+    is_valid_helm_chart, write_version_to_file, read_version_from_file
 
 from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
     valid_setup_py, invalid_setup_py_1, invalid_setup_py_2, \
     valid_version_file_1, valid_version_file_2, invalid_version_file_1, invalid_version_file_2
 
 
-def simulate_get_version(file, app_version=False, sem_ver=False, release=False, metadata=False):
-    """
-    execute sub process to simulate real app execution,
-    return current version from a file
-    if app_version is True, then add the --app-version flag to execution
-    :param file: string
-    :param app_version: boolean
-    :param sem_ver: boolean
-    :param release: boolean
-    :param metadata: boolean
-    :return: CompletedProcess object
-    """
-    if app_version:
-        return run(["python", "src/pybump.py", "get", "--file", file, "--app-version"], stdout=PIPE, stderr=PIPE)
-    elif sem_ver:
-        return run(["python", "src/pybump.py", "get", "--file", file, "--sem-ver"], stdout=PIPE, stderr=PIPE)
-    elif release:
-        return run(["python", "src/pybump.py", "get", "--file", file, "--release"], stdout=PIPE, stderr=PIPE)
-    elif metadata:
-        return run(["python", "src/pybump.py", "get", "--file", file, "--metadata"], stdout=PIPE, stderr=PIPE)
-    else:
-        return run(["python", "src/pybump.py", "get", "--file", file], stdout=PIPE, stderr=PIPE)
-
-
-def simulate_set_version(file, version='', app_version=False, auto=False):
-    """
-    execute sub process to simulate real app execution,
-    set new version to a file
-    if auto is True, auto add git branch / hash
-    if app_version is True, then add the --app-version flag to execution
-    :param file: string
-    :param version: string
-    :param app_version: boolean
-    :param auto: boolean
-    :return: CompletedProcess object
-    """
-    if auto:
-        if app_version:
-            return run(["python", "src/pybump.py", "set", "--file", file, "--auto", "--app-version"],
-                       stdout=PIPE, stderr=PIPE)
-        else:
-            return run(["python", "src/pybump.py", "set", "--file", file, "--auto"],
-                       stdout=PIPE, stderr=PIPE)
-    else:
-        if app_version:
-            return run(["python", "src/pybump.py", "set", "--file", file, "--set-version", version, "--app-version"],
-                       stdout=PIPE, stderr=PIPE)
-        else:
-            return run(["python", "src/pybump.py", "set", "--file", file, "--set-version", version],
-                       stdout=PIPE, stderr=PIPE)
-
-
-def simulate_bump_version(file, level, app_version=False):
-    """
-    execute sub process to simulate real app execution,
-    bump version in file based on level
-    if app_version is True, then add the --app-version flag to execution
-    :param file: string
-    :param level: string
-    :param app_version: boolean
-    :return:
-    """
-    if app_version:
-        return run(["python", "src/pybump.py", "bump", "--level", level, "--file", file, "--app-version"],
-                   stdout=PIPE, stderr=PIPE)
-    else:
-        return run(["python", "src/pybump.py", "bump", "--level", level, "--file", file],
-                   stdout=PIPE, stderr=PIPE)
-
-
 class PyBumpTest(unittest.TestCase):
 
     def setUp(self):
-        self.version_a = PybumpVersion(
-            prefix=False,
-            version_array=[9, 0, 7],
-            release='release_text',
-            metadata='meta_text'
-        )
-        self.version_b = PybumpVersion(
-            prefix=True,
-            version_array=[1, 2, 3],
-            release=False,
-            metadata=False
-        )
-        self.version_c = PybumpVersion(
-            prefix=False,
-            version_array=[0, 4, 0],
-            release=False,
-            metadata='meta_text-with-some-num-123123'
-        )
+        self.version_a = PybumpVersion('9.0.7-release-text+meta.text')
+        self.version_b = PybumpVersion('v1.2.3')
+        self.version_c = PybumpVersion('0.4.0+meta.text-with-some-num-123123')
+
+        self.version_d = PybumpVersion('1.5.invalid')
+        self.version_e = PybumpVersion('0.0.0')
+        self.version_f = PybumpVersion('v0.0.0')
+        self.version_g = PybumpVersion('v1.0.11111111111111111111111111111111111111111111111')
+        self.version_h = PybumpVersion('13.0.75')
+        self.version_i = PybumpVersion('0.5.447')
+        self.version_j = PybumpVersion('v3.0.1-alpha')
+        self.version_k = PybumpVersion('1.1.6-alpha-beta-gama')
+        self.version_l = PybumpVersion('0.5.0-alpha+meta-data.is-ok')
+        self.version_m = PybumpVersion('')
+        self.version_n = PybumpVersion('      ')
+        self.version_o = PybumpVersion('1.02.3')
+        self.version_p = PybumpVersion('000.000.111')
+        self.version_q = PybumpVersion('1.2.c')
+        self.version_r = PybumpVersion('V1.40.2')
+        self.version_s = PybumpVersion('v1.2.3.4')
+        self.version_t = PybumpVersion('1.2.-3')
+        self.version_u = PybumpVersion('1.9')
+        self.version_v = PybumpVersion('text')
+
+        self.version_x = PybumpVersion(4)
+        self.version_y = PybumpVersion(True)
+        self.version_z = PybumpVersion(None)
+
+        self.valid_version_1 = PybumpVersion(valid_version_file_1)
+        self.valid_version_2 = PybumpVersion(valid_version_file_2)
+        self.invalid_version_1 = PybumpVersion(invalid_version_file_1)
+        self.invalid_version_2 = PybumpVersion(invalid_version_file_2)
+
+    def test_validate_semantic_string(self):
+        """
+        validate_semantic_string() function is called every time objects inited
+        """
+        self.assertTrue(self.version_a.validate_semantic_string(self.version_a.__str__()))
+        # update version_a with non valid metadata
+        self.version_a.metadata = 'non_valid@meta$strings'
+        self.assertFalse(self.version_a.validate_semantic_string(self.version_a.__str__()))
+
+        # test created object since they have already passed via validate_semantic_string function at init
+        self.assertFalse(self.version_d.is_valid_semantic_version())
+        self.assertEqual(self.version_d.invalid_version, '1.5.invalid')
+
+        self.assertTrue(self.version_e.is_valid_semantic_version())
+        self.assertEqual(self.version_e.version, [0, 0, 0])
+        self.assertFalse(self.version_e.prefix)
+
+        self.assertTrue(self.version_f.is_valid_semantic_version())
+        self.assertEqual(self.version_f.version, [0, 0, 0])
+        self.assertTrue(self.version_f.prefix)
+
+        self.assertTrue(self.version_g.is_valid_semantic_version())
+        self.assertEqual(self.version_g.version, [1, 0, 11111111111111111111111111111111111111111111111])
+        self.assertTrue(self.version_g.prefix)
+
+        self.assertTrue(self.version_h.is_valid_semantic_version())
+        self.assertEqual(self.version_h.version, [13, 0, 75])
+        self.assertFalse(self.version_h.prefix)
+
+        self.assertTrue(self.version_j.is_valid_semantic_version())
+        self.assertEqual(self.version_j.version, [3, 0, 1])
+        self.assertTrue(self.version_j.prefix)
+        self.assertEqual(self.version_j.release, 'alpha')
+
+        self.assertTrue(self.version_l.is_valid_semantic_version())
+        self.assertEqual(self.version_l.version, [0, 5, 0])
+        self.assertFalse(self.version_l.prefix)
+        self.assertEqual(self.version_l.release, 'alpha')
+        self.assertEqual(self.version_l.metadata, 'meta-data.is-ok')
+
+        self.assertFalse(self.version_n.is_valid_semantic_version())
+        self.assertEqual(self.version_n.invalid_version, '      ')
+
+        self.assertFalse(self.version_o.is_valid_semantic_version())
+        self.assertEqual(self.version_o.invalid_version, '1.02.3')
+
+        self.assertFalse(self.version_p.is_valid_semantic_version())
+        self.assertEqual(self.version_p.invalid_version, '000.000.111')
+
+        self.assertFalse(self.version_q.is_valid_semantic_version())
+        self.assertEqual(self.version_q.invalid_version, '1.2.c')
+
+        self.assertFalse(self.version_r.is_valid_semantic_version())
+        self.assertEqual(self.version_r.invalid_version, 'V1.40.2')
+
+        self.assertFalse(self.version_s.is_valid_semantic_version())
+        self.assertEqual(self.version_s.invalid_version, 'v1.2.3.4')
+
+        self.assertFalse(self.version_t.is_valid_semantic_version())
+        self.assertEqual(self.version_t.invalid_version, '1.2.-3')
+
+        self.assertFalse(self.version_u.is_valid_semantic_version())
+        self.assertEqual(self.version_u.invalid_version, '1.9')
+
+        self.assertFalse(self.version_v.is_valid_semantic_version())
+        self.assertEqual(self.version_v.invalid_version, 'text')
+
+        self.assertFalse(self.version_x.is_valid_semantic_version())
+        self.assertEqual(self.version_x.invalid_version, 4)
+
+        self.assertFalse(self.version_y.is_valid_semantic_version())
+        self.assertEqual(self.version_y.invalid_version, True)
+
+        self.assertFalse(self.version_z.is_valid_semantic_version())
+        self.assertEqual(self.version_z.invalid_version, None)
+
+    def test_is_larger_then(self):
+        self.assertTrue(self.version_a.is_larger_then(self.version_b))
+        self.assertTrue(self.version_b.is_larger_then(self.version_c))
+        self.assertFalse(self.version_c.is_larger_then(self.version_a))
+
+    def test_is_valid_semantic_version(self):
+        self.assertTrue(self.version_a.is_valid_semantic_version())
+        self.assertFalse(self.version_d.is_valid_semantic_version())
 
     def test_assemble_version_string(self):
         self.assertEqual(
             self.version_a.__str__(),
-            '9.0.7-release_text+meta_text'
+            '9.0.7-release-text+meta.text'
         )
         self.assertEqual(
             self.version_b.__str__(),
@@ -113,7 +140,7 @@ class PyBumpTest(unittest.TestCase):
         )
         self.assertEqual(
             self.version_c.__str__(),
-            '0.4.0+meta_text-with-some-num-123123'
+            '0.4.0+meta.text-with-some-num-123123'
         )
 
     def test_bump_version(self):
@@ -128,60 +155,6 @@ class PyBumpTest(unittest.TestCase):
 
         self.assertRaises(ValueError, self.version_b.bump_version, None)
         self.assertRaises(ValueError, self.version_b.bump_version, 'not_patch')
-
-    def test_is_semantic_string(self):
-        self.assertEqual(is_semantic_string('1.2.3'),
-                         {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': ''})
-        self.assertEqual(is_semantic_string('v1.2.3'),
-                         {'prefix': True, 'version': [1, 2, 3], 'release': '', 'metadata': ''})
-        self.assertEqual(is_semantic_string('1.2.6-dev'),
-                         {'prefix': False, 'version': [1, 2, 6], 'release': 'dev', 'metadata': ''})
-        self.assertEqual(
-            is_semantic_string('1.2.6-dev+some.metadata'),
-            {'prefix': False, 'version': [1, 2, 6], 'release': 'dev', 'metadata': 'some.metadata'}
-        )
-        self.assertEqual(
-            is_semantic_string('1.2.3+meta-only'),
-            {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': 'meta-only'}
-        )
-        self.assertEqual(
-            is_semantic_string('v1.2.3+meta-only'),
-            {'prefix': True, 'version': [1, 2, 3], 'release': '', 'metadata': 'meta-only'}
-        )
-        self.assertNotEqual(is_semantic_string('1.2.3'),
-                            {'prefix': False, 'version': [1, 2, 4], 'release': '', 'metadata': ''})
-        self.assertNotEqual(
-            is_semantic_string('1.2.3-ALPHA'),
-            {'prefix': False, 'version': [1, 2, 3], 'release': '', 'metadata': 'ALPHA'}
-        )
-        self.assertNotEqual(
-            is_semantic_string('1.2.3+META.ONLY'),
-            {'prefix': False, 'version': [1, 2, 3], 'release': 'META.ONLY', 'metadata': ''}
-        )
-        self.assertTrue(is_semantic_string('0.0.0'))
-        self.assertTrue(is_semantic_string('v0.0.0'))
-        self.assertTrue(is_semantic_string('v1.0.11111111111111111111111111111111111111111111111'))
-        self.assertTrue(is_semantic_string('13.0.75'))
-        self.assertTrue(is_semantic_string('0.5.447'))
-        self.assertTrue(is_semantic_string('3.0.1-alpha'))
-        self.assertTrue(is_semantic_string('v3.0.1-alpha'))
-        self.assertTrue(is_semantic_string('1.1.6-alpha-beta-gama'))
-        self.assertTrue(is_semantic_string('0.5.0-alpha+meta-data.is-ok'))
-        self.assertFalse(is_semantic_string(''))
-        self.assertFalse(is_semantic_string('   '))
-        self.assertFalse(is_semantic_string('1.02.3'))
-        self.assertFalse(is_semantic_string('000.000.111'))
-        self.assertFalse(is_semantic_string('1.2.c'))
-        self.assertFalse(is_semantic_string('V1.40.2'))
-        self.assertFalse(is_semantic_string('v1.2.3.4'))
-        self.assertFalse(is_semantic_string('X-1.40.2'))
-        self.assertFalse(is_semantic_string('1.2.-3'))
-        self.assertFalse(is_semantic_string('1.9'))
-        self.assertFalse(is_semantic_string('text'))
-
-        self.assertFalse(is_semantic_string(4))
-        self.assertFalse(is_semantic_string(True))
-        self.assertFalse(is_semantic_string(None))
 
     def test_is_valid_helm_chart(self):
         self.assertTrue(is_valid_helm_chart(valid_helm_chart))
@@ -208,14 +181,21 @@ class PyBumpTest(unittest.TestCase):
         )
 
     def test_is_valid_version_file(self):
-        self.assertTrue(is_semantic_string(valid_version_file_1))
-        self.assertTrue(is_semantic_string(valid_version_file_2))
-        self.assertFalse(is_semantic_string(invalid_version_file_1))
-        self.assertFalse(is_semantic_string(invalid_version_file_2))
-        self.assertEqual(is_semantic_string(valid_version_file_1),
-                         {'prefix': False, 'version': [0, 12, 4], 'release': '', 'metadata': ''})
-        self.assertEqual(is_semantic_string(valid_version_file_2),
-                         {'prefix': False, 'version': [1, 5, 0], 'release': 'alpha', 'metadata': 'meta'})
+        self.assertTrue(self.valid_version_1.is_valid_semantic_version())
+        self.assertEqual(self.valid_version_1.version, [0, 12, 4])
+        self.assertEqual(self.valid_version_1.prefix, False)
+        self.assertEqual(self.valid_version_1.release, '')
+        self.assertEqual(self.valid_version_1.metadata, '')
+
+        self.assertTrue(self.valid_version_2.is_valid_semantic_version())
+        self.assertEqual(self.valid_version_2.version, [1, 5, 0])
+        self.assertEqual(self.valid_version_2.prefix, False)
+        self.assertEqual(self.valid_version_2.release, 'alpha')
+        self.assertEqual(self.valid_version_2.metadata, 'meta')
+
+        self.assertFalse(self.invalid_version_1.is_valid_semantic_version())
+        self.assertFalse(self.invalid_version_2.is_valid_semantic_version())
+        self.assertEqual(self.invalid_version_2.invalid_version, '\n    version=1.5.0\n    ')
 
     def test_write_read_files(self):
         # write_version_to_file will write any text to a given file,
@@ -278,213 +258,6 @@ class PyBumpTest(unittest.TestCase):
              'version': '1.1.2',
              'file_type': 'plain_version'}
         )
-
-    def test_bump_patch(self):
-        #####################
-        # simulate patch bump
-        #####################
-        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "0.1.0")
-        test_patch_1 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "patch")
-        self.assertEqual(test_patch_1.returncode, 0)
-
-        test_patch_1 = simulate_get_version("test/test_content_files/test_valid_chart.yaml")
-        self.assertEqual(test_patch_1.returncode, 0)
-
-        stdout = test_patch_1.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, '0.1.1', msg="return version should be 0.1.1")
-
-        #############################################
-        # simulate patch bump with --app-version flag
-        #############################################
-        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "3.1.5", True)
-        test_patch_2 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "patch", True)
-        self.assertEqual(test_patch_2.returncode, 0)
-
-        test_patch_2 = simulate_get_version("test/test_content_files/test_valid_chart.yaml", True)
-        self.assertEqual(test_patch_2.returncode, 0)
-
-        stdout = test_patch_2.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, '3.1.6', msg="return version should be 3.1.6")
-
-        #################################
-        # simulate patch bump with prefix
-        #################################
-        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "v3.1.5")
-        test_patch_3 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "patch")
-        self.assertEqual(test_patch_3.returncode, 0)
-
-        test_patch_3 = simulate_get_version("test/test_content_files/test_valid_chart.yaml")
-        self.assertEqual(test_patch_3.returncode, 0)
-
-        stdout = test_patch_3.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, 'v3.1.6', msg="return version should be v3.1.6")
-
-    def test_bump_minor(self):
-        #####################
-        # simulate minor bump
-        #####################
-        simulate_set_version("test/test_content_files/test_valid_setup.py", "2.1.5-alpha+metadata.is.useful")
-        test_minor_1 = simulate_bump_version("test/test_content_files/test_valid_setup.py", "minor")
-        self.assertEqual(test_minor_1.returncode, 0)
-
-        test_minor_1 = simulate_get_version("test/test_content_files/test_valid_setup.py")
-        self.assertEqual(test_minor_1.returncode, 0)
-
-        stdout = test_minor_1.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, '2.2.0-alpha+metadata.is.useful',
-                         msg="return version should be 2.2.0-alpha+metadata.is.useful")
-
-    def test_bump_major(self):
-        #####################
-        # simulate major bump
-        #####################
-        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "0.5.9")
-        test_major_1 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "major")
-        self.assertEqual(test_major_1.returncode, 0)
-
-        test_major_1 = simulate_get_version("test/test_content_files/test_valid_chart.yaml")
-        self.assertEqual(test_major_1.returncode, 0)
-
-        stdout = test_major_1.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, '1.0.0', msg="return version should be 1.0.0")
-
-        #############################################
-        # simulate major bump with --app-version flag
-        #############################################
-        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "2.2.8", True)
-        test_major_2 = simulate_bump_version("test/test_content_files/test_valid_chart.yaml", "major", True)
-        self.assertEqual(test_major_2.returncode, 0)
-
-        test_major_2 = simulate_get_version("test/test_content_files/test_valid_chart.yaml", True)
-        self.assertEqual(test_major_2.returncode, 0)
-
-        stdout = test_major_2.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, '3.0.0', msg="return version should be 3.0.0")
-
-        ######################################################################################
-        # simulate major bump with --app-version flag on a chart with missing appVersion field
-        ######################################################################################
-        test_major_3 = simulate_bump_version("test/test_content_files/test_valid_chart_minimal.yaml", "major", True)
-        self.assertEqual(test_major_3.returncode, 1,
-                         msg="returned 0 exist code, but tested bump against a chart file with missing appVersion key")
-
-    def test_invalid_bump_major(self):
-        simulate_set_version("test/test_content_files/test_invalid_chart.yaml", "3.5.5")
-        completed_process_object = simulate_bump_version("test/test_content_files/test_invalid_chart.yaml", "major")
-        self.assertNotEqual(completed_process_object.returncode, 0,
-                            msg="returned a 0 exist code, but tested bump version against a non valid chart file")
-
-    def test_invalid_set_version(self):
-        completed_process_object = simulate_set_version("test/test_content_files/test_valid_setup.py", "V3.2.0")
-        self.assertNotEqual(completed_process_object.returncode, 0,
-                            msg="returned a 0 exist code, but tested set version against a non valid semver")
-
-    def test_get_flags(self):
-        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "2.0.8-alpha.802+sha-256")
-
-        ##################################################
-        # simulate the 'get' command with '--sem-ver' flag
-        ##################################################
-        test_get_sem_ver = simulate_get_version("test/test_content_files/test_valid_chart.yaml", sem_ver=True)
-        self.assertEqual(test_get_sem_ver.returncode, 0,
-                         msg="returned a non 0 exist code, but tested get version against a valid chart file")
-
-        stdout = test_get_sem_ver.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, '2.0.8',
-                         msg="return sem-ver version should be 2.0.8")
-
-        ##################################################
-        # simulate the 'get' command with '--release' flag
-        ##################################################
-        test_get_release = simulate_get_version("test/test_content_files/test_valid_chart.yaml", release=True)
-        self.assertEqual(test_get_release.returncode, 0,
-                         msg="returned a non 0 exist code, but tested get version against a valid chart file")
-
-        stdout = test_get_release.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, 'alpha.802',
-                         msg="return release string should be alpha.802")
-
-        ###################################################
-        # simulate the 'get' command with '--metadata' flag
-        ###################################################
-        test_get_metadata = simulate_get_version("test/test_content_files/test_valid_chart.yaml", metadata=True)
-        self.assertEqual(test_get_metadata.returncode, 0,
-                         msg="returned a non 0 exist code, but tested get version against a valid chart file")
-
-        stdout = test_get_metadata.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, 'sha-256',
-                         msg="return metadata string should be sha-256")
-
-        ################################################
-        # simulate the 'get' command with version prefix
-        ################################################
-        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "v2.0.8-alpha.802+sha-256")
-        test_get_prefix = simulate_get_version("test/test_content_files/test_valid_chart.yaml")
-        self.assertEqual(test_get_prefix.returncode, 0,
-                         msg="returned a non 0 exist code, but tested get version against a valid chart file")
-
-        stdout = test_get_prefix.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, 'v2.0.8-alpha.802+sha-256',
-                         msg="return string should be v2.0.8-alpha.802+sha-256")
-        if stdout != "v2.0.8-alpha.802+sha-256":
-            raise Exception("test_get_flags failed, return string should be v2.0.8-alpha.802+sha-256 got " + stdout)
-
-        #############################################################################################
-        # simulate the 'get' command with --app-version flag on a chart with missing appVersion field
-        #############################################################################################
-        test_get_missing_app_version = simulate_get_version(
-            "test/test_content_files/test_valid_chart_minimal.yaml", app_version=True
-        )
-        self.assertEqual(test_get_missing_app_version.returncode, 1,
-                         msg="returned a 0 exist code, "
-                             "but tested get 'app-version' flag against a chart file with missing appVersion key")
-
-    def test_set_flags(self):
-        ################################################
-        # simulate the 'get' command with version prefix
-        ################################################
-        # this path test/test_content_files/ is not a valid git repo (its parent is),
-        # so it should fail with relevant error
-        test_set_auto = simulate_set_version("test/test_content_files/test_valid_setup.py", auto=True)
-        self.assertEqual('test/test_content_files is not a valid git repo',
-                         test_set_auto.stderr.decode('utf-8').strip())
-
-        # Currently not testing success with auto flag since git branch / hash is dynamic
-
-    def test_plain_text_version_file(self):
-        """
-        Test case when target file is a 'VERSION' file
-        """
-        completed_process_object = simulate_get_version("test/test_content_files/VERSION")
-        self.assertEqual(completed_process_object.returncode, 0,
-                         msg="returned a non 0 exist code, but tested get version against a valid VERSION file")
-
-        stdout = completed_process_object.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, '2.5.1+metadata.here', msg="return version should be 2.5.1+metadata.here")
-
-        simulate_bump_version("test/test_content_files/VERSION", "major")
-        completed_process_object = simulate_get_version("test/test_content_files/VERSION")
-        self.assertEqual(completed_process_object.returncode, 0,
-                         msg="returned a non 0 exist code, but tested bump version against a valid VERSION file")
-
-        stdout = completed_process_object.stdout.decode('utf-8').strip()
-        self.assertEqual(stdout, '3.0.0+metadata.here')
-
-    def test_verify_flag(self):
-        """
-        Test case when user is verifying string
-        """
-        # Verify valid string
-        completed_process_object = run(["python", "src/pybump.py", "--verify", "123.45.6789+valid-version"],
-                                       stdout=PIPE, stderr=PIPE)
-        self.assertIs(completed_process_object.returncode, 0,
-                      msg="returned a non 0 exist code, but tested 'verify' flag against a valid semver string")
-
-        # Verify invalid string
-        completed_process_object = run(["python", "src/pybump.py", "--verify", "1.1-my-feature"],
-                                       stdout=PIPE, stderr=PIPE)
-        self.assertIs(completed_process_object.returncode, 1,
-                      msg="returned a 0 exist code, but tested 'verify' flag against a non valid semver string")
 
 
 if __name__ == '__main__':

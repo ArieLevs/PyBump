@@ -10,16 +10,86 @@ regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'
 
 
 class PybumpVersion(object):
-    prefix = False
+    __prefix = False
     version = [0, 0, 0]
-    release = None
-    metadata = None
+    __release = None
+    __metadata = None
+    valid_sem_ver = False
+    invalid_version = None
 
-    def __init__(self, version_array, prefix=False, release=None, metadata=None):
-        self.prefix = prefix
-        self.version = version_array
-        self.release = release
-        self.metadata = metadata
+    def __init__(self, version):
+        self.validate_semantic_string(version)
+
+    def validate_semantic_string(self, version):
+        """
+        init the PybumpVersion object by getting a plain text version string,
+        init will check if input string is a semantic version
+        semver defined here: https://github.com/semver/semver/blob/master/semver.md,
+        The version is allowed a lower case 'v' character.
+        search a match according to the regular expresion, so for example '1.1.2-prerelease+meta' is valid,
+        then make sure there is and exact single match and validate if each of x,y,z is an integer.
+
+        in case a non valid version passed, 'valid_sem_ver' will stay False
+
+        :param version: string
+        """
+        orig_version = version
+        # only if passed version is non empty string
+        if type(version) == str and len(version) != 0:
+            # In case the version if of type 'v2.2.5' then save 'v' prefix and cut it for further 'semver' validation
+            if version[0] == 'v':
+                version = version[1:]
+                self.__prefix = True
+
+            semver_regex = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"  # Match x.y.z
+                                      # Match -sometext-12.here
+                                      r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
+                                      r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
+                                      # Match +more.123.here
+                                      r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$")
+            # returns a list of tuples, for example [('2', '2', '7', 'alpha', '')]
+            match = semver_regex.findall(version)
+
+            # if there was no match using 'semver_regex', then empty list returned
+            if len(match) != 0:
+                try:
+                    self.version = [int(n) for n in match[0][:3]]
+
+                    self.__release = match[0][3]
+                    self.__metadata = match[0][4]
+
+                    self.valid_sem_ver = True
+                    self.invalid_version = None
+                    return True
+                except ValueError:
+                    pass
+        self.valid_sem_ver = False
+        self.invalid_version = orig_version
+        return False
+
+    @property
+    def prefix(self):
+        return self.__prefix
+
+    @property
+    def release(self):
+        return self.__release
+
+    @release.setter
+    def release(self, value):
+        self.__release = value
+        # re validate that updated version with new release is still valid
+        self.validate_semantic_string(self.__str__())
+
+    @property
+    def metadata(self):
+        return self.__metadata
+
+    @metadata.setter
+    def metadata(self, value):
+        # re validate that updated version with new metadata is still valid
+        self.__metadata = value
+        self.validate_semantic_string(self.__str__())
 
     def __str__(self):
         """
@@ -68,6 +138,15 @@ class PybumpVersion(object):
         """
         return self.version > other_version.version
 
+    def is_valid_semantic_version(self):
+        return self.valid_sem_ver
+
+    def print_invalid_version(self):
+        print("Invalid semantic version format: {}\n"
+              "Make sure to comply with https://semver.org/ "
+              "(lower case 'v' prefix is allowed)".format(self.invalid_version),
+              file=stderr)
+
 
 def get_pypi_package_releases(package_name):
     """
@@ -103,13 +182,14 @@ def is_patchable(x, y):
 
 def identify_possible_patch(releases_list, version_to_patch):
     """
-    check if there is a possible patch version newer then the patch version of current_version_dict,
+    check if there is a possible patch version (in releases_list) newer then version_to_patch,
     get list of semantic versions,
-    for example ['0.1.2', '0.1.3', '0.3.1', '0.3.2'] and 'version_to_patch' with '0.3.1'
-    :param releases_list: list of semantic versions as strings
-    :param version_to_patch: is_semantic_string output
-    :return: dict in the for of:
-        {'current_patch': version_to_patch, 'latest_patch': patchable_version_str, 'patchable': patchable}
+    for example ['0.1.2', '0.1.3', '0.3.1', '0.3.2'] and 'version_to_patch' with PybumpVersion object
+
+    :param releases_list: list of strings
+    :param version_to_patch: PybumpVersion object
+    :return: dict in the form of:
+        {'patchable': boolean, 'latest_patch': 'string'}
     """
     if not releases_list or not version_to_patch:
         raise ValueError('one of the lists empty')
@@ -119,34 +199,37 @@ def identify_possible_patch(releases_list, version_to_patch):
     patchable = False
 
     for release in releases_list:
-        release_patch_candidate = is_semantic_string(release)
-        # if 'False' returned
-        if not release_patch_candidate:
+        release_patch_candidate = PybumpVersion(release)
+
+        if not release_patch_candidate.is_valid_semantic_version():
             # current 'release' does not meet semantic version, skip
             continue
 
         # check if version_to_patch is patchable
-        if not is_patchable(release_patch_candidate.get('version', None), version_to_patch):
+        if not is_patchable(release_patch_candidate.version, version_to_patch.version):
             continue
 
         # at this point possible patch version found, so if version_to_patch is [0, 3, 1],
         # and current iteration over releases_list is [0, 3, 2] then it matches for a patch,
         # but there also might be a release with version [0, 3, 3] and even newer, we need to find most recent.
         # calculate highest value found for patch (for cases when the 'releases' is not sorted)
-        if release_patch_candidate.get('version')[2] > latest_patch_version[2]:
-            latest_patch_version = release_patch_candidate.get('version')
+        if release_patch_candidate.version[2] > latest_patch_version.version[2]:
+            latest_patch_version = release_patch_candidate
 
-    if latest_patch_version > version_to_patch:
+    if latest_patch_version.is_larger_then(version_to_patch):
         patchable = True
 
-    return {'current_patch': version_to_patch, 'latest_patch': latest_patch_version, 'patchable': patchable}
+    return {'patchable': patchable, 'latest_patch': latest_patch_version.__str__()}
 
 
 def get_setup_py_install_requires(content):
     """
-    Extract 'install_requires' value using regex from 'content'
+    Extract 'install_requires' value using regex from 'content',
+    function will return a list of python packages:
+    ['package_a', 'package_b==1.5.6', 'package_c>=3.0']
+
     :param content: the content of a setup.py file
-    :return: install_requires values as array
+    :return: list on strings, install_requires values as list
     """
     # use DOTALL https://docs.python.org/3/library/re.html#re.DOTALL to include new lines
     regex_install_requires_pattern = re.compile(r"install_requires=(.*?)],", flags=re.DOTALL)
@@ -166,64 +249,90 @@ def get_setup_py_install_requires(content):
     return literal_eval(found_install_requires)
 
 
-def get_versions_from_requirements(requirements_array):
+def get_versions_from_requirements(requirements_list):
     """
-    brake python requirements array, in the form of ['package_1==version', 'package_2', ], for example
-    ['pyyaml==5.3.1', 'pybump']
-    into more detailed dictionary containing package name and 'is_semantic_string' result
-    :param requirements_array: array of strings
-    :return: array of PybumpVersion objects in the form of:
+    as described here https://pip.pypa.io/en/stable/reference/pip_install/#example-requirements-file
+    python versions requirement may appear in the form of:
+    docopt == 0.6.1             # Version Matching. Must be version 0.6.1
+    keyring >= 4.1.1            # Minimum version 4.1.1
+    coverage != 3.5             # Version Exclusion. Anything except version 3.5
+    Mopidy-Dirble ~= 1.1        # Compatible release. Same as >= 1.1, == 1.*
+
+    the function is interested only in exact version match (case '==')
+    brake python requirements list, in the form of ['package_a', 'package_b==1.5.6', 'package_c>=3.0'],
+    for example
+    ['pyyaml==5.3.1', 'pybump', 'GitPython>=3.1']
+    into more detailed dictionary containing package name and PybumpVersion
+    :param requirements_list: list of strings
+    :return: list of dicts in the form of:
         [
             {
                 'package_name': 'pyyaml',
-                'package_version': {'prefix': False, 'version': [5, 3, 1], 'release': '', 'metadata': ''}
+                'package_version': PybumpVersion
             },
             {
                 'package_name': 'pybump',
-                'package_version': 'latest'
+                'package_version': PybumpVersion
             }
         ]
     """
     dependencies = []
-    for req in requirements_array:
-        # python packages may be locked to specific version by using 'pack==0.1.2'
-        package_array = req.split('==')
-        package_name = package_array[0]
+    for req in requirements_list:
+        # split name from version by all allowed operators
+        package_array = re.split("==|>=|!=|~=", req)
+
+        package_name = package_array[0].strip()
         if len(package_array) == 1:
-            # there is no locked version for current package, it will use latest
-            package_version = 'latest'
-        else:
-            package_version = is_semantic_string(package_array[1])
+            # if package has no locked version or has >= type for current package, of type 'package>=2.7' its invalid
+            version = PybumpVersion('latest')
+        else:  # else the object will have a (probably) valid semantic version
+            version = PybumpVersion(package_array[1].strip())
+
             # in case the string after '==' is not semantic version return error
-            if not package_version:
-                raise RuntimeError("Current package '{0}', is not set with semantic version: '{1}', cannot promote"
-                                   .format(package_name, package_array[1]))
+            # if not version.is_valid_semantic_version():
+            #     raise RuntimeError("Current package '{0}', is not set with semantic version: '{1}', cannot promote"
+            #                        .format(package_name, package_array[1]))
 
         # append current package
-        dependencies.append({'package_name': package_name, 'package_version': package_version})
+        dependencies.append({'package_name': package_name, 'package_version': version})
 
     return dependencies
 
 
 def check_available_python_patches(setup_py_content=None):
-    requirements_array = get_setup_py_install_requires(setup_py_content)
-    requirements_versions = get_versions_from_requirements(requirements_array)
+    """
+    get the content of setup.py file and return a list of dicts with possible patchable dependancies versions,
+    return will be in the form of:
+    [
+        {'package_name': 'pyyaml', 'version': '5.3.1', 'patchable': False, 'latest_patch': '5.3.1'},
+        {'package_name': 'GitPython', 'version': '3.1.7', 'patchable': True, 'latest_patch': '3.1.12'}
+    ]
+    :param setup_py_content: content of setup.py file
+    :return: list of dicts
+    """
+    requirements_list = get_setup_py_install_requires(setup_py_content)
+    requirements_versions = get_versions_from_requirements(requirements_list)
 
     patchable_packages_array = []
-    for req in requirements_versions:
-        if not req.get('package_version') == 'latest':
+    for requirement in requirements_versions:
+        if requirement.get('package_version').is_valid_semantic_version():
+            package_name = requirement.get('package_name')
             # get current package info (as json) from pypi api
-            package_releases = get_pypi_package_releases(req.get('package_name'))
+            package_releases = get_pypi_package_releases(package_name)
+            # version_to_patch is a PybumpVersion object
+            version_to_patch = requirement.get('package_version')
 
             # convert keys of the 'releases' dict, into a list (only version numbers),
-            releases_list = package_releases.get('releases').keys()
-            # fetch just the version of current package as is_semantic_string output
-            version_to_patch = req.get('package_version').get('version', None)
+            releases_list = package_releases.get('releases').keys()  # releases_list is a list of strings
+
+            res = identify_possible_patch(releases_list, version_to_patch)  # check for possible patch
 
             patchable_packages_array.append(
                 {
-                    'package_name': req.get('package_name'),
-                    'version': identify_possible_patch(releases_list, version_to_patch)  # check for possible patch
+                    'package_name': package_name,
+                    'version': str(version_to_patch),
+                    'patchable': res.get('patchable'),
+                    'latest_patch': res.get('latest_patch')
                 }
             )
 
@@ -264,47 +373,6 @@ def set_setup_py_version(version, content):
     :return: content of setup.py file with 'version'
     """
     return regex_version_pattern.sub(r'\g<1>{}\g<3>'.format(version), content)
-
-
-def is_semantic_string(semantic_string):
-    """
-    Check if input string is a semantic version as defined here: https://github.com/semver/semver/blob/master/semver.md,
-    The version is allowed a lower case 'v' character.
-    Function will search a match according to the regular expresion, so for example '1.1.2-prerelease+meta' is valid,
-    then make sure there is and exact single match and validate if each of x,y,z is an integer.
-    return {'prefix': boolean, 'version': [x, y, z], 'release': 'some-release', 'metadata': 'some-metadata'} if True
-
-    :param semantic_string: string
-    :return: dict if True, else False
-    """
-    if type(semantic_string) != str or len(semantic_string) == 0:
-        return False
-
-    version_prefix = False
-    # In case the version if of type 'v2.2.5' then save 'v' prefix and cut it for further 'semver' validation
-    if semantic_string[0] == 'v':
-        semantic_string = semantic_string[1:]
-        version_prefix = True
-
-    semver_regex = re.compile(r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"  # Match x.y.z
-                              # Match -sometext-12.here
-                              r"(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)"
-                              r"(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?"
-                              # Match +more.123.here
-                              r"(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?$")
-    # returns a list of tuples, for example [('2', '2', '7', 'alpha', '')]
-    match = semver_regex.findall(semantic_string)
-
-    # There was no match using 'semver_regex', since if 0 or more then single match found and empty list returned
-    if len(match) == 0:
-        return False
-
-    try:
-        semantic_array = [int(n) for n in match[0][:3]]
-    except ValueError:
-        return False
-
-    return {'prefix': version_prefix, 'version': semantic_array, 'release': match[0][3], 'metadata': match[0][4]}
 
 
 def get_self_version(dist_name):
@@ -396,12 +464,6 @@ def read_version_from_file(file_path, app_version):
     return {'file_content': file_content, 'version': current_version, 'file_type': file_type}
 
 
-def print_invalid_version(version):
-    print("Invalid semantic version format: {}\n"
-          "Make sure to comply with https://semver.org/ (lower case 'v' prefix is allowed)".format(version),
-          file=stderr)
-
-
 def main():
     parser = argparse.ArgumentParser(description='Python version bumper')
     subparsers = parser.add_subparsers(dest='sub_command')
@@ -449,10 +511,11 @@ def main():
     # Case where no args passed, sub_command is mandatory
     if args['sub_command'] is None:
         if args['verify']:
-            if is_semantic_string(args['verify']):
-                print('{} is valid'.format(args['verify']))
+            version = PybumpVersion(args['verify'])
+            if version.is_valid_semantic_version():
+                print('{} is valid'.format(version.__str__()))
             else:
-                print_invalid_version(args['verify'])
+                version.print_invalid_version()
                 exit(1)
         else:
             parser.print_help()
@@ -462,19 +525,11 @@ def main():
     file_data = read_version_from_file(args['file'], args['app_version'])
     file_content = file_data.get('file_content')
     file_type = file_data.get('file_type')
+    version_object = PybumpVersion(file_data.get('version'))
 
-    current_version_dict = is_semantic_string(file_data.get('version'))
-
-    if not current_version_dict:
-        print_invalid_version(file_data.get('version'))
+    if not version_object.is_valid_semantic_version():
+        version_object.print_invalid_version()
         exit(1)
-
-    current_pybump_version = PybumpVersion(
-        prefix=current_version_dict.get('prefix'),
-        version_array=current_version_dict.get('version'),
-        release=current_version_dict.get('release'),
-        metadata=current_version_dict.get('metadata')
-    )
 
     if args['sub_command'] == 'patch-verification':
         if file_type == 'python':
@@ -485,22 +540,22 @@ def main():
     elif args['sub_command'] == 'get':
         if args['sem_ver']:
             # Join the array of current_version_dict by dots
-            print('.'.join(str(x) for x in current_pybump_version.version))
+            print('.'.join(str(x) for x in version_object.version))
         elif args['release']:
-            print(current_pybump_version.release)
+            print(version_object.release)
         elif args['metadata']:
-            print(current_pybump_version.metadata)
+            print(version_object.metadata)
         else:
-            print(file_data.get('version'))
+            print(version_object.__str__())
     else:
         # Set new_version to be invalid first
-        new_version = ''
+        new_version = None
 
         # Set the 'new_version' value
         if args['sub_command'] == 'set':
             # Case set-version argument passed, just set the new version with its value
             if args['set_version']:
-                new_version = args['set_version']
+                new_version = PybumpVersion(args['set_version'])
             # Case the 'auto' flag was set, set release with current git branch name and metadata with hash
             elif args['auto']:
                 from git import Repo, InvalidGitRepositoryError
@@ -509,9 +564,9 @@ def main():
                 try:
                     repo = Repo(path=file_dirname_path)
                     # update current version release and metadata with relevant git values
-                    current_pybump_version.release = repo.active_branch.name
-                    current_pybump_version.metadata = str(repo.active_branch.commit)
-                    new_version = current_pybump_version.__str__()
+                    version_object.release = repo.active_branch.name
+                    version_object.metadata = str(repo.active_branch.commit)
+                    new_version = version_object
                 except InvalidGitRepositoryError:
                     print("{} is not a valid git repo".format(file_dirname_path), file=stderr)
                     exit(1)
@@ -521,13 +576,14 @@ def main():
                 exit(1)
         else:  # bump version ['sub_command'] == 'bump'
             # Only bump value of the 'version' key
-            current_pybump_version.bump_version(args['level'])
-            new_version = current_pybump_version.__str__()
-        if not is_semantic_string(new_version):
-            print_invalid_version(new_version)
+            version_object.bump_version(args['level'])
+            new_version = version_object
+        # new_version should never be None at this point, but check this anyway
+        if not new_version or not new_version.is_valid_semantic_version():
+            new_version.print_invalid_version()
             exit(1)
         # Write the new version with relevant content back to the file
-        write_version_to_file(args['file'], file_content, new_version, args['app_version'])
+        write_version_to_file(args['file'], file_content, new_version.__str__(), args['app_version'])
 
         if args['quiet'] is False:
             print(new_version)

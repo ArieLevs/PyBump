@@ -14,5 +14,8 @@ setuptools.setup(
     install_requires=[
         'pybump==1.3.1',
         'GitPython==3.1.7',
+        'pyyaml>=5.2',
+        'package_a',
+        'package_b!=34.1.5',
     ],
 )
