@@ -10,14 +10,14 @@ regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'
 
 
 class PybumpVersion(object):
-    __prefix = False
-    version = [0, 0, 0]
-    __release = None
-    __metadata = None
-    valid_sem_ver = False
-    invalid_version = None
 
     def __init__(self, version):
+        self.__prefix = False
+        self.__version = [0, 0, 0]
+        self.__release = None
+        self.__metadata = None
+        self.__valid_sem_ver = False
+        self.__invalid_version = None
         self.validate_semantic_string(version)
 
     def validate_semantic_string(self, version):
@@ -53,19 +53,23 @@ class PybumpVersion(object):
             # if there was no match using 'semver_regex', then empty list returned
             if len(match) != 0:
                 try:
-                    self.version = [int(n) for n in match[0][:3]]
+                    self.__version = [int(n) for n in match[0][:3]]
 
                     self.__release = match[0][3]
                     self.__metadata = match[0][4]
 
-                    self.valid_sem_ver = True
-                    self.invalid_version = None
+                    self.__valid_sem_ver = True
+                    self.__invalid_version = None
                     return True
                 except ValueError:
                     pass
-        self.valid_sem_ver = False
-        self.invalid_version = orig_version
+        self.__valid_sem_ver = False
+        self.__invalid_version = orig_version
         return False
+
+    @property
+    def version(self):
+        return self.__version
 
     @property
     def prefix(self):
@@ -91,6 +95,10 @@ class PybumpVersion(object):
         self.__metadata = value
         self.validate_semantic_string(self.__str__())
 
+    @property
+    def invalid_version(self):
+        return self.__invalid_version
+
     def __str__(self):
         """
         reconstruct version to string, if releases or metadata passed, override the one that is part of object
@@ -99,7 +107,7 @@ class PybumpVersion(object):
         result_string = ''
         if self.prefix:
             result_string = 'v'
-        result_string += '.'.join(str(x) for x in self.version)
+        result_string += '.'.join(str(x) for x in self.__version)
 
         if self.release:
             result_string += '-' + self.release
@@ -116,19 +124,19 @@ class PybumpVersion(object):
         :return: int array with new value
         """
         if level == 'major':
-            self.version[0] += 1
-            self.version[1] = 0
-            self.version[2] = 0
+            self.__version[0] += 1
+            self.__version[1] = 0
+            self.__version[2] = 0
         elif level == 'minor':
-            self.version[1] += 1
-            self.version[2] = 0
+            self.__version[1] += 1
+            self.__version[2] = 0
         elif level == 'patch':
-            self.version[2] += 1
+            self.__version[2] += 1
         else:
             raise ValueError("Error, invalid level: '{}', "
                              "should be major|minor|patch.".format(level))
 
-        return self.version
+        return self.__version
 
     def is_larger_then(self, other_version):
         """
@@ -136,15 +144,15 @@ class PybumpVersion(object):
         :param other_version: PybumpVersion object
         :return: boolean
         """
-        return self.version > other_version.version
+        return self.__version > other_version.version
 
     def is_valid_semantic_version(self):
-        return self.valid_sem_ver
+        return self.__valid_sem_ver
 
     def print_invalid_version(self):
         print("Invalid semantic version format: {}\n"
               "Make sure to comply with https://semver.org/ "
-              "(lower case 'v' prefix is allowed)".format(self.invalid_version),
+              "(lower case 'v' prefix is allowed)".format(self.__invalid_version),
               file=stderr)
 
 
@@ -256,7 +264,7 @@ def get_versions_from_requirements(requirements_list):
     docopt == 0.6.1             # Version Matching. Must be version 0.6.1
     keyring >= 4.1.1            # Minimum version 4.1.1
     coverage != 3.5             # Version Exclusion. Anything except version 3.5
-    Mopidy-Dirble ~= 1.1        # Compatible release. Same as >= 1.1, == 1.*
+    pybump ~= 1.1               # Compatible release. Same as >= 1.1, == 1.*
 
     the function is interested only in exact version match (case '==')
     brake python requirements list, in the form of ['package_a', 'package_b==1.5.6', 'package_c>=3.0'],
@@ -301,7 +309,7 @@ def get_versions_from_requirements(requirements_list):
 
 def check_available_python_patches(setup_py_content=None):
     """
-    get the content of setup.py file and return a list of dicts with possible patchable dependancies versions,
+    get the content of setup.py file and return a list of dicts with possible patchable dependencies versions,
     return will be in the form of:
     [
         {'package_name': 'pyyaml', 'version': '5.3.1', 'patchable': False, 'latest_patch': '5.3.1'},
