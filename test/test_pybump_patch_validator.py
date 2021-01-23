@@ -1,10 +1,9 @@
 import json
 import unittest
 from unittest import mock
-from subprocess import run, PIPE
 
-from src.pybump import get_setup_py_install_requires, get_versions_from_requirements, identify_possible_patch, \
-    is_patchable, get_pypi_package_releases, check_available_python_patches, PybumpVersion
+from src.pybump import get_setup_py_install_requires, get_versions_from_requirements, \
+    get_pypi_package_releases, check_available_python_patches, PybumpVersion, PybumpPatchableVersion
 
 from . import valid_setup_py, valid_setup_py_2, invalid_setup_py_1, invalid_setup_py_2
 
@@ -40,26 +39,45 @@ def mocked__pypi_requests(*args):
     return MockResponse(None, 404)
 
 
-def simulate_patch_verification(file):
-    """
-    execute sub process to simulate real app patch-verification execution,
-    :param file: string
-    :return: CompletedProcess object
-    """
-
-    return run(["python", "src/pybump.py", "patch-verification", "--file", file], stdout=PIPE, stderr=PIPE)
-
-
 class PyBumpPatcherTest(unittest.TestCase):
 
     def setUp(self):
-        self.version_invalid = PybumpVersion('latest')
+        version_invalid_1 = PybumpVersion('latest')
+        version_invalid_2 = PybumpVersion('some_text>=more_text')
+
         self.version_0_3_0 = PybumpVersion('0.3.0')
         self.version_0_3_1 = PybumpVersion('v0.3.1')
         self.version_0_3_2 = PybumpVersion('0.3.2')
         self.version_0_3_8 = PybumpVersion('0.3.8')
         self.version_0_4_2 = PybumpVersion('0.4.2')
         self.version_1_3_3 = PybumpVersion('1.3.3')
+
+        self.package_a_0_3_0 = PybumpPatchableVersion('package_a', self.version_0_3_0)
+        self.package_b_0_3_1 = PybumpPatchableVersion('package_b', self.version_0_3_1)
+        self.package_c_0_3_2 = PybumpPatchableVersion('package_b', self.version_0_3_2)
+        self.package_d_0_4_2 = PybumpPatchableVersion('package_c', self.version_0_4_2)
+        self.package_invalid_a = PybumpPatchableVersion('package_invalid_a', version_invalid_1)
+        self.package_invalid_b = PybumpPatchableVersion('package_invalid_b', version_invalid_2)
+
+    def test_get_dict(self):
+        self.assertEqual(self.package_a_0_3_0.get_dict(),
+                         {'latest_patch': 'None',
+                          'package_name': 'package_a',
+                          'patchable': False,
+                          'version': '0.3.0'})
+        self.assertEqual(self.package_invalid_a.get_dict(),
+                         {'latest_patch': 'None',
+                          'package_name': 'package_invalid_a',
+                          'patchable': False,
+                          'version': '0.0.0'})
+
+    def test_str(self):
+        self.assertEqual(
+            str(self.package_a_0_3_0),
+            "{'package_name': 'package_a', 'version': '0.3.0', 'patchable': False, 'latest_patch': 'None'}")
+        self.assertEqual(
+            str(self.package_invalid_a),
+            "{'package_name': 'package_invalid_a', 'version': '0.0.0', 'patchable': False, 'latest_patch': 'None'}")
 
     def test_get_setup_py_install_requires(self):
         # should return empty list since valid_setup_py missing the install_requires=[] key
@@ -76,49 +94,48 @@ class PyBumpPatcherTest(unittest.TestCase):
     def test_get_versions_from_requirements(self):
         """
         get_versions_from_requirements function should return list of dicts in the form of:
-        [
-            {
-                'package_name': 'pyyaml', 'package_version': PybumpVersion
-            },
-            {
-                'package_name': 'pybump', 'package_version': PybumpVersion
-            }
-        ]
+        [PybumpPatchableVersion, PybumpPatchableVersion, ]
         will test against the values returned inside the PybumpVersion object
         """
         result = get_versions_from_requirements(
-            ['pyyaml', 'pybump==1.3.3', 'package_a >= 5.7', 'package_b!=4.5.5', 'package_c~=1.1']
+            ['pyyaml', 'pybump==1.3.3', 'package_a >= 5.7', 'package_b~=1.1', 'package_c!=4.5.5', 'just_text=1']
         )
 
         # pyyaml
-        self.assertEqual(result[0].get('package_name'), 'pyyaml')
-        self.assertEqual(result[0].get('package_version').version, [0, 0, 0])
-        self.assertEqual(result[0].get('package_version').release, None)
-        self.assertFalse(result[0].get('package_version').is_valid_semantic_version())
+        self.assertEqual(result[0].package_name, 'pyyaml')
+        self.assertEqual(result[0].version.version, [0, 0, 0])
+        self.assertEqual(result[0].version.release, None)
+        self.assertFalse(result[0].version.is_valid_semantic_version())
 
         # pybump
-        self.assertEqual(result[1].get('package_name'), 'pybump')
-        self.assertEqual(result[1].get('package_version').version, [1, 3, 3])
-        self.assertEqual(result[1].get('package_version').release, '')
-        self.assertTrue(result[1].get('package_version').is_valid_semantic_version())
+        self.assertEqual(result[1].package_name, 'pybump')
+        self.assertEqual(result[1].version.version, [1, 3, 3])
+        self.assertEqual(result[1].version.release, '')
+        self.assertTrue(result[1].version.is_valid_semantic_version())
 
         # package_a
-        self.assertEqual(result[2].get('package_name'), 'package_a')
-        self.assertEqual(result[2].get('package_version').version, [0, 0, 0])
-        self.assertEqual(result[2].get('package_version').release, None)
-        self.assertFalse(result[2].get('package_version').is_valid_semantic_version())
+        self.assertEqual(result[2].package_name, 'package_a')
+        self.assertEqual(result[2].version.version, [0, 0, 0])
+        self.assertEqual(result[2].version.release, None)
+        self.assertFalse(result[2].version.is_valid_semantic_version())
 
         # package_b
-        self.assertEqual(result[3].get('package_name'), 'package_b')
-        self.assertEqual(result[3].get('package_version').version, [4, 5, 5])
-        self.assertEqual(result[3].get('package_version').release, '')
-        self.assertTrue(result[3].get('package_version').is_valid_semantic_version())
+        self.assertEqual(result[3].package_name, 'package_b')
+        self.assertEqual(result[3].version.version, [0, 0, 0])
+        self.assertEqual(result[3].version.release, None)
+        self.assertFalse(result[3].version.is_valid_semantic_version())
 
         # package_c
-        self.assertEqual(result[4].get('package_name'), 'package_c')
-        self.assertEqual(result[4].get('package_version').version, [0, 0, 0])
-        self.assertEqual(result[4].get('package_version').release, None)
-        self.assertFalse(result[4].get('package_version').is_valid_semantic_version())
+        self.assertEqual(result[4].package_name, 'package_c!=4.5.5')
+        self.assertEqual(result[4].version.version, [0, 0, 0])
+        self.assertEqual(result[4].version.release, None)
+        self.assertFalse(result[4].version.is_valid_semantic_version())
+
+        # just_text
+        self.assertEqual(result[5].package_name, 'just_text=1')
+        self.assertEqual(result[5].version.version, [0, 0, 0])
+        self.assertEqual(result[5].version.release, None)
+        self.assertFalse(result[5].version.is_valid_semantic_version())
 
         # test passing empty list
         self.assertEqual(
@@ -131,51 +148,51 @@ class PyBumpPatcherTest(unittest.TestCase):
             get_versions_from_requirements('str')
 
     def test_identify_possible_patch(self):
-        # test most simple case when version is patchable
-        self.assertEqual(
-            identify_possible_patch(['0.1.2', '0.1.3', '0.3.1', '0.3.2'], self.version_0_3_0),
-            {'patchable': True, 'latest_patch': str(self.version_0_3_2)}
-        )
+        # test package_a_0_3_0 case when version is patchable
+        self.assertFalse(self.package_a_0_3_0.patchable)
+        self.package_a_0_3_0.identify_possible_patch(['0.1.2', '0.1.3', '0.3.1', '0.3.2'])
+        self.assertTrue(self.package_a_0_3_0.patchable)
+        self.assertEqual(self.package_a_0_3_0.latest_patch.version, self.version_0_3_2.version)
 
-        # test most simple NOT sorted list case
-        self.assertEqual(
-            identify_possible_patch(['0.3.2', '0.1.2', '0.1.3', '0.3.1'], self.version_0_3_1),
-            {'patchable': True, 'latest_patch': str(self.version_0_3_2)}
-        )
+        # test package_b_0_3_1 NOT sorted list case
+        self.assertFalse(self.package_b_0_3_1.patchable)
+        self.package_b_0_3_1.identify_possible_patch(['0.3.2', '0.1.2', '0.1.3', '0.3.1'])
+        self.assertTrue(self.package_b_0_3_1.patchable)
+        self.assertEqual(self.package_b_0_3_1.latest_patch.version, self.version_0_3_2.version)
 
-        # test most simple NOT sorted list case
-        self.assertEqual(
-            identify_possible_patch(['4.2.2', '0.3.8', '0.1.2', '0.1.3', '0.3.1'], self.version_0_3_1),
-            {'patchable': True, 'latest_patch': str(self.version_0_3_8)}
-        )
+        self.package_b_0_3_1.identify_possible_patch(['0.2.2', 'text', None])
+        self.assertFalse(self.package_b_0_3_1.patchable)
+        self.assertEqual(self.package_b_0_3_1.latest_patch.version, self.version_0_3_1.version)
 
-        # test simple list case with
-        self.assertEqual(
-            identify_possible_patch(['0.3.2', 'text', None], self.version_0_3_1),
-            {'patchable': True, 'latest_patch': str(self.version_0_3_2)}
-        )
+        # test package_b_0_3_1 NOT sorted list case
+        self.package_b_0_3_1.identify_possible_patch(['4.2.2', '0.3.8', '0.1.2', '0.1.3', '0.3.1'])
+        self.assertTrue(self.package_b_0_3_1.patchable)
+        self.assertEqual(self.package_b_0_3_1.latest_patch.version, self.version_0_3_8.version)
 
-        # pass both empty lists
+        # pass empty list
         with self.assertRaises(ValueError):
-            identify_possible_patch([], [])
+            self.package_b_0_3_1.identify_possible_patch([])
 
         # test version that is already latest
-        self.assertEqual(
-            identify_possible_patch(['0.1.2', '0.1.3', '0.3.1', '0.3.2'], self.version_0_3_2),
-            {'patchable': False, 'latest_patch': str(self.version_0_3_2)}
-        )
+        self.package_c_0_3_2.identify_possible_patch(['0.1.2', '0.1.3', '0.3.1', '0.3.2'])
+        self.assertFalse(self.package_c_0_3_2.patchable)
+        self.assertEqual(self.package_c_0_3_2.latest_patch.version, self.version_0_3_2.version)
 
         # test not patchable version
-        self.assertEqual(
-            identify_possible_patch(['0.1.2', '0.1.3', '0.3.1', '0.3.2'], self.version_0_4_2),
-            {'patchable': False, 'latest_patch': str(self.version_0_4_2)}
-        )
+        self.package_d_0_4_2.identify_possible_patch(['4.2.2', '0.3.8', '0.1.2', '0.1.3', '0.3.1'])
+        self.assertFalse(self.package_d_0_4_2.patchable)
+        self.assertEqual(self.package_d_0_4_2.latest_patch.version, self.version_0_4_2.version)
+
+        self.assertFalse(self.package_invalid_b.patchable)
+        self.package_invalid_b.identify_possible_patch(['4.2.2', '0.3.8', '0.1.2', '0.1.3', '0.3.1'])
+        self.assertFalse(self.package_invalid_b.patchable)
+        self.assertEqual(self.package_invalid_b.latest_patch.invalid_version, 'some_text>=more_text')
 
     def test_is_patchable(self):
-        self.assertTrue(is_patchable([0, 4, 5], [0, 4, 1]))
-        self.assertFalse(is_patchable([2, 1, 2], [2, 4, 2]))
-        self.assertFalse(is_patchable([0, 4, 5], [0, 4, 6]))
-        self.assertFalse(is_patchable([0, 0, 1], [0, 0, 1]))
+        self.assertTrue(PybumpPatchableVersion.is_patchable([0, 4, 5], [0, 4, 1]))
+        self.assertFalse(PybumpPatchableVersion.is_patchable([2, 1, 2], [2, 4, 2]))
+        self.assertFalse(PybumpPatchableVersion.is_patchable([0, 4, 5], [0, 4, 6]))
+        self.assertFalse(PybumpPatchableVersion.is_patchable([0, 0, 1], [0, 0, 1]))
 
     @mock.patch('requests.get', side_effect=mocked__pypi_requests)
     def test_get_pypi_package_releases(self, mock_get):
@@ -204,11 +221,10 @@ class PyBumpPatcherTest(unittest.TestCase):
             [
                 {'package_name': 'pybump', 'version': '1.3.1', 'patchable': True, 'latest_patch': '1.3.8'},
                 {'package_name': 'GitPython', 'version': '3.1.7', 'patchable': True, 'latest_patch': '3.1.12'},
-                {'package_name': 'package_b', 'version': '34.1.5', 'patchable': False, 'latest_patch': '34.1.5'},
             ])
 
-        # make sure we mocked 1 tests
-        self.assertEqual(len(mock_get.call_args_list), 3)
+        # make sure we check (mocked) 2 packages
+        self.assertEqual(len(mock_get.call_args_list), 2)
 
 
 if __name__ == '__main__':

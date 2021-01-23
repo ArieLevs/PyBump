@@ -7,7 +7,7 @@ keywords = ['bump', 'version', 'appVersion', 'versioning', 'helm', 'charts', 'se
 
 setuptools.setup(
     name="pybump",
-    version="1.6.3",
+    version="1.7.0",
     author="Arie Lev",
     author_email="levinsonarie@gmail.com",
     description="Python version bumper",
@@ -18,8 +18,9 @@ setuptools.setup(
     license='Apache License 2.0',
     packages=setuptools.find_packages(),
     install_requires=[
-        'pyyaml==5.3.1',
+        'pyyaml==5.4.1',
         'GitPython==3.1.7',
+        'requests==2.25.1',
     ],
     classifiers=[
         "Programming Language :: Python :: 3",

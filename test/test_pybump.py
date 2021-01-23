@@ -120,6 +120,10 @@ class PyBumpTest(unittest.TestCase):
         self.assertFalse(self.version_z.is_valid_semantic_version())
         self.assertEqual(self.version_z.invalid_version, None)
 
+    def test_pybump_version_string(self):
+        self.assertEqual(str(self.version_a), '9.0.7-release-text+meta.text')
+        self.assertEqual(str(self.version_c), '0.4.0+meta.text-with-some-num-123123')
+
     def test_is_larger_then(self):
         self.assertTrue(self.version_a.is_larger_then(self.version_b))
         self.assertTrue(self.version_b.is_larger_then(self.version_c))
