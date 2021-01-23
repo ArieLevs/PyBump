@@ -40,7 +40,7 @@ Usage
 | **set** explicit version or set auto release+metadata:
 | ``pybump set --file PATH_TO_CHART.YAML --set-version X.Y.Z [--quiet]``
 |
-| the auto flag is mainly intended for pull request CIs, by using:
+| the **auto** flag is mainly intended for pull request CIs, by using:
 | ``pybump set --file PATH_TO_CHART.YAML --auto [--quiet]``
 | pybump will add git branch name as prerelease and git hash as metadata
 |
