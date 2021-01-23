@@ -1,7 +1,6 @@
 import json
 import unittest
 from unittest import mock
-from subprocess import run, PIPE
 
 from src.pybump import get_setup_py_install_requires, get_versions_from_requirements, \
     get_pypi_package_releases, check_available_python_patches, PybumpVersion, PybumpPatchableVersion
@@ -38,16 +37,6 @@ def mocked__pypi_requests(*args):
         return MockResponse(None, 404, 'Not Found')
 
     return MockResponse(None, 404)
-
-
-def simulate_patch_verification(file):
-    """
-    execute sub process to simulate real app patch-verification execution,
-    :param file: string
-    :return: CompletedProcess object
-    """
-
-    return run(["python", "src/pybump.py", "patch-verification", "--file", file], stdout=PIPE, stderr=PIPE)
 
 
 class PyBumpPatcherTest(unittest.TestCase):
