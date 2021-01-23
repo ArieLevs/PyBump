@@ -508,7 +508,7 @@ def main():
     parser_get.add_argument('--metadata', action='store_true', help='Get the version metadata only', required=False)
 
     # Sub-parser for version latest patch verification command
-    subparsers.add_parser('patch-verification', parents=[base_sub_parser])
+    subparsers.add_parser('patch-update', parents=[base_sub_parser])
 
     args = vars(parser.parse_args())
 
@@ -535,7 +535,7 @@ def main():
         version_object.print_invalid_version()
         exit(1)
 
-    if args['sub_command'] == 'patch-verification':
+    if args['sub_command'] == 'patch-update':
         if file_type == 'python':
             print(check_available_python_patches(setup_py_content=file_content))
         else:
