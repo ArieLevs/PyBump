@@ -1,4 +1,4 @@
-FROM python:3.8.7-slim
+FROM python:3-slim
 
 LABEL maintainer="Arie Lev <levinsonarie@gmail.com>" \
       description="Python version bumper"
