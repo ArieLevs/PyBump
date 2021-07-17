@@ -6,6 +6,7 @@ LABEL maintainer="Arie Lev <levinsonarie@gmail.com>" \
 WORKDIR package
 
 COPY src src
+COPY requirements.txt .
 COPY setup.py .
 COPY LICENSE .
 COPY README.rst .

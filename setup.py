@@ -1,4 +1,8 @@
 import setuptools
+from pkg_resources import parse_requirements
+
+with open("requirements.txt") as f:
+    requirements = [str(r) for r in parse_requirements(f)]
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
@@ -17,11 +21,7 @@ setuptools.setup(
     url="https://github.com/ArieLevs/PyBump",
     license='Apache License 2.0',
     packages=setuptools.find_packages(),
-    install_requires=[
-        'pyyaml==5.4.1',
-        'GitPython==3.1.7',
-        'requests==2.25.1',
-    ],
+    install_requires=requirements,
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.6",
