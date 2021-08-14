@@ -9,6 +9,7 @@ COPY src src
 COPY setup.py .
 COPY LICENSE .
 COPY README.rst .
+COPY requirements.txt .
 RUN python ./setup.py install
 
 WORKDIR /
