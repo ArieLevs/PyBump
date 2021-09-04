@@ -4,6 +4,10 @@ Python Version Bumper
     :alt: Build
     :target: https://pypi.org/project/pybump/
 
+.. image:: https://codecov.io/gh/ArieLevs/PyBump/branch/master/graph/badge.svg?token=P3AZKGX5IR
+    :alt: Code Coverage
+    :target: https://codecov.io/gh/ArieLevs/PyBump
+
 .. image:: https://img.shields.io/pypi/v/pybump.svg
     :alt: Version
     :target: https://pypi.org/project/pybump/
