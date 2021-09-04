@@ -44,6 +44,8 @@ jobs:
 
         # generate coverage xmo report
         coverage xml
+        # just print coverage locally
+        coverage report
 
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v2
