@@ -36,11 +36,21 @@ jobs:
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv
 
-    - name: Test with unittest
+    - name: Test with unittest (codecov)
       run: |
         pip install -r requirements.txt
         # discover all tests in the test directory
-        python -m unittest discover test -vv -t .
+        coverage run --omit 'venv/*' -m unittest discover test -vv -t .
+
+    - name: Upload Coverage to Codecov
+      uses: codecov/codecov-action@v2
+      with:
+        ## secrets should have CODECOV_TOKEN
+        #token: ${{ secrets.CODECOV_TOKEN }}
+        flags: unittests
+        name: codecov-pybump
+        fail_ci_if_error: true
+        verbose: true
 
     - name: Check distribution valid
       run: |
