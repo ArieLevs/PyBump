@@ -42,6 +42,9 @@ jobs:
         # discover all tests in the test directory
         coverage run --omit 'venv/*' -m unittest discover test -vv -t .
 
+        # generate coverage xmo report
+        coverage xml
+
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v2
       with:
