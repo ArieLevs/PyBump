@@ -39,6 +39,7 @@ jobs:
     - name: Test with unittest (codecov)
       run: |
         pip install -r requirements.txt
+        pip install coverage==5.5
         # discover all tests in the test directory
         coverage run --omit 'venv/*' -m unittest discover test -vv -t .
 
