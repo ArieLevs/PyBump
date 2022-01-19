@@ -26,7 +26,7 @@ class PybumpVersion(object):
         init will check if input string is a semantic version
         semver defined here: https://github.com/semver/semver/blob/master/semver.md,
         The version is allowed a lower case 'v' character.
-        search a match according to the regular expresion, so for example '1.1.2-prerelease+meta' is valid,
+        search a match according to the regular expression, so for example '1.1.2-prerelease+meta' is valid,
         then make sure there is and exact single match and validate if each of x,y,z is an integer.
 
         in case a non valid version passed, 'valid_sem_ver' will stay False
@@ -568,8 +568,11 @@ def main():
                 try:
                     repo = Repo(path=file_dirname_path)
                     # update current version release and metadata with relevant git values
-                    version_object.release = repo.active_branch.name
-                    version_object.metadata = str(repo.active_branch.commit)
+                    try:
+                        version_object.release = repo.active_branch.name
+                        version_object.metadata = str(repo.active_branch.commit)
+                    except TypeError:
+                        version_object.metadata = str(repo.head.object.hexsha)
                     new_version = version_object
                 except InvalidGitRepositoryError:
                     print("{} is not a valid git repo".format(file_dirname_path), file=stderr)
