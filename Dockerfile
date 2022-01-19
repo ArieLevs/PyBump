@@ -3,6 +3,9 @@ FROM python:3.9-slim
 LABEL maintainer="Arie Lev <levinsonarie@gmail.com>" \
       description="Python version bumper"
 
+RUN apt-get update && \
+    apt-get install -y git
+
 WORKDIR package
 
 COPY src src
