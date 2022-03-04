@@ -47,7 +47,9 @@ Usage
 | the **auto** flag is mainly intended for pull request CIs, by using:
 | ``pybump set --file PATH_TO_CHART.YAML --auto [--quiet]``
 | pybump will add git branch name as prerelease and git hash as metadata
-|
+
+ * NOTE - This can be dangerous as the `auto` flag might detect a git repo you were not intended to bump,
+   make sure the bumped file is really a child in the git repo you intended to bump.
 
 | **get** current version:
 | ``pybump get --file PATH_TO_CHART.YAML``

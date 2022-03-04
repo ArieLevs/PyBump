@@ -566,7 +566,7 @@ def main():
                 # get the directory path of current working file
                 file_dirname_path = os.path.dirname(args['file'])
                 try:
-                    repo = Repo(path=file_dirname_path)
+                    repo = Repo(path=file_dirname_path, search_parent_directories=True)
                     # update current version release and metadata with relevant git values
                     try:
                         version_object.release = repo.active_branch.name
