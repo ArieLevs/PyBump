@@ -569,10 +569,9 @@ def main():
                     repo = Repo(path=file_dirname_path, search_parent_directories=True)
                     # update current version release and metadata with relevant git values
                     try:
-                        version_object.release = repo.active_branch.name
-                        version_object.metadata = str(repo.active_branch.commit)
+                        version_object.release = str(repo.active_branch.commit)
                     except TypeError:
-                        version_object.metadata = str(repo.head.object.hexsha)
+                        version_object.release = str(repo.head.object.hexsha)
                     new_version = version_object
                 except InvalidGitRepositoryError:
                     print("{} is not a valid git repo".format(file_dirname_path), file=stderr)

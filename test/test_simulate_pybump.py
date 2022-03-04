@@ -241,13 +241,13 @@ class PyBumpSimulatorTest(unittest.TestCase):
         ################################################
         # simulate the 'set' command with version prefix
         ################################################
-        # this path test/test_content_files/ is not a valid git repo (its parent is),
-        # so it should fail with relevant error
-        test_set_auto = simulate_set_version("test/test_content_files/test_valid_setup.py", auto=True)
-        self.assertEqual('test/test_content_files is not a valid git repo',
-                         test_set_auto.stderr.decode('utf-8').strip())
+        # first set test_valid_setup.py a simple version
+        simulate_set_version("test/test_content_files/test_valid_setup.py", version="1.0.1")
 
-        # Currently not testing success with auto flag since git branch / hash is dynamic
+        test_set_auto = simulate_set_version("test/test_content_files/test_valid_setup.py", auto=True)
+        self.assertRegex(test_set_auto.stdout.decode('utf-8').strip(),
+                         r'\b1.0.1-[0-9a-f]{40}\b',
+                         msg="test that 'test_set_auto' contains an hexadecimal string with exactly 40 characters")
 
         # test invalid version set
         test_set_auto = simulate_set_version("test/test_content_files/test_valid_setup.py", version='V123.x.4')

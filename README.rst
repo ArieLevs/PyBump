@@ -46,7 +46,7 @@ Usage
 |
 | the **auto** flag is mainly intended for pull request CIs, by using:
 | ``pybump set --file PATH_TO_CHART.YAML --auto [--quiet]``
-| pybump will add git branch name as prerelease and git hash as metadata
+| pybump will add git commit hash as release info to version
 
  * NOTE - This can be dangerous as the `auto` flag might detect a git repo you were not intended to bump,
    make sure the bumped file is really a child in the git repo you intended to bump.
@@ -69,27 +69,27 @@ Examples
 --------
 
 | Case: ``version: 0.0.1``
-| ``pybump bump --file Chart.yaml --level patch`` will bump version to ``version: 0.0.2``
+| ``pybump bump --file Chart.yaml --level patch`` will bump version to ``0.0.2``
 |
 
 | Case: ``version: 0.1.4-alpha+meta.data``
-| ``pybump bump --file Chart.yaml --level minor`` will bump version to ``version: 0.2.0-alpha+meta.data``
+| ``pybump bump --file Chart.yaml --level minor`` will bump version to ``0.2.0-alpha+meta.data``
 |
 
 | Case: ``version: v0.0.3``
-| ``pybump bump --file Chart.yaml --level major`` will bump version to ``version: v1.0.0``
+| ``pybump bump --file Chart.yaml --level major`` will bump version to ``v1.0.0``
 |
 
 | Case: ``version: 0.0.1+some-metadata``
-| ``pybump set --file Chart.yaml --set-version 1.4.0`` will set version to ``version: 1.4.0+some-metadata``
+| ``pybump set --file Chart.yaml --set-version 1.4.0`` will set version to ``1.4.0+metadata-here``
 |
 
 | Case: ``version: v7.0.2``
-| ``pybump set --file setup.py --auto`` will set version to ``version: v7.0.2-fix-minor-bug-5a51e0e1d9894d3c5d4201619f10be242320cb59``
+| ``pybump set --file setup.py --auto`` will set version to ``v7.0.2-5a51e0e1d9894d3c5d4201619f10be242320cb59``
 |
 
 | Case: ``appVersion 2.3.2``
-| ``pybump bump --file Chart.yaml --level patch --app-version`` will bump appVersion to ``appVersion: 2.3.3``
+| ``pybump bump --file Chart.yaml --level patch --app-version`` will bump appVersion to ``2.3.3``
 |
 
 | Case: ``version: 1.0.13``
