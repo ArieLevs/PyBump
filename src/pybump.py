@@ -468,7 +468,7 @@ def read_version_from_file(file_path, app_version):
     return {'file_content': file_content, 'version': current_version, 'file_type': file_type}
 
 
-def main():
+def main():  # pragma: no cover
     parser = argparse.ArgumentParser(description='Python version bumper')
     subparsers = parser.add_subparsers(dest='sub_command')
 
