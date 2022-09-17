@@ -5,6 +5,7 @@ from sys import stderr
 
 import yaml
 from pkg_resources import get_distribution, DistributionNotFound
+import pybump_patch as pybump_patch
 
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
@@ -29,12 +30,12 @@ class PybumpVersion(object):
         search a match according to the regular expression, so for example '1.1.2-prerelease+meta' is valid,
         then make sure there is and exact single match and validate if each of x,y,z is an integer.
 
-        in case a non valid version passed, 'valid_sem_ver' will stay False
+        in case a non-valid version passed, 'valid_sem_ver' will stay False
 
-        :param version: string
+        param version: string
         """
         orig_version = version
-        # only if passed version is non empty string
+        # only if passed version is non-empty string
         if type(version) == str and len(version) != 0:
             # In case the version if of type 'v2.2.5' then save 'v' prefix and cut it for further 'semver' validation
             if version[0] == 'v':
@@ -82,7 +83,7 @@ class PybumpVersion(object):
     @release.setter
     def release(self, value):
         self.__release = value
-        # re validate that updated version with new release is still valid
+        # re-validate that updated version with new release is still valid
         self.validate_semantic_string(self.__str__())
 
     @property
@@ -91,7 +92,7 @@ class PybumpVersion(object):
 
     @metadata.setter
     def metadata(self, value):
-        # re validate that updated version with new metadata is still valid
+        # re-validate that updated version with new metadata is still valid
         self.__metadata = value
         self.validate_semantic_string(self.__str__())
 
@@ -154,193 +155,6 @@ class PybumpVersion(object):
               "Make sure to comply with https://semver.org/ "
               "(lower case 'v' prefix is allowed)".format(self.__invalid_version),
               file=stderr)
-
-
-class PybumpPatchableVersion(object):
-    def __init__(self, package_name, version):
-        self.__package_name = package_name
-        self.__version = version
-        self.patchable = False
-        self.latest_patch = None
-
-    @property
-    def package_name(self):
-        return self.__package_name
-
-    @property
-    def version(self):
-        return self.__version
-
-    def identify_possible_patch(self, releases_list):
-        """
-        check if there is a possible patch version (in releases_list) newer then self.__version,
-        get list of semantic versions, for example ['0.1.2', '0.1.3', '0.3.1', '0.3.2']
-
-        :param releases_list: list of strings
-        """
-        if not releases_list:
-            raise ValueError('releases_list cannot be empty')
-
-        # assume self.__version is the latest version
-        latest_patch_version = self.__version
-
-        for release in releases_list:
-            release_patch_candidate = PybumpVersion(release)
-
-            if not release_patch_candidate.is_valid_semantic_version():
-                # current 'release' does not meet semantic version, skip
-                continue
-
-            # check if version_to_patch is patchable
-            if not self.is_patchable(release_patch_candidate.version, self.__version.version):
-                continue
-
-            # at this point possible patch version found, so if version_to_patch is [0, 3, 1],
-            # and current iteration over releases_list is [0, 3, 2] then it matches for a patch,
-            # but there also might be a release with version [0, 3, 3] and even newer, we need to find most recent.
-            # calculate highest value found for patch (for cases when the 'releases' is not sorted)
-            if release_patch_candidate.version[2] > latest_patch_version.version[2]:
-                latest_patch_version = release_patch_candidate
-
-        if latest_patch_version.is_larger_then(self.__version):
-            self.patchable = True
-        else:
-            self.patchable = False
-        self.latest_patch = latest_patch_version
-
-    def get_dict(self):
-        return {
-            "package_name": self.package_name,
-            "version": str(self.version),
-            "patchable": self.patchable,
-            "latest_patch": str(self.latest_patch)
-        }
-
-    def __str__(self):
-        return str(self.get_dict())
-
-    @staticmethod
-    def is_patchable(x, y):
-        """
-        takes two lists, and checks if second list is patchable,
-        a version is patchable only if major and minor values equal but patch value is higher in first version,
-        for example:
-        x = [0, 4, 8] y = [0, 4, 6] returns True
-        x = [0, 4, 5] y = [0, 4, 6] returns False
-        x = [2, 1, 1] y = [2, 4, 1] returns False
-        :param x: list of ints
-        :param y: list of ints
-        :return: boolean
-        """
-        return x[0] == y[0] and x[1] == y[1] and x[2] > y[2]
-
-
-def get_pypi_package_releases(package_name):
-    """
-    calls PYPI json api as described here
-    https://wiki.python.org/moin/PyPIJSON
-    https://warehouse.readthedocs.io/api-reference/json.html
-    :param package_name: string, pypi project name
-    :return: json with pypi project response
-    """
-    import requests
-
-    result = requests.get('https://pypi.org/pypi/{}/json'.format(package_name))
-    if result.status_code != 200:
-        print('error occurred fetching package {} from PYPI.\n'
-              'response is: {}'.format(package_name, result.reason))
-        raise requests.exceptions.RequestException
-    return result.json()
-
-
-def get_setup_py_install_requires(content):
-    """
-    Extract 'install_requires' value using regex from 'content',
-    function will return a list of python packages:
-    ['package_a', 'package_b==1.5.6', 'package_c>=3.0']
-
-    :param content: the content of a setup.py file
-    :return: list on strings, install_requires values as list
-    """
-    # use DOTALL https://docs.python.org/3/library/re.html#re.DOTALL to include new lines
-    regex_install_requires_pattern = re.compile(r"install_requires=(.*?)],", flags=re.DOTALL)
-    version_match = regex_install_requires_pattern.findall(content)
-
-    if len(version_match) > 1:
-        raise RuntimeError("More than one 'install_requires' found: {0}".format(version_match))
-    if not version_match:
-        # 'install_requires' missing from setup.py file, just return empty array
-        return []
-
-    # add ending ']' since regex will not include it
-    found_install_requires = version_match[0] + ']'
-
-    # convert found_install_requires values into an array and return
-    from ast import literal_eval
-    return literal_eval(found_install_requires)
-
-
-def get_versions_from_requirements(requirements_list):
-    """
-    as described here https://pip.pypa.io/en/stable/reference/pip_install/#example-requirements-file
-    python versions requirement may appear in the form of:
-    docopt == 0.6.1             # Version Matching. Must be version 0.6.1
-    keyring >= 4.1.1            # Minimum version 4.1.1
-    coverage != 3.5             # Version Exclusion. Anything except version 3.5
-    pybump ~= 1.1               # Compatible release. Same as >= 1.1, == 1.*
-
-    the function is interested only in exact version match (case '=='), and will not consider '!=' patching
-    brake python requirements list, in the form of ['package_a', 'package_b==1.5.6', 'package_c>=3.0'],
-    for example
-    ['pyyaml==5.3.1', 'pybump', 'GitPython>=3.1']
-    :param requirements_list: list of strings
-    :return: list of PybumpPatchableVersion objects in the form of:
-        [PybumpPatchableVersion, PybumpPatchableVersion, PybumpPatchableVersion, ]
-    """
-    dependencies = []
-    for req in requirements_list:
-        # split name from version by all allowed operators
-        package_array = re.split("==|>=|~=", req)
-
-        package_name = package_array[0].strip()
-        if len(package_array) == 1:
-            # if package has no locked version or has >= type for current package, of type 'package>=2.7' its invalid
-            version = PybumpVersion('latest')
-        else:  # else the object will have a (probably) valid semantic version
-            version = PybumpVersion(package_array[1].strip())
-
-        # append current package
-        dependencies.append(PybumpPatchableVersion(package_name, version))
-
-    return dependencies
-
-
-def check_available_python_patches(setup_py_content=None):
-    """
-    get the content of setup.py file and return a list of dicts with possible patchable dependencies versions,
-    return will be in the form of:
-    [
-        {'package_name': 'pyyaml', 'version': '5.3.1', 'patchable': False, 'latest_patch': '5.3.1'},
-        {'package_name': 'GitPython', 'version': '3.1.7', 'patchable': True, 'latest_patch': '3.1.12'}
-    ]
-    :param setup_py_content: content of setup.py file
-    :return: list of dicts
-    """
-    requirements_list = get_setup_py_install_requires(setup_py_content)
-    requirements_versions = get_versions_from_requirements(requirements_list)
-
-    patchable_packages_array = []
-    for requirement in requirements_versions:
-        if requirement.version.is_valid_semantic_version():
-            # get current package info (as json) from pypi api
-            package_releases = get_pypi_package_releases(requirement.package_name)
-
-            # convert keys of the 'releases' dict, into a list (only version numbers),
-            releases_list = package_releases.get('releases').keys()  # releases_list is a list of strings
-            requirement.identify_possible_patch(releases_list)
-            patchable_packages_array.append(requirement.get_dict())
-
-    return patchable_packages_array
 
 
 def is_valid_helm_chart(content):
@@ -478,7 +292,7 @@ def main():  # pragma: no cover
     parser.add_argument('--verify', required=False,
                         help='Verify if input string is a valid semantic version')
 
-    # Define parses that is shared, and will be used as 'parent' parser to all others
+    # Define parses that are shared, and will be used as 'parent' parser to all others
     base_sub_parser = argparse.ArgumentParser(add_help=False)
     base_sub_parser.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
     base_sub_parser.add_argument('--app-version', action='store_true',
@@ -507,7 +321,7 @@ def main():  # pragma: no cover
     parser_get.add_argument('--release', action='store_true', help='Get the version release only', required=False)
     parser_get.add_argument('--metadata', action='store_true', help='Get the version metadata only', required=False)
 
-    # Sub-parser for version latest patch verification command
+    # Sub-parser for version the latest patch verification command
     subparsers.add_parser('patch-update', parents=[base_sub_parser])
 
     args = vars(parser.parse_args())
@@ -524,75 +338,84 @@ def main():  # pragma: no cover
         else:
             parser.print_help()
         exit(0)
+    elif args['sub_command'] == 'patch-update':
+        with open(args['file'], 'r') as stream:
+            filename, file_extension = os.path.splitext(args['file'])
+            file_base_name = os.path.basename(filename)
+            file_content = stream.read()
 
-    # Read current version from the given file
-    file_data = read_version_from_file(args['file'], args['app_version'])
-    file_content = file_data.get('file_content')
-    file_type = file_data.get('file_type')
-    version_object = PybumpVersion(file_data.get('version'))
-
-    if not version_object.is_valid_semantic_version():
-        version_object.print_invalid_version()
-        exit(1)
-
-    if args['sub_command'] == 'patch-update':
-        if file_type == 'python':
-            print(check_available_python_patches(setup_py_content=file_content))
+        requirements = []
+        if file_base_name == 'python':
+            requirements = pybump_patch.get_setup_py_install_requires(file_content)
+        elif file_base_name == 'requirements':
+            requirements = [line.rstrip() for line in file_content.splitlines()]
         else:
-            print('currently only python pypi packages supported for latest patch verifications')
+            print('currently only python.py or requirements.txt pypi packages supported for latest patch verifications')
             exit(1)
-    elif args['sub_command'] == 'get':
-        if args['sem_ver']:
-            # Join the array of current_version_dict by dots
-            print('.'.join(str(x) for x in version_object.version))
-        elif args['release']:
-            print(version_object.release)
-        elif args['metadata']:
-            print(version_object.metadata)
-        else:
-            print(version_object.__str__())
+
+        print(pybump_patch.check_available_python_patches(requirements_list=requirements))
     else:
-        # Set new_version to be invalid first
-        new_version = None
+        # Read current version from the given file
+        file_data = read_version_from_file(args['file'], args['app_version'])
+        file_content = file_data.get('file_content')
+        version_object = PybumpVersion(file_data.get('version'))
 
-        # Set the 'new_version' value
-        if args['sub_command'] == 'set':
-            # Case set-version argument passed, just set the new version with its value
-            if args['set_version']:
-                new_version = PybumpVersion(args['set_version'])
-            # Case the 'auto' flag was set, set release with current git branch name and metadata with hash
-            elif args['auto']:
-                from git import Repo, InvalidGitRepositoryError
-                # get the directory path of current working file
-                file_dirname_path = os.path.dirname(args['file'])
-                try:
-                    repo = Repo(path=file_dirname_path, search_parent_directories=True)
-                    # update current version release and metadata with relevant git values
-                    try:
-                        version_object.release = str(repo.active_branch.commit)
-                    except TypeError:
-                        version_object.release = str(repo.head.object.hexsha)
-                    new_version = version_object
-                except InvalidGitRepositoryError:
-                    print("{} is not a valid git repo".format(file_dirname_path), file=stderr)
-                    exit(1)
-            # Should never reach this point due to argparse mutual exclusion, but set safety if statement anyway
-            else:
-                print("set-version or auto flags are mandatory", file=stderr)
-                exit(1)
-        else:  # bump version ['sub_command'] == 'bump'
-            # Only bump value of the 'version' key
-            version_object.bump_version(args['level'])
-            new_version = version_object
-        # new_version should never be None at this point, but check this anyway
-        if not new_version or not new_version.is_valid_semantic_version():
-            new_version.print_invalid_version()
+        if not version_object.is_valid_semantic_version():
+            version_object.print_invalid_version()
             exit(1)
-        # Write the new version with relevant content back to the file
-        write_version_to_file(args['file'], file_content, new_version.__str__(), args['app_version'])
 
-        if args['quiet'] is False:
-            print(new_version)
+        if args['sub_command'] == 'get':
+            if args['sem_ver']:
+                # Join the array of current_version_dict by dots
+                print('.'.join(str(x) for x in version_object.version))
+            elif args['release']:
+                print(version_object.release)
+            elif args['metadata']:
+                print(version_object.metadata)
+            else:
+                print(version_object.__str__())
+        else:
+            # Set new_version to be invalid first
+            new_version = None
+
+            # Set the 'new_version' value
+            if args['sub_command'] == 'set':
+                # Case set-version argument passed, just set the new version with its value
+                if args['set_version']:
+                    new_version = PybumpVersion(args['set_version'])
+                # Case the 'auto' flag was set, set release with current git branch name and metadata with hash
+                elif args['auto']:
+                    from git import Repo, InvalidGitRepositoryError
+                    # get the directory path of current working file
+                    file_dirname_path = os.path.dirname(args['file'])
+                    try:
+                        repo = Repo(path=file_dirname_path, search_parent_directories=True)
+                        # update current version release and metadata with relevant git values
+                        try:
+                            version_object.release = str(repo.active_branch.commit)
+                        except TypeError:
+                            version_object.release = str(repo.head.object.hexsha)
+                        new_version = version_object
+                    except InvalidGitRepositoryError:
+                        print("{} is not a valid git repo".format(file_dirname_path), file=stderr)
+                        exit(1)
+                # Should never reach this point due to argparse mutual exclusion, but set safety if statement anyway
+                else:
+                    print("set-version or auto flags are mandatory", file=stderr)
+                    exit(1)
+            else:  # bump version ['sub_command'] == 'bump'
+                # Only bump value of the 'version' key
+                version_object.bump_version(args['level'])
+                new_version = version_object
+            # new_version should never be None at this point, but check this anyway
+            if not new_version or not new_version.is_valid_semantic_version():
+                new_version.print_invalid_version()
+                exit(1)
+            # Write the new version with relevant content back to the file
+            write_version_to_file(args['file'], file_content, new_version.__str__(), args['app_version'])
+
+            if args['quiet'] is False:
+                print(new_version)
 
 
 if __name__ == "__main__":
