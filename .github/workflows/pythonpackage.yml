@@ -77,7 +77,7 @@ jobs:
         id: app_version_bump
         run: |
           pip install pybump
-          echo "::set-output name=app_version::$(pybump bump --level patch --file setup.py)"
+          echo "app_version=$(pybump bump --level patch --file setup.py)" >> $GITHUB_OUTPUT
 
       - name: Publish to global pypi
         run: |
@@ -89,12 +89,16 @@ jobs:
             --password ${{ secrets.PYPI_PASSWORD }} \
             --repository-url https://upload.pypi.org/legacy/
 
-      - name: Build and push docker image
-        uses: docker/build-push-action@v1
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-          repository: arielev/pybump
+
+      - name: Build and push docker image
+        uses: docker/build-push-action@v3
+        with:
+          push: true
           tags: ${{ steps.app_version_bump.outputs.app_version }},latest
 
   commit:
@@ -113,7 +117,7 @@ jobs:
         id: app_version_bump
         run: |
           pip install pybump
-          echo "::set-output name=app_version::$(pybump bump --level patch --file setup.py)"
+          echo "app_version=$(pybump bump --level patch --file setup.py)" >> $GITHUB_OUTPUT
 
       - name: Commit new version
         env:
