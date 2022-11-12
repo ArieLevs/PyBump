@@ -25,3 +25,17 @@ wheels/
 MANIFEST
 
 venv/
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.*
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/

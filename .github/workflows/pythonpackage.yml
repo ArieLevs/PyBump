@@ -39,14 +39,14 @@ jobs:
     - name: Test with unittest (codecov)
       run: |
         pip install -r requirements.txt
-        pip install coverage==5.5
+        pip install coverage==6.5
         # discover all tests in the test directory
         coverage run --omit 'venv/*' -m unittest discover test -vv -t .
 
         # generate coverage xmo report
         coverage xml
         # just print coverage locally
-        coverage report
+        coverage report --fail-under=80
 
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v2
