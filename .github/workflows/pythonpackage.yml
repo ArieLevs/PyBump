@@ -125,7 +125,7 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
-          tags: ${{ steps.app_version_bump.outputs.app_version }},latest
+          tags: arielev/pybump:${{ steps.app_version_bump.outputs.app_version }},arielev/pybump:latest
 
   commit:
     if: github.ref == 'refs/heads/master'
