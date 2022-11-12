@@ -5,7 +5,10 @@ from sys import stderr
 
 import yaml
 from pkg_resources import get_distribution, DistributionNotFound
-from pybump_version import PybumpVersion
+try:
+    from .pybump_version import PybumpVersion
+except ImportError:
+    from pybump_version import PybumpVersion
 
 regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
