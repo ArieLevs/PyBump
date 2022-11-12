@@ -79,8 +79,8 @@ jobs:
           twine check dist/*
 
           twine upload dist/* \
-            --username ${{ secrets.PYPI_USERNAME }} \
-            --password ${{ secrets.PYPI_PASSWORD }} \
+            --username ${{ secrets.PYPI_TEST_USERNAME }} \
+            --password ${{ secrets.PYPI_TEST_PASSWORD }} \
             --repository testpypi
 
       - name: Build test docker image
