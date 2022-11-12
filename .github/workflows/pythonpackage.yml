@@ -65,6 +65,7 @@ jobs:
         twine check dist/*
 
   simulate:
+    if: github.ref != 'refs/heads/master'
     needs: test
     runs-on: ubuntu-latest
     steps:
@@ -81,7 +82,7 @@ jobs:
           twine upload dist/* \
             --username ${{ secrets.PYPI_TEST_USERNAME }} \
             --password ${{ secrets.PYPI_TEST_PASSWORD }} \
-            --repository testpypi
+            --repository testpypi --skip-existing
 
       - name: Build test docker image
         uses: docker/build-push-action@v3
@@ -91,7 +92,7 @@ jobs:
 
   build:
     if: github.ref == 'refs/heads/master'
-    needs: simulate
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
