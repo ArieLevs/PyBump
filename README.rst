@@ -25,12 +25,6 @@ Simple python code to bump kubernetes package manager Helm charts.yaml, VERSION 
 | Versions must match semver 2.0.0: https://github.com/semver/semver/blob/master/semver.md
 | Version is allowed a lower case 'v' character for example: ``v1.5.4-beta2``
 
-| Continuous integration dependencies check:
-| the ``patch-update`` argument will check dependencies in target file and suggest only patchable versions,
-| The main purpose it to provide a way to constantly scan dependencies updates, and patch them once available.
-| For example, this package has a dependencies ``pyyaml``, and a version with ``5.3.1``,
-| once a new patch i released at PYPI, it will detect it and return for example ``5.3.7``.
-
 Install
 -------
 ``pip install pybump``
@@ -53,10 +47,6 @@ Usage
 
 | **get** current version:
 | ``pybump get --file PATH_TO_CHART.YAML``
-|
-
-| **patch-verification**:
-| ``pybump patch-update --file PATH_TO_SETUP.PY``
 |
 
 | update Helm chart **appVersion**:

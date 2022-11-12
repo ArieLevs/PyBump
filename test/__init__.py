@@ -1,3 +1,9 @@
+# make sure to import package directory whe running tests from root dir
+import os
+import sys
+
+ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
+sys.path.append(os.path.join(ROOT, 'src'))
 
 valid_helm_chart = {'apiVersion': 'v1',
                     'appVersion': '1.0',

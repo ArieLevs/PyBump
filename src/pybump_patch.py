@@ -1,5 +1,5 @@
 import re
-from pybump import PybumpVersion
+from pybump_version import PybumpVersion
 
 
 class PybumpPatchableVersion(object):
@@ -150,7 +150,7 @@ def get_versions_from_requirements(requirements_list):
         package_array = re.split("==|>=|~=", req)
 
         if len(package_array) != 2:
-            # if after split, a list that is not of type ["name", "ver"] returend, then the delimiter is not valid
+            # if after split, a list that is not of type ["name", "ver"] returned, then the delimiter is not valid
             version = PybumpVersion('invalid')
         else:  # else the object will have a (probably) valid semantic version
             # the "ver" part can be like " 3.1.27 # comment here" with a comment
