@@ -81,7 +81,7 @@ jobs:
           twine upload dist/* \
             --username ${{ secrets.PYPI_USERNAME }} \
             --password ${{ secrets.PYPI_PASSWORD }} \
-            --repository-url testpypi
+            --repository testpypi
 
       - name: Build test docker image
         uses: docker/build-push-action@v3
