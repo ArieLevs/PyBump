@@ -24,7 +24,7 @@ jobs:
     - uses: actions/checkout@v2
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v1
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
@@ -64,24 +64,38 @@ jobs:
         python setup.py bdist_wheel
         twine check dist/*
 
-        twine upload dist/* \
-          --username ${{ secrets.PYPI_USERNAME }} \
-          --password ${{ secrets.PYPI_PASSWORD }} \
-          --repository-url https://test.pypi.org/simple/
-
-    - name: Build test docker image
-      uses: docker/build-push-action@v3
-      with:
-        push: false
-        tags: ${{ steps.app_version_bump.outputs.app_version }},latest
-
-  build:
-    if: github.ref == 'refs/heads/master'
+  simulate:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+      - name: Check distribution valid and test publish
+        run: |
+          pip install wheel twine
+          python setup.py bdist_wheel
+          twine check dist/*
+
+          twine upload dist/* \
+            --username ${{ secrets.PYPI_USERNAME }} \
+            --password ${{ secrets.PYPI_PASSWORD }} \
+            --repository-url testpypi
+
+      - name: Build test docker image
+        uses: docker/build-push-action@v3
+        with:
+          push: false
+          tags: ${{ steps.app_version_bump.outputs.app_version }},latest
+
+  build:
+    if: github.ref == 'refs/heads/master'
+    needs: simulate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
       - name: Bump version using self app
@@ -118,7 +132,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-python@v2
+      - uses: actions/setup-python@v4
         with:
           python-version: '3.x'
       # currently there is no way of passing data between jobs except using artifact,
