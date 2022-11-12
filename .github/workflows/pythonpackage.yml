@@ -58,11 +58,22 @@ jobs:
         fail_ci_if_error: true
         verbose: true
 
-    - name: Check distribution valid
+    - name: Check distribution valid and test publish
       run: |
         pip install wheel twine
         python setup.py bdist_wheel
         twine check dist/*
+
+        twine upload dist/* \
+          --username ${{ secrets.PYPI_USERNAME }} \
+          --password ${{ secrets.PYPI_PASSWORD }} \
+          --repository-url https://test.pypi.org/simple/
+
+    - name: Build test docker image
+      uses: docker/build-push-action@v3
+      with:
+        push: false
+        tags: ${{ steps.app_version_bump.outputs.app_version }},latest
 
   build:
     if: github.ref == 'refs/heads/master'
