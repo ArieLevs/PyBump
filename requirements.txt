@@ -1,6 +1,6 @@
 
 pyyaml==6.0
-GitPython==3.1.29
+GitPython==3.1.30
 
 # currently not in use since patch-update support dropped
 #requests==2.28.1

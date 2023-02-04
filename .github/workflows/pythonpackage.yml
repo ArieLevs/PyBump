@@ -49,7 +49,7 @@ jobs:
         coverage report --fail-under=80
 
     - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action@v2
+      uses: codecov/codecov-action@v3
       with:
         ## secrets should have CODECOV_TOKEN
         #token: ${{ secrets.CODECOV_TOKEN }}
