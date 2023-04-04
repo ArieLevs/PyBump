@@ -86,11 +86,11 @@ jobs:
           pip install wheel twine
           python setup.py bdist_wheel
           twine check dist/*
-
-          twine upload dist/* \
-            --username ${{ secrets.PYPI_TEST_USERNAME }} \
-            --password ${{ secrets.PYPI_TEST_PASSWORD }} \
-            --repository testpypi --skip-existing
+          twine upload dist/* --skip-existing
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
+          TWINE_REPOSITORY_URL: "testpypi"
 
       - name: Build test docker image
         uses: docker/build-push-action@v3
@@ -117,11 +117,11 @@ jobs:
         run: |
           pip install wheel twine
           python setup.py bdist_wheel
-
-          twine upload dist/* \
-            --username ${{ secrets.PYPI_USERNAME }} \
-            --password ${{ secrets.PYPI_PASSWORD }} \
-            --repository-url https://upload.pypi.org/legacy/
+          twine upload dist/* --skip-existing
+        env:
+          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          TWINE_REPOSITORY_URL: "https://upload.pypi.org/legacy/"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
