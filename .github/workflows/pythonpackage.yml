@@ -117,7 +117,7 @@ jobs:
         run: |
           pip install wheel twine
           python setup.py bdist_wheel
-          twine upload dist/* --skip-existing
+          twine upload dist/*
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
