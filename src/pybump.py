@@ -80,7 +80,7 @@ def write_version_to_file(file_path, file_content, version, app_version):
                 file_content['appVersion'] = version
             else:
                 file_content['version'] = version
-            yaml.dump(file_content, outfile, default_flow_style=False)
+            yaml.dump(file_content, outfile, default_flow_style=False, sort_keys=False)
         elif os.path.basename(filename) == 'VERSION':
             outfile.write(version)
         outfile.close()
