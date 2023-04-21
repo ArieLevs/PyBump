@@ -20,7 +20,9 @@ def is_valid_helm_chart(content):
     :param content: parsed YAML file as dictionary of key values
     :return: True if dict contains mandatory values, else False
     """
-    return all(x in content for x in ['apiVersion', 'name', 'version'])
+    if content is not None:
+        return all(x in content for x in ['apiVersion', 'name', 'version'])
+    return False
 
 
 def get_setup_py_version(content):
