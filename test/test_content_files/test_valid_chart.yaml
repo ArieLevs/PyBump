@@ -1,5 +1,19 @@
+# valid helm chart file
+# comments should stay here after YAML file handling
 apiVersion: v1
 appVersion: 2.0.3
+version: 0.1.0 # version key should stay here and not be sorted
 description: A Helm chart for Kubernetes
 name: test
-version: 0.1.0
+plainText: |-
+  some data
+  here
+mapKey:
+  a: b
+
+  # above empty line will be preserved
+  bool: true
+listKey:
+- a
+- b
+- c

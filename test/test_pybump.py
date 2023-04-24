@@ -164,6 +164,7 @@ class PyBumpTest(unittest.TestCase):
         self.assertTrue(is_valid_helm_chart(valid_helm_chart))
         self.assertFalse(is_valid_helm_chart(invalid_helm_chart))
         self.assertFalse(is_valid_helm_chart(empty_helm_chart))
+        self.assertFalse(is_valid_helm_chart(None))
 
     def test_get_setup_py_version(self):
         self.assertEqual(get_setup_py_version(valid_setup_py), '0.1.3')

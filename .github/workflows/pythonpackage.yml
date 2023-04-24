@@ -90,7 +90,7 @@ jobs:
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
-          TWINE_REPOSITORY_URL: "testpypi"
+          TWINE_REPOSITORY_URL: "https://test.pypi.org/legacy/"
 
       - name: Build test docker image
         uses: docker/build-push-action@v3

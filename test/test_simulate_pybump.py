@@ -289,3 +289,39 @@ class PyBumpSimulatorTest(unittest.TestCase):
                                        stdout=PIPE, stderr=PIPE)
         self.assertIs(completed_process_object.returncode, 1,
                       msg="returned a 0 exist code, but tested 'verify' flag against a non valid semver string")
+
+    def test_yaml_sort_comments_preservation(self):
+        """
+        Test case that check YAML files are not sorted or missing original inline comments after version bumps
+        :return:
+        """
+        # first "reset" version and appVersion with pre-defined values
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "1.0.0", app_version=False)
+        simulate_set_version("test/test_content_files/test_valid_chart.yaml", "1.0.0", app_version=True)
+
+        with open("test/test_content_files/test_valid_chart.yaml", "r") as f:
+            content = f.read()
+
+        # below text must be equal to the output of test_valid_chart.yaml file after bump action
+        # this test will make sure all "# comments" preserved and key sorting did not occur
+        self.assertMultiLineEqual(
+            content,
+            '# valid helm chart file\n'
+            '# comments should stay here after YAML file handling\n'
+            'apiVersion: v1\n'
+            'appVersion: 1.0.0\n'
+            'version: 1.0.0                    # version key should stay here and not be sorted\n'
+            'description: A Helm chart for Kubernetes\n'
+            'name: test\n'
+            'plainText: |-\n'
+            '  some data\n'
+            '  here\n'
+            'mapKey:\n'
+            '  a: b\n'
+            '\n'
+            '  # above empty line will be preserved\n'
+            '  bool: true\n'
+            'listKey:\n'
+            '- a\n'
+            '- b\n'
+            '- c\n')

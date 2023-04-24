@@ -3,7 +3,7 @@ import os
 import re
 from sys import stderr
 
-import yaml
+from ruamel.yaml import YAML, YAMLError
 from pkg_resources import get_distribution, DistributionNotFound
 try:
     from .pybump_version import PybumpVersion
@@ -20,7 +20,9 @@ def is_valid_helm_chart(content):
     :param content: parsed YAML file as dictionary of key values
     :return: True if dict contains mandatory values, else False
     """
-    return all(x in content for x in ['apiVersion', 'name', 'version'])
+    if content is not None:
+        return all(x in content for x in ['apiVersion', 'name', 'version'])
+    return False
 
 
 def get_setup_py_version(content):
@@ -80,7 +82,8 @@ def write_version_to_file(file_path, file_content, version, app_version):
                 file_content['appVersion'] = version
             else:
                 file_content['version'] = version
-            yaml.dump(file_content, outfile, default_flow_style=False, sort_keys=False)
+            yaml = YAML()
+            yaml.dump(file_content, outfile)
         elif os.path.basename(filename) == 'VERSION':
             outfile.write(version)
         outfile.close()
@@ -107,8 +110,9 @@ def read_version_from_file(file_path, app_version):
             file_type = 'python'
         elif file_extension == '.yaml' or file_extension == '.yml':  # Case Helm chart files
             try:
-                file_content = yaml.safe_load(stream)
-            except yaml.YAMLError as exc:
+                yaml = YAML()
+                file_content = yaml.load(stream)
+            except YAMLError as exc:
                 print(exc)
             # Make sure Helm chart is valid and contains minimal mandatory keys
             if is_valid_helm_chart(file_content):
