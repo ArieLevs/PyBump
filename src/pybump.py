@@ -4,7 +4,7 @@ import re
 from sys import stderr
 
 from ruamel.yaml import YAML, YAMLError
-from pkg_resources import get_distribution, DistributionNotFound
+
 try:
     from .pybump_version import PybumpVersion
 except ImportError:
@@ -59,8 +59,10 @@ def get_self_version(dist_name):
     :return: version as string
     """
     try:
-        return get_distribution(dist_name).version
-    except DistributionNotFound:
+        # https://docs.python.org/3/library/importlib.metadata.html#distribution-versions
+        from importlib.metadata import version
+        return version(dist_name)
+    except ModuleNotFoundError:
         return 'version not found'
 
 
