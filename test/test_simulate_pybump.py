@@ -325,3 +325,13 @@ class PyBumpSimulatorTest(unittest.TestCase):
             '- a\n'
             '- b\n'
             '- c\n')
+
+    def test_package_version(self):
+        """
+        Test case when user is passing the version flag
+        """
+        # Verify valid string
+        completed_process_object = run(["python", "src/pybump.py", "--version"],
+                                       stdout=PIPE, stderr=PIPE)
+        self.assertIs(completed_process_object.returncode, 0,
+                      msg="tested 'version' flag that should always return exist 0, even on exceptions")
