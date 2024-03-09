@@ -28,7 +28,7 @@ class PybumpVersion(object):
         """
         orig_version = version
         # only if passed version is non-empty string
-        if type(version) == str and len(version) != 0:
+        if isinstance(version, str) and len(version) != 0:
             # In case the version if of type 'v2.2.5' then save 'v' prefix and cut it for further 'semver' validation
             if version[0] == 'v':
                 version = version[1:]

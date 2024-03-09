@@ -26,7 +26,10 @@ jobs:
     strategy:
       max-parallel: 2
       matrix:
-        python-version: ["3.9", "3.11"]
+        python-version:
+          - "3.7" # EOL 2023-06-27
+          - "3.9"
+          - "3.12"
 
     steps:
     - uses: actions/checkout@v4
@@ -38,16 +41,16 @@ jobs:
 
     - name: Lint with flake8
       run: |
-        pip install flake8==5.0.4
+        pip install flake8==7.0.0
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics --exclude=venv
+        flake8 . --count --show-source --statistics --exclude=venv
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv
 
     - name: Test with unittest (codecov)
       run: |
         pip install -r requirements.txt
-        pip install coverage==6.5
+        pip install coverage==7.4
         # discover all tests in the test directory
         coverage run --omit 'venv/*' -m unittest discover test -vv -t .
 
@@ -80,7 +83,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
       - name: Check distribution valid and test publish
         run: |
           pip install wheel twine
@@ -106,7 +109,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
       - name: Bump version using self app
         id: app_version_bump
         run: |
@@ -166,7 +169,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.9'
+          python-version: '3.12'
       # currently there is no way of passing data between jobs except using artifact,
       # this might be an option, but just do another bump for now,
       # and anyway setup.py file will need to have some change since we checked out again

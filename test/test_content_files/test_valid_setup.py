@@ -2,7 +2,7 @@ import setuptools
 
 setuptools.setup(
     name="pybump",
-    version="0.1.3",
+    version="1.0.1-aa2cfd71788ab67bc9b59e62dee2070765948e29",
     author="Arie Lev",
     author_email="levinsonarie@gmail.com",
     description="Python version bumper",
