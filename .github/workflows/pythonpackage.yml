@@ -85,7 +85,7 @@ jobs:
           python-version: '3.12'
       - name: Check distribution valid and test publish
         run: |
-          pip install wheel twine
+          pip install wheel twine setuptools
           python setup.py bdist_wheel
           twine check dist/*
           twine upload dist/* --skip-existing
