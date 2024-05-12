@@ -59,10 +59,9 @@ jobs:
         coverage report --fail-under=80
 
     - name: Upload Coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4.3.1
       with:
-        ## secrets should have CODECOV_TOKEN
-        #token: ${{ secrets.CODECOV_TOKEN }}
+        token: ${{ secrets.CODECOV_TOKEN }}
         flags: unittests
         name: codecov-pybump
         fail_ci_if_error: true
