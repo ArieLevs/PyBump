@@ -13,6 +13,7 @@ COPY setup.py .
 COPY LICENSE .
 COPY README.rst .
 COPY requirements.txt .
+RUN pip install setuptools
 RUN python ./setup.py install
 
 WORKDIR /
