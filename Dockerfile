@@ -1,4 +1,4 @@
-FROM python:3.13.0b3-slim
+FROM python:3.13.0rc2-slim
 
 LABEL maintainer="Arie Lev <levinsonarie@gmail.com>" \
       description="Python version bumper"
@@ -13,6 +13,7 @@ COPY setup.py .
 COPY LICENSE .
 COPY README.rst .
 COPY requirements.txt .
+RUN pip install setuptools
 RUN python ./setup.py install
 
 WORKDIR /
