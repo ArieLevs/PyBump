@@ -24,10 +24,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     strategy:
-      max-parallel: 2
+      max-parallel: 4
       matrix:
         python-version:
           - "3.8" # EOL 2024-10
+          - "3.9"
           - "3.12"
 
     steps:
@@ -40,23 +41,23 @@ jobs:
 
     - name: Lint with flake8
       run: |
-        pip install flake8==7.0.0
+        pip install flake8==7.1.2
         # stop the build if there are Python syntax errors or undefined names
-        flake8 . --count --show-source --statistics --exclude=venv
+        flake8 . --count --show-source --statistics --exclude=.venv
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
-        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=venv
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics --exclude=.venv
 
     - name: Test with unittest (codecov)
       run: |
         pip install -r requirements.txt
-        pip install coverage==7.4
+        pip install coverage==7.6
         # discover all tests in the test directory
-        coverage run --omit 'venv/*' -m unittest discover test -vv -t .
+        python -m coverage run --omit '.venv/*' -m unittest discover test -vv -t .
 
         # generate coverage xmo report
-        coverage xml
+        python -m coverage xml
         # just print coverage locally
-        coverage report --fail-under=80
+        python -m coverage report --fail-under=85
 
     - name: Upload Coverage to Codecov
       uses: codecov/codecov-action@v4.3.1
@@ -163,6 +164,8 @@ jobs:
     if: github.ref == 'refs/heads/master'
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

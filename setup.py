@@ -1,8 +1,20 @@
 import setuptools
-from pkg_resources import parse_requirements
+from packaging.requirements import Requirement
 
-with open("requirements.txt") as f:
-    requirements = [str(r) for r in parse_requirements(f)]
+
+def parse_requirements(filename):
+    requirements_list = []
+    with open(filename, 'r') as f:
+        for line in f.readlines():
+            line = line.strip()
+            if line and not line.startswith("#"):  # Skip empty lines and comments
+                try:
+                    req = Requirement(line)  # Validate the requirement using packaging
+                    requirements_list.append(str(req))
+                except ValueError:
+                    print(f"Invalid requirement line: {line}")
+    return requirements_list
+
 
 with open("README.rst", "r") as fh:
     long_description = fh.read()
@@ -21,7 +33,7 @@ setuptools.setup(
     url="https://github.com/ArieLevs/PyBump",
     license='Apache License 2.0',
     packages=setuptools.find_packages(),
-    install_requires=requirements,
+    install_requires=parse_requirements("requirements.txt"),
     classifiers=[
         "Programming Language :: Python :: 3",
         "Programming Language :: Python :: 3.8",
