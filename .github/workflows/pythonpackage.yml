@@ -30,7 +30,7 @@ jobs:
           - "3.8" # EOL 2024-10
           - "3.9"
           - "3.12"
-
+          #- "3.13"
     steps:
     - uses: actions/checkout@v4
 
@@ -68,42 +68,79 @@ jobs:
         fail_ci_if_error: true
         verbose: true
 
-    - name: Check distribution valid and test publish
+    - name: Install uv
+      uses: astral-sh/setup-uv@v5
+      with:
+        version: "0.6.x"
+
+    - name: Build python package
       run: |
-        pip install wheel twine setuptools
-        python setup.py bdist_wheel
-        twine check dist/*
+        uv build
+
+  test-container-image:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Run Checkov action
+      id: checkov
+      uses: bridgecrewio/checkov-action@v12.1347.0
+      with:
+        framework: dockerfile
+        dockerfile_path: Dockerfile
+        quit: true
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Build container image
+      uses: docker/build-push-action@v3
+      with:
+        platforms: linux/amd64,linux/arm64
+        push: false
+        tags: arielev/pybump:test
+
+    - name: Run simple test case against new image
+      run: |
+        docker run --rm \
+          arielev/pybump:test \
+          --version
+        docker run --rm \
+          arielev/pybump:test \
+          --verify v2.3.5+test
 
   simulate:
     if: github.ref != 'refs/heads/master'
-    needs: test
+    needs: [test, test-container-image]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Check distribution valid and test publish
-        run: |
-          pip install wheel twine setuptools
-          python setup.py bdist_wheel
-          twine check dist/*
-          twine upload dist/* --skip-existing
-        env:
-          TWINE_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
-          TWINE_REPOSITORY_URL: "https://test.pypi.org/legacy/"
-
-      - name: Build test docker image
-        uses: docker/build-push-action@v3
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
-          push: false
-          tags: ${{ steps.app_version_bump.outputs.app_version }},latest
+          version: "0.6.x"
+      - name: Build python package and test publish
+        run: |
+          uv build
+          uv publish
+        env:
+          UV_PUBLISH_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
+          UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
+          UV_PUBLISH_URL: "https://test.pypi.org/legacy/"
 
   build:
     if: github.ref == 'refs/heads/master'
-    needs: test
+    needs: [test, test-container-image]
     runs-on: ubuntu-latest
+    outputs:
+      bumped_version: ${{ steps.app_version_bump.outputs.app_version }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -115,15 +152,18 @@ jobs:
           pip install pybump
           echo "app_version=$(pybump bump --level patch --file setup.py)" >> $GITHUB_OUTPUT
 
-      - name: Publish to global pypi
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.6.x"
+      - name: Build python package and publish to global pypi
         run: |
-          pip install wheel twine setuptools
-          python setup.py bdist_wheel
-          twine upload dist/*
+          uv build
+          uv publish
         env:
-          TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-          TWINE_REPOSITORY_URL: "https://upload.pypi.org/legacy/"
+          UV_PUBLISH_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
+          UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
+          UV_PUBLISH_URL: "https://upload.pypi.org/legacy/"
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -168,26 +208,14 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      # currently there is no way of passing data between jobs except using artifact,
-      # this might be an option, but just do another bump for now,
-      # and anyway setup.py file will need to have some change since we checked out again
-      - name: Bump version using self app
-        id: app_version_bump
-        run: |
-          pip install pybump
-          echo "app_version=$(pybump bump --level patch --file setup.py)" >> $GITHUB_OUTPUT
-
       - name: Commit new version
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NEW_VERSION: ${{needs.build.outputs.bumped_version}}
         run: |
           # Update version on git repo
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
           git config --local user.name "GitHub Action"
           git add setup.py
-          git commit -m "update version to: ${{ steps.app_version_bump.outputs.app_version }} (github action)"
+          git commit -m "update version to: $NEW_VERSION (github action)"
 
           git push https://${GITHUB_ACTOR}:${GITHUB_TOKEN}@github.com/ArieLevs/pybump HEAD:master
