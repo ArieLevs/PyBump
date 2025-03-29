@@ -212,6 +212,12 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+      # another bump must occur here or there will be no changes in git
+      - name: Bump version using self app
+        id: app_version_bump
+        run: |
+          pip install pybump
+          echo "app_version=$(pybump bump --level patch --file pyproject.toml)" >> $GITHUB_OUTPUT
       - name: Commit new version
         env:
           NEW_VERSION: ${{needs.build-python-package.outputs.bumped_version}}
