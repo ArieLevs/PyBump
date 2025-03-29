@@ -21,54 +21,86 @@ Python Version Bumper
     :alt: Python Version
     :target: https://pypi.org/project/pybump/
 
-| Simple python code to bump kubernetes package manager Helm charts.yaml, VERSION and setup.py files versions. 
-| Versions must match semver 2.0.0: https://github.com/semver/semver/blob/master/semver.md
-| Version is allowed a lower case 'v' character for example: ``v1.5.4-beta2``
+A simple Python script for updating the version in Kubernetes Helm ``Chart.yaml``,
+``VERSION``, and ``pyproject.toml/setup.py`` files.
 
-Install
-=======
-``pip install pybump``
+- Ensures version consistency across all files.
+- Enforces `Semantic Versioning 2.0.0 <https://github.com/semver/semver/blob/master/semver.md>`_.
+- Supports an optional lowercase 'v' prefix (e.g., ``v1.5.4-beta2``).
+
+.. image:: ./docs/pybump-recording.gif
+
+Installation
+============
+To install pybump, run:
+
+.. code-block:: bash
+
+    pip install pybump
 
 Usage
 =====
 
-| **bump** version:
-| ``pybump bump [-h] --file PATH_TO_CHART.YAML --level {major,minor,patch} [--quiet]``
-|
+Bumping Versions
+----------------
 
-| **set** explicit version or set auto release+metadata:
-| ``pybump set --file PATH_TO_CHART.YAML --set-version X.Y.Z [--quiet]``
-|
-| the **auto** flag is mainly intended for pull request CIs, by using:
-| ``pybump set --file PATH_TO_CHART.YAML --auto [--quiet]``
-| pybump will add git commit hash as release info to version
+To **bump** the version:
 
- * NOTE - This can be dangerous as the `auto` flag might detect a git repo you were not intended to bump,
-   make sure the bumped file is really a child in the git repo you intended to bump.
+.. code-block:: bash
 
-| **get** current version:
-| ``pybump get --file PATH_TO_CHART.YAML``
-|
+    pybump bump [-h] --file PATH_TO_CHART.YAML --level {major,minor,patch} [--quiet]
 
-| update Helm chart **appVersion**:
-| in order to bump/get/set the Helm chart appVersion value just add the ``--app-version`` flag
-| ``pybump bump [-h] --file PATH_TO_CHART.YAML --level {major,minor,patch} [--quiet] [--app-version]``
+Setting Explicit Versions
+-------------------------
 
- * note that the --app-version flag is relevant only for Helm chart.yaml files and has not effect on other cases.
+To **set** an explicit version or automatically update release metadata:
+
+.. code-block:: bash
+
+    pybump set --file PATH_TO_CHART.YAML --set-version X.Y.Z [--quiet]
+
+The **auto** flag is primarily intended for CI/CD pipelines, such as pull request workflows:
+
+.. code-block:: bash
+
+    pybump set --file PATH_TO_CHART.YAML --auto [--quiet]
+
+When using `--auto`, `pybump` appends the Git commit hash as release metadata to the version.
+
+
+ * Warning - The `--auto` flag can be risky, as it may detect a Git repository unintentionally.
+   Ensure that the target file is part of the correct repository before running this command.
+
+Retrieving the Current Version
+------------------------------
+
+To **get** the current version:
+
+.. code-block:: bash
+
+    pybump get --file PATH_TO_CHART.YAML
+
+Updating Helm Chart `appVersion`
+--------------------------------
+
+To bump, get, or set the `appVersion` field in a Helm chart, use the ``--app-version`` flag:
+
+.. code-block:: bash
+
+    pybump bump [-h] --file PATH_TO_CHART.YAML --level {major,minor,patch} [--quiet] [--app-version]
+
+.. note::
+
+    The ``--app-version`` flag applies only to Helm `Chart.yaml` files and has no effect on other file types.
 
 Examples
 ========
 
-CLI example
--------------
-
-.. image:: ./docs/pybump-recording.gif
-
-
 CI Usage example
 ----------------
 
-Simple jenkins CI (using k8s plugin) that will use the `set --file setup.py --auto` options
+A simple Jenkins CI pipeline (using the Kubernetes plugin) that utilizes the
+``set --file setup.py --auto`` option:
 
 ..  code-block:: java
 
@@ -109,38 +141,92 @@ Simple jenkins CI (using k8s plugin) that will use the `set --file setup.py --au
         }
     }
 
-| Case: ``version: 0.0.1``
-| ``pybump bump --file Chart.yaml --level patch`` will bump version to ``0.0.2``
-|
+Version Bumping Examples
+------------------------
 
-| Case: ``version: 0.1.4-alpha+meta.data``
-| ``pybump bump --file Chart.yaml --level minor`` will bump version to ``0.2.0-alpha+meta.data``
-|
+Case: ``version: 0.0.1``
 
-| Case: ``version: v0.0.3``
-| ``pybump bump --file Chart.yaml --level major`` will bump version to ``v1.0.0``
-|
+.. code-block:: bash
 
-| Case: ``version: 0.0.1+some-metadata``
-| ``pybump set --file Chart.yaml --set-version 1.4.0`` will set version to ``1.4.0+metadata-here``
-|
+    pybump bump --file Chart.yaml --level patch
 
-| Case: ``version: v7.0.2``
-| ``pybump set --file setup.py --auto`` will set version to ``v7.0.2-5a51e0e1d9894d3c5d4201619f10be242320cb59``
-|
+**Result:** Version updated to ``0.0.2``.
 
-| Case: ``appVersion 2.3.2``
-| ``pybump bump --file Chart.yaml --level patch --app-version`` will bump appVersion to ``2.3.3``
-|
+---
 
-| Case: ``version: 1.0.13``
-| ``pybump get --file Chart.yaml`` will return ``1.0.13``
-|
+Case: ``version: 0.1.4-alpha+meta.data``
 
-| Case: ``version: 1.0.13+some-metadata``
-| ``pybump get --file Chart.yaml --release`` will return ``some``
+.. code-block:: bash
 
-using a container image
+    pybump bump --file Chart.yaml --level minor
+
+**Result:** Version updated to ``0.2.0-alpha+meta.data``.
+
+---
+
+Case: ``version: v0.0.3``
+
+.. code-block:: bash
+
+    pybump bump --file Chart.yaml --level major
+
+**Result:** Version updated to ``v1.0.0``.
+
+---
+
+Case: ``version: 0.0.1+some-metadata``
+
+.. code-block:: bash
+
+    pybump set --file Chart.yaml --set-version 1.4.0
+
+**Result:** Version updated to ``1.4.0+metadata-here``.
+
+---
+
+Case: ``version: v7.0.2``
+
+.. code-block:: bash
+
+    pybump set --file setup.py --auto
+
+**Result:** Version updated to ``v7.0.2-5a51e0e1d9894d3c5d4201619f10be242320cb59``.
+
+---
+
+Case: ``appVersion: 2.3.2``
+
+.. code-block:: bash
+
+    pybump bump --file Chart.yaml --level patch --app-version
+
+**Result:** ``appVersion`` updated to ``2.3.3``.
+
+---
+
+Case: ``version: 1.0.13``
+
+.. code-block:: bash
+
+    pybump get --file Chart.yaml
+
+**Result:** Returns ``1.0.13``.
+
+---
+
+Case: ``version: 1.0.13+some-metadata``
+
+.. code-block:: bash
+
+    pybump get --file Chart.yaml --release
+
+**Result:** Returns ``some``.
+
+Using a Container Image
 -----------------------
-| ``docker run --rm --volume $(pwd):/tmp -t arielev/pybump set --file /tmp/setup.py --auto``
-|
+
+To run `pybump` within a container:
+
+.. code-block:: bash
+
+    docker run --rm --volume $(pwd):/tmp -t arielev/pybump set --file /tmp/setup.py --auto

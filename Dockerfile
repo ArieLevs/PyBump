@@ -7,7 +7,6 @@ WORKDIR /package
 
 COPY src src
 COPY pyproject.toml .
-COPY setup.py .
 COPY LICENSE .
 COPY README.rst .
 COPY requirements.txt .
