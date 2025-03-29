@@ -19,7 +19,7 @@ maintainers = [
 description = "Python version bumper"
 readme = "README.rst"
 license = { file = "LICENSE" }
-keywords = ['bump', 'version', 'appVersion', 'versioning', 'helm', 'charts', 'setup.py', 'promote']
+keywords = ['bump', 'version', 'appVersion', 'versioning', 'helm', 'charts', 'pyproject.toml', 'setup.py', 'promote']
 classifiers=[
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
