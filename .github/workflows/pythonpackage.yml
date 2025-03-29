@@ -15,6 +15,7 @@ on:
       - 'test/**'
       - 'Dockerfile'
       - 'requirements.txt'
+      - 'pyproject.toml'
       - 'setup.py'
 
   # run on any pr.
