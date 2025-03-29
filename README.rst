@@ -67,10 +67,9 @@ The **auto** flag is primarily intended for CI/CD pipelines, such as pull reques
 
 When using `--auto`, `pybump` appends the Git commit hash as release metadata to the version.
 
-.. warning::
 
-    The `--auto` flag can be risky, as it may detect a Git repository unintentionally.
-    Ensure that the target file is part of the correct repository before running this command.
+ * Warning - The `--auto` flag can be risky, as it may detect a Git repository unintentionally.
+   Ensure that the target file is part of the correct repository before running this command.
 
 Retrieving the Current Version
 ------------------------------
@@ -94,15 +93,8 @@ To bump, get, or set the `appVersion` field in a Helm chart, use the ``--app-ver
 
     The ``--app-version`` flag applies only to Helm `Chart.yaml` files and has no effect on other file types.
 
-
-
-
-#----------------------------------------
-
-
 Examples
 ========
-
 
 CI Usage example
 ----------------

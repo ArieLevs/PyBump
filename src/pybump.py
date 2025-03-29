@@ -95,7 +95,7 @@ def read_version_from_file(file_path, app_version):
     """
     Read the 'version' or 'appVersion' from a given file,
     note for return values for file_type are:
-        python for .py file
+        python for .py/.toml file
         helm_chart for .yaml/.yml files
         plain_version for VERSION files
     :param file_path: full path to file as string
@@ -106,7 +106,7 @@ def read_version_from_file(file_path, app_version):
     with open(file_path, 'r') as stream:
         filename, file_extension = os.path.splitext(file_path)
 
-        if file_extension in ('.py', '.toml'):  # Case setup.py files
+        if file_extension in ('.py', '.toml'):  # Case setup.py / pyproject.toml files
             file_content = stream.read()
             current_version = get_version_from_file(file_content)
             file_type = 'python'
@@ -156,7 +156,8 @@ def main():  # pragma: no cover
 
     # Define parses that are shared, and will be used as 'parent' parser to all others
     base_sub_parser = argparse.ArgumentParser(add_help=False)
-    base_sub_parser.add_argument('--file', help='Path to Chart.yaml/setup.py/VERSION file', required=True)
+    base_sub_parser.add_argument('--file',
+                                 help='Path to Chart.yaml/pyproject.toml/setup.py/VERSION file', required=True)
     base_sub_parser.add_argument('--app-version', action='store_true',
                                  help='Bump Helm chart appVersion, relevant only for Chart.yaml files', required=False)
 

@@ -18,7 +18,7 @@ maintainers = [
 ]
 description = "Python version bumper"
 readme = "README.rst"
-license = { file = "LICENSE" }
+license-files = ["LICENSE"]
 keywords = ['bump', 'version', 'appVersion', 'versioning', 'helm', 'charts', 'pyproject.toml', 'setup.py', 'promote']
 classifiers=[
     "Programming Language :: Python :: 3",
@@ -28,7 +28,6 @@ classifiers=[
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "License :: OSI Approved :: Apache Software License",
     "Operating System :: OS Independent",
 ]
 
