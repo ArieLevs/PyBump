@@ -146,8 +146,8 @@ jobs:
           uv build
           uv publish
         env:
-          UV_PUBLISH_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
-          UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
+          UV_PUBLISH_USERNAME: ${{ secrets.PYPI_USERNAME }}
+          UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
           UV_PUBLISH_URL: "https://upload.pypi.org/legacy/"
 
       - name: Set up QEMU
