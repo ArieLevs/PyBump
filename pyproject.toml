@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+
+[project]
+name = "pybump"
+version = "1.12.7"
+dynamic = ["dependencies"]
+
+authors = [
+  {name = "Arie Lev", email = "levinsonarie@gmail.com"}
+]
+maintainers = [
+  {name = "Arie Lev", email = "levinsonarie@gmail.com"}
+]
+description = "Python version bumper"
+readme = "README.rst"
+license = { file = "LICENSE" }
+keywords = ['bump', 'version', 'appVersion', 'versioning', 'helm', 'charts', 'setup.py', 'promote']
+classifiers=[
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.scripts]
+pybump = "pybump:main"
