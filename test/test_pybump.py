@@ -1,11 +1,12 @@
 import unittest
 
-from src.pybump import PybumpVersion, get_setup_py_version, set_setup_py_version, \
+from src.pybump import PybumpVersion, get_version_from_file, set_version_in_file, \
     is_valid_helm_chart, write_version_to_file, read_version_from_file
 
 from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
-    valid_setup_py, invalid_setup_py_1, invalid_setup_py_2, \
-    valid_version_file_1, valid_version_file_2, invalid_version_file_1, invalid_version_file_2
+    valid_setup_py, invalid_setup_py_1, invalid_setup_py_multiple_ver, \
+    valid_version_file_1, valid_version_file_2, invalid_version_file_1, invalid_version_file_2, \
+    valid_pyproject_toml
 
 
 class PyBumpTest(unittest.TestCase):
@@ -166,24 +167,28 @@ class PyBumpTest(unittest.TestCase):
         self.assertFalse(is_valid_helm_chart(empty_helm_chart))
         self.assertFalse(is_valid_helm_chart(None))
 
-    def test_get_setup_py_version(self):
-        self.assertEqual(get_setup_py_version(valid_setup_py), '0.1.3')
+    def test_get_version_from_file(self):
+        self.assertEqual(get_version_from_file(valid_setup_py), '0.1.3')
 
         with self.assertRaises(RuntimeError):
-            get_setup_py_version(invalid_setup_py_1)
+            get_version_from_file(invalid_setup_py_1)
 
-        with self.assertRaises(RuntimeError):
-            get_setup_py_version(invalid_setup_py_2)
+        with self.assertRaises(RuntimeError, msg="content 'version' key declared 3 times"):
+            get_version_from_file(invalid_setup_py_multiple_ver)
 
-    def test_set_setup_py_version(self):
+        self.assertEqual(get_version_from_file(valid_pyproject_toml), '0.1.0')
+
+    def test_set_version_in_file(self):
         # test the version replacement string, in a content
         content_pre = 'some text before version="3.17.5", and some text after'
         # above content should be equal to below after sending to 'set_setup_py_version'
         content_post = 'some text before version="0.1.3", and some text after'
+        self.assertEqual(set_version_in_file(version='0.1.3', content=content_pre), content_post)
 
-        self.assertEqual(
-            set_setup_py_version(version='0.1.3', content=content_pre), content_post
-        )
+        content_pre_2 = 'some text before version="3.17.5", and another version="v5.5.0"'
+        content_post_2 = 'some text before version="0.1.0-replaced", and another version="0.1.0-replaced"'
+        self.assertEqual(set_version_in_file(version='0.1.0-replaced', content=content_pre_2), content_post_2,
+                         msg="set_version_in_file function should replace all occurrences of 'version' in file")
 
     def test_is_valid_version_file(self):
         self.assertTrue(self.valid_version_1.is_valid_semantic_version())

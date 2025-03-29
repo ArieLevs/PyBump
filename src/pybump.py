@@ -25,10 +25,10 @@ def is_valid_helm_chart(content):
     return False
 
 
-def get_setup_py_version(content):
+def get_version_from_file(content):
     """
     Extract 'version' value using regex from 'content'
-    :param content: the content of a setup.py file
+    :param content: the content of a file
     :return: version value as string
     """
     version_match = regex_version_pattern.findall(content)
@@ -39,14 +39,14 @@ def get_setup_py_version(content):
     return version_match[0][1]
 
 
-def set_setup_py_version(version, content):
+def set_version_in_file(version, content):
     """
-    Replace version in setup.py file using regex,
+    Replace ALL version occurrences in file using regex,
     g<1> contains the string left of version
     g<3> contains the string right of version
     :param version: string
-    :param content: content of setup.py as string
-    :return: content of setup.py file with 'version'
+    :param content: content of file as string
+    :return: content of file with 'version'
     """
     return regex_version_pattern.sub(r'\g<1>{}\g<3>'.format(version), content)
 
@@ -77,8 +77,8 @@ def write_version_to_file(file_path, file_content, version, app_version):
     # Append the 'new_version' to relevant file
     with open(file_path, 'w') as outfile:
         filename, file_extension = os.path.splitext(file_path)
-        if file_extension == '.py':
-            outfile.write(set_setup_py_version(version, file_content))
+        if file_extension in ('.py', '.toml'):
+            outfile.write(set_version_in_file(version, file_content))
         elif file_extension == '.yaml' or file_extension == '.yml':
             if app_version:
                 file_content['appVersion'] = version
@@ -106,9 +106,9 @@ def read_version_from_file(file_path, app_version):
     with open(file_path, 'r') as stream:
         filename, file_extension = os.path.splitext(file_path)
 
-        if file_extension == '.py':  # Case setup.py files
+        if file_extension in ('.py', '.toml'):  # Case setup.py files
             file_content = stream.read()
-            current_version = get_setup_py_version(file_content)
+            current_version = get_version_from_file(file_content)
             file_type = 'python'
         elif file_extension == '.yaml' or file_extension == '.yml':  # Case Helm chart files
             try:

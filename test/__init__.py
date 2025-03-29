@@ -69,7 +69,7 @@ invalid_setup_py_1 = """
 
 # This setup.py content 'version' key declared 3 times
 # and 'install_requires' key declared twice
-invalid_setup_py_2 = """
+invalid_setup_py_multiple_ver = """
     setuptools.setup(
         name="pybump",
         version="0.1.3",
@@ -87,6 +87,16 @@ invalid_setup_py_2 = """
             "pybump==1.3.3"
         ],
     )
+    """
+
+valid_pyproject_toml = """
+    [project]
+    name = "test-project"
+    version = "0.1.0"
+    description = "description"
+    readme = "README.md"
+    requires-python = ">=3.13"
+    dependencies = []
     """
 
 valid_version_file_1 = """0.12.4"""
