@@ -70,7 +70,6 @@ jobs:
 
   test-container-image:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
 
@@ -107,6 +106,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Bump version using self app
+        id: app_version_bump
+        run: |
+          pip install pybump
+          echo "app_version=$(pybump bump --level patch --file pyproject.toml)" >> $GITHUB_OUTPUT
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
@@ -120,7 +124,7 @@ jobs:
           UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
           UV_PUBLISH_URL: "https://test.pypi.org/legacy/"
 
-  build:
+  build-python-package:
     if: github.ref == 'refs/heads/master'
     needs: [test, test-container-image]
     runs-on: ubuntu-latest
@@ -149,6 +153,21 @@ jobs:
           UV_PUBLISH_USERNAME: ${{ secrets.PYPI_USERNAME }}
           UV_PUBLISH_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
           UV_PUBLISH_URL: "https://upload.pypi.org/legacy/"
+
+  build-container-image:
+    if: github.ref == 'refs/heads/master'
+    needs: [test, test-container-image]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Bump version using self app
+        id: app_version_bump
+        run: |
+          pip install pybump
+          echo "app_version=$(pybump bump --level patch --file pyproject.toml)" >> $GITHUB_OUTPUT
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -187,7 +206,7 @@ jobs:
 
   commit:
     if: github.ref == 'refs/heads/master'
-    needs: build
+    needs: [build-python-package, build-container-image]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -195,7 +214,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Commit new version
         env:
-          NEW_VERSION: ${{needs.build.outputs.bumped_version}}
+          NEW_VERSION: ${{needs.build-python-package.outputs.bumped_version}}
         run: |
           # Update version on git repo
           git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
