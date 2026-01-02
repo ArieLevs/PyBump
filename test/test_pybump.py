@@ -179,16 +179,17 @@ class PyBumpTest(unittest.TestCase):
         self.assertEqual(get_version_from_file(valid_pyproject_toml), '0.1.0')
 
     def test_set_version_in_file(self):
-        # test the version replacement string, in a content
-        content_pre = 'some text before version="3.17.5", and some text after'
+        # test the version replacement string, in a content (version must be at start of line)
+        content_pre = 'some text before\nversion="3.17.5"\nand some text after'
         # above content should be equal to below after sending to 'set_setup_py_version'
-        content_post = 'some text before version="0.1.3", and some text after'
+        content_post = 'some text before\nversion="0.1.3"\nand some text after'
         self.assertEqual(set_version_in_file(version='0.1.3', content=content_pre), content_post)
 
-        content_pre_2 = 'some text before version="3.17.5", and another version="v5.5.0"'
-        content_post_2 = 'some text before version="0.1.0-replaced", and another version="0.1.0-replaced"'
+        # test with indented version (common in setup.py)
+        content_pre_2 = 'setup(\n    version="3.17.5",\n    name="test"\n)'
+        content_post_2 = 'setup(\n    version="0.1.0-replaced",\n    name="test"\n)'
         self.assertEqual(set_version_in_file(version='0.1.0-replaced', content=content_pre_2), content_post_2,
-                         msg="set_version_in_file function should replace all occurrences of 'version' in file")
+                         msg="should replace version at start of line (with optional indentation)")
 
     def test_is_valid_version_file(self):
         self.assertTrue(self.valid_version_1.is_valid_semantic_version())
@@ -226,7 +227,7 @@ class PyBumpTest(unittest.TestCase):
                               version='1.1.2', app_version=True)
 
         write_version_to_file(file_path='test_write_read_file.py',
-                              file_content='some text before version="0.17.5", and some text after',
+                              file_content='some text before\nversion="0.17.5"\nand some text after',
                               version='1.1.2', app_version=False)
         write_version_to_file(file_path='VERSION',
                               file_content='',
@@ -257,7 +258,7 @@ class PyBumpTest(unittest.TestCase):
 
         self.assertEqual(read_version_from_file(
             file_path='test_write_read_file.py', app_version=False),
-            {'file_content': 'some text before version="1.1.2", and some text after',
+            {'file_content': 'some text before\nversion="1.1.2"\nand some text after',
              'version': '1.1.2',
              'file_type': 'python'}
         )

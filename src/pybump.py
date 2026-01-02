@@ -10,7 +10,7 @@ try:
 except ImportError:
     from pybump_version import PybumpVersion
 
-regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
+regex_version_pattern = re.compile(r"(^[ \t]*(?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])", re.MULTILINE)
 
 
 def is_valid_helm_chart(content):
