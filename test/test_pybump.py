@@ -6,7 +6,7 @@ from src.pybump import PybumpVersion, get_version_from_file, set_version_in_file
 from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
     valid_setup_py, invalid_setup_py_1, invalid_setup_py_multiple_ver, \
     valid_version_file_1, valid_version_file_2, invalid_version_file_1, invalid_version_file_2, \
-    valid_pyproject_toml
+    valid_pyproject_toml, valid_pyproject_toml_with_compound_keys, valid_setup_py_inline_version
 
 
 class PyBumpTest(unittest.TestCase):
@@ -177,6 +177,16 @@ class PyBumpTest(unittest.TestCase):
             get_version_from_file(invalid_setup_py_multiple_ver)
 
         self.assertEqual(get_version_from_file(valid_pyproject_toml), '0.1.0')
+
+        # Test for issue #58: compound keys containing 'version' substring should not match
+        # File contains: version="2.0.0", target-version="py312", myversion="should-not-match"
+        # Only 'version' should be matched, not 'target-version' or 'myversion'
+        self.assertEqual(get_version_from_file(valid_pyproject_toml_with_compound_keys), '2.0.0',
+                         msg="Should only match 'version', not compound keys like 'target-version'")
+
+        # Test that inline version (not at line start) still works
+        self.assertEqual(get_version_from_file(valid_setup_py_inline_version), '3.2.1',
+                         msg="Should match version even when indented (setup.py style)")
 
     def test_set_version_in_file(self):
         # test the version replacement string, in a content
