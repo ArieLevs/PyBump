@@ -128,8 +128,9 @@ jobs:
           # Using --metadata flag for PEP 440 compatibility (+ instead of -)
           pybump bump --level patch --file pyproject.toml
           echo "app_version=$(pybump set --auto --metadata --file pyproject.toml)" >> $GITHUB_OUTPUT
-          # PyPI/TestPyPI reject PEP 440 local versions (1.2.3+sha); normalize version for publishing
-          sed -i '/^version *= */ s/+/\./g' pyproject.toml
+          # PyPI/TestPyPI do not accept PEP 440 local versions (1.2.3+sha);
+          # replace local version with a PEP 440–compliant dev release for publishing
+          sed -i 's/^\(version *= *"\)\([^+"]*\)+\([^"]*\)"/\1\2.dev\3"/' pyproject.toml
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
