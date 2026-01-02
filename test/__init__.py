@@ -99,6 +99,31 @@ valid_pyproject_toml = """
     dependencies = []
     """
 
+# pyproject.toml with compound keys containing 'version' substring (issue #58)
+# Should only match 'version = "2.0.0"' and NOT 'target-version' or other compound keys
+valid_pyproject_toml_with_compound_keys = """
+[project]
+name = "test-project"
+version = "2.0.0"
+description = "A test project"
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.some]
+this-is-a-version-containing-key = "1.1.7"
+myversion = "should-not-match"
+"""
+
+# Content with version NOT at line start - should still match (inline in setup.py style)
+valid_setup_py_inline_version = """
+    setuptools.setup(
+        name="pybump",
+        version="3.2.1",
+        author="Test",
+    )
+    """
+
 valid_version_file_1 = """0.12.4"""
 valid_version_file_2 = """1.5.0-alpha+meta"""
 invalid_version_file_1 = """

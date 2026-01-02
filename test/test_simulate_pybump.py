@@ -26,25 +26,27 @@ def simulate_get_version(file, app_version=False, sem_ver=False, release=False, 
         return run(["python", "src/pybump.py", "get", "--file", file], stdout=PIPE, stderr=PIPE)
 
 
-def simulate_set_version(file, version='', app_version=False, auto=False):
+def simulate_set_version(file, version='', app_version=False, auto=False, metadata=False):
     """
     execute sub process to simulate real app execution,
     set new version to a file
     if auto is True, auto add git branch / hash
+    if metadata is True (with auto), set SHA as metadata (+sha) instead of release (-sha)
     if app_version is True, then add the --app-version flag to execution
     :param file: string
     :param version: string
     :param app_version: boolean
     :param auto: boolean
+    :param metadata: boolean
     :return: CompletedProcess object
     """
     if auto:
+        cmd = ["python", "src/pybump.py", "set", "--file", file, "--auto"]
+        if metadata:
+            cmd.append("--metadata")
         if app_version:
-            return run(["python", "src/pybump.py", "set", "--file", file, "--auto", "--app-version"],
-                       stdout=PIPE, stderr=PIPE)
-        else:
-            return run(["python", "src/pybump.py", "set", "--file", file, "--auto"],
-                       stdout=PIPE, stderr=PIPE)
+            cmd.append("--app-version")
+        return run(cmd, stdout=PIPE, stderr=PIPE)
     else:
         if app_version:
             return run(["python", "src/pybump.py", "set", "--file", file, "--set-version", version, "--app-version"],
@@ -239,15 +241,30 @@ class PyBumpSimulatorTest(unittest.TestCase):
 
     def test_set_flags(self):
         ################################################
-        # simulate the 'set' command with version prefix
+        # simulate the 'set' command with --auto flag
         ################################################
         # first set test_valid_setup.py a simple version
         simulate_set_version("test/test_content_files/test_valid_setup.py", version="1.0.1")
 
+        # test --auto sets release (-sha)
         test_set_auto = simulate_set_version("test/test_content_files/test_valid_setup.py", auto=True)
         self.assertRegex(test_set_auto.stdout.decode('utf-8').strip(),
                          r'\b1.0.1-[0-9a-f]{40}\b',
                          msg="test that 'test_set_auto' contains an hexadecimal string with exactly 40 characters")
+
+        ########################################################
+        # simulate the 'set' command with --auto --metadata flag
+        ########################################################
+        # reset to simple version
+        simulate_set_version("test/test_content_files/test_valid_setup.py", version="2.0.0")
+
+        # test --auto --metadata sets metadata (+sha) instead of release (-sha)
+        test_set_auto_metadata = simulate_set_version("test/test_content_files/test_valid_setup.py",
+                                                      auto=True, metadata=True)
+        self.assertRegex(test_set_auto_metadata.stdout.decode('utf-8').strip(),
+                         r'\b2.0.0\+[0-9a-f]{40}\b',
+                         msg="test that '--auto --metadata' sets SHA as metadata (+sha), "
+                             "output should match 2.0.0+<40-char-hex>")
 
         # test invalid version set
         test_set_auto = simulate_set_version("test/test_content_files/test_valid_setup.py", version='V123.x.4')
