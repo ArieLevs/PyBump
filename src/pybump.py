@@ -10,7 +10,17 @@ try:
 except ImportError:
     from pybump_version import PybumpVersion
 
-regex_version_pattern = re.compile(r"((?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
+# Regex to match version strings like: version = "1.0.0" or __version__ = '1.0.0'
+# (?<![a-zA-Z0-9_-])  - Negative lookbehind: 'version' must NOT be preceded by alphanumeric, underscore, or hyphen
+#                      This prevents matching 'target-version', 'myversion', etc.
+# (?:__)?             - Optional non-capturing group for '__' prefix (matches __version__)
+# version             - Literal 'version' string
+# (?:__)?             - Optional non-capturing group for '__' suffix (matches __version__)
+# ?= ?                - Optional spaces around the equals sign
+# [\"']               - Opening quote (single or double)
+# (.+?)               - Capture group 2: version value (non-greedy)
+# [\"']               - Closing quote (single or double)
+regex_version_pattern = re.compile(r"((?<![a-zA-Z0-9_-])(?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
 
 def is_valid_helm_chart(content):
