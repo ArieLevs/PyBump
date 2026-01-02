@@ -22,6 +22,7 @@ on:
 
 jobs:
   test:
+    name: Python Test - ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     strategy:
       max-parallel: 4
@@ -41,7 +42,7 @@ jobs:
 
     - name: Lint with flake8
       run: |
-        pip install flake8==7.1.2
+        pip install flake8==7.3.0
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --show-source --statistics --exclude=.venv
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
@@ -50,7 +51,7 @@ jobs:
     - name: Test with unittest (codecov)
       run: |
         pip install -r requirements.txt
-        pip install coverage==7.6
+        pip install coverage==7.13
         # discover all tests in the test directory
         python -m coverage run --omit '.venv/*' -m unittest discover test -vv -t .
 
@@ -68,14 +69,27 @@ jobs:
         fail_ci_if_error: true
         verbose: true
 
+  test-results:
+    name: Python test results
+    needs: [test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tests passed
+        if: ${{ !(contains(needs.*.result, 'failure')) }}
+        run: exit 0
+      - name: Tests failed
+        if: ${{ (contains(needs.*.result, 'failure')) }}
+        run: exit 1
+
   test-container-image:
+    name: Container Image Test
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
 
     - name: Run Checkov action
       id: checkov
-      uses: bridgecrewio/checkov-action@v12.1347.0
+      uses: bridgecrewio/checkov-action@v12
       with:
         framework: dockerfile
         dockerfile_path: Dockerfile
@@ -98,6 +112,7 @@ jobs:
           --verify v2.3.5+test
 
   simulate:
+    name: Publish Simulation
     if: github.ref != 'refs/heads/master'
     needs: [test, test-container-image]
     runs-on: ubuntu-latest
