@@ -110,9 +110,10 @@ jobs:
         id: app_version_bump
         run: |
           pip install pybump
-          # Bump patch, then set release to git commit SHA for unique test.pypi.org versions
+          # Bump patch, then set commit SHA as metadata (+sha) for unique test.pypi.org versions
+          # Using --metadata flag for PEP 440 compatibility (+ instead of -)
           pybump bump --level patch --file pyproject.toml
-          echo "app_version=$(pybump set --auto --file pyproject.toml)" >> $GITHUB_OUTPUT
+          echo "app_version=$(pybump set --auto --metadata --file pyproject.toml)" >> $GITHUB_OUTPUT
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:

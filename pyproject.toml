@@ -7,7 +7,7 @@ dependencies = {file = ["requirements.txt"]}
 
 [project]
 name = "pybump"
-version = "1.13.1"
+version = "1.14.0"
 dynamic = ["dependencies"]
 
 authors = [

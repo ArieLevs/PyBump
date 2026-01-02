@@ -186,6 +186,9 @@ def main():  # pragma: no cover
                            help='Set automatic release / metadata from current git branch for current version')
     set_group.add_argument('--set-version',
                            help='Semantic version to set as a combination of \'vX.Y.Z-release+metadata\'')
+    parser_set.add_argument('--metadata', action='store_true',
+                            help='With --auto, set commit SHA as metadata (+sha) instead of release (-sha)',
+                            required=False)
     parser_set.add_argument('--quiet', action='store_true', help='Do not print new version', required=False)
 
     # Sub-parser for get version command
@@ -256,18 +259,23 @@ def main():  # pragma: no cover
                 # Case set-version argument passed, just set the new version with its value
                 if args['set_version']:
                     new_version = PybumpVersion(args['set_version'])
-                # Case the 'auto' flag was set, set release with current git branch name and metadata with hash
+                # Case the 'auto' flag was set, set release or metadata with git commit SHA
                 elif args['auto']:
                     from git import Repo, InvalidGitRepositoryError
                     # get the directory path of current working file
                     file_dirname_path = os.path.dirname(args['file'])
                     try:
                         repo = Repo(path=file_dirname_path, search_parent_directories=True)
-                        # update current version release and metadata with relevant git values
+                        # get commit SHA (try active branch first, fall back to HEAD)
                         try:
-                            version_object.release = str(repo.active_branch.commit)
+                            commit_sha = str(repo.active_branch.commit)
                         except TypeError:
-                            version_object.release = str(repo.head.object.hexsha)
+                            commit_sha = str(repo.head.object.hexsha)
+                        # set metadata (+sha) if --metadata flag is set, otherwise set release (-sha)
+                        if args.get('metadata'):
+                            version_object.metadata = commit_sha
+                        else:
+                            version_object.release = commit_sha
                         new_version = version_object
                     except InvalidGitRepositoryError:
                         print("{} is not a valid git repo".format(file_dirname_path), file=stderr)
