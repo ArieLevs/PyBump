@@ -127,10 +127,8 @@ jobs:
           # Bump patch, then set commit SHA as metadata (+sha) for unique test.pypi.org versions
           # Using --metadata flag for PEP 440 compatibility (+ instead of -)
           pybump bump --level patch --file pyproject.toml
-          echo "app_version=$(pybump set --auto --metadata --file pyproject.toml)" >> $GITHUB_OUTPUT
-          # PyPI/TestPyPI do not accept PEP 440 local versions (1.2.3+sha);
-          # replace local version with a PEP 440–compliant dev release for publishing
-          sed -i 's/^\(version *= *"\)\([^+"]*\)+\([^"]*\)"/\1\2.dev\3"/' pyproject.toml
+          # Append GitHub run number as a numeric release segment (PEP 440 / PyPI compliant)
+          sed -i 's/^\(version *= *"\)\([0-9.]*\)\("\)/\1\2.'"$GITHUB_RUN_NUMBER"'\3/' pyproject.toml
       - name: Install uv
         uses: astral-sh/setup-uv@v5
         with:
