@@ -32,7 +32,7 @@ jobs:
           - "3.12"
           #- "3.13"
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
@@ -84,7 +84,7 @@ jobs:
     name: Container Image Test
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
 
     - name: Run Checkov action
       id: checkov
@@ -116,7 +116,7 @@ jobs:
     needs: [test, test-container-image]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -149,7 +149,7 @@ jobs:
     outputs:
       bumped_version: ${{ steps.app_version_bump.outputs.app_version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -177,7 +177,7 @@ jobs:
     needs: [test, test-container-image]
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -229,7 +229,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       # another bump must occur here or there will be no changes in git
       - name: Bump version using self app
         id: app_version_bump
