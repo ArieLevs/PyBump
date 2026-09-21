@@ -2,7 +2,7 @@ import unittest
 from os import remove
 
 from src.pybump import PybumpVersion, get_version_from_file, set_version_in_file, \
-    is_valid_helm_chart, write_version_to_file, read_version_from_file
+    is_valid_helm_chart, write_version_to_file, read_version_from_file, resolve_file_type
 
 from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
     valid_setup_py, invalid_setup_py_1, invalid_setup_py_multiple_ver, \
@@ -368,6 +368,25 @@ class PyBumpTest(unittest.TestCase):
 
             self.assertIn(expected_text, str(context.exception),
                           msg="{0} should report '{1}'".format(file_name, expected_text))
+
+    def test_resolve_file_type(self):
+        """
+        One place decides which file types are supported, used by both the read
+        and the write side so they can never disagree.
+        """
+        for file_path, expected in (('setup.py', 'python'),
+                                    ('pyproject.toml', 'python'),
+                                    ('Chart.yaml', 'helm_chart'),
+                                    ('Chart.yml', 'helm_chart'),
+                                    ('VERSION', 'plain_version'),
+                                    ('some/dir/VERSION', 'plain_version'),
+                                    ('VERSION.txt', 'plain_version')):
+            self.assertEqual(resolve_file_type(file_path), expected,
+                             msg="{0} should resolve to {1}".format(file_path, expected))
+
+        for file_path in ('unknown.conf', 'notes.txt', 'Makefile'):
+            with self.assertRaises(ValueError, msg="{0} should be rejected".format(file_path)):
+                resolve_file_type(file_path)
 
 
 if __name__ == '__main__':

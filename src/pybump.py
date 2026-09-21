@@ -23,6 +23,35 @@ except ImportError:
 regex_version_pattern = re.compile(r"((?<![a-zA-Z0-9_-])(?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
 
+# The file types this app knows how to read and write, and the 'file_type'
+# value each one is reported as
+PYTHON_FILE_EXTENSIONS = ('.py', '.toml')
+HELM_CHART_FILE_EXTENSIONS = ('.yaml', '.yml')
+PLAIN_VERSION_FILE_NAME = 'VERSION'
+
+
+def resolve_file_type(file_path):
+    """
+    Resolve which supported file type a path refers to.
+    Both the read and the write side go through here, so they cannot disagree
+    about what is supported.
+    :param file_path: full path to file as string
+    :return: one of 'python', 'helm_chart', 'plain_version'
+    :raises ValueError: if the file name and extension are not supported
+    """
+    filename, file_extension = os.path.splitext(file_path)
+
+    if file_extension in PYTHON_FILE_EXTENSIONS:
+        return 'python'
+    if file_extension in HELM_CHART_FILE_EXTENSIONS:
+        return 'helm_chart'
+    if os.path.basename(filename) == PLAIN_VERSION_FILE_NAME:
+        return 'plain_version'
+
+    raise ValueError("File name or extension not known to this app: {0}{1}"
+                     .format(os.path.basename(filename), file_extension))
+
+
 def is_valid_helm_chart(content):
     """
     Check if input dictionary contains mandatory keys of a Helm Chart.yaml file,
@@ -84,19 +113,9 @@ def write_version_to_file(file_path, file_content, version, app_version):
     :param version: version to set as string
     :param app_version: boolean, if True then set the appVersion key
     """
-    filename, file_extension = os.path.splitext(file_path)
-
     # Resolve the file type before opening for write, mode 'w' truncates the file
     # immediately, so an unhandled type must be rejected while the content is still there
-    if file_extension in ('.py', '.toml'):
-        file_type = 'python'
-    elif file_extension == '.yaml' or file_extension == '.yml':
-        file_type = 'helm_chart'
-    elif os.path.basename(filename) == 'VERSION':
-        file_type = 'plain_version'
-    else:
-        raise ValueError("File name or extension not known to this app: {0}{1}"
-                         .format(os.path.basename(filename), file_extension))
+    file_type = resolve_file_type(file_path)
 
     # A VERSION file keeps whatever trailing newline it already had, this has to be
     # read before opening for write since mode 'w' truncates the file
@@ -133,14 +152,13 @@ def read_version_from_file(file_path, app_version):
     :return: dict containing file content, version and type as:
      {'file_content': file_content, 'version': current_version, 'file_type': file_type}
     """
-    with open(file_path, 'r') as stream:
-        filename, file_extension = os.path.splitext(file_path)
+    file_type = resolve_file_type(file_path)
 
-        if file_extension in ('.py', '.toml'):  # Case setup.py / pyproject.toml files
+    with open(file_path, 'r') as stream:
+        if file_type == 'python':  # Case setup.py / pyproject.toml files
             file_content = stream.read()
             current_version = get_version_from_file(file_content)
-            file_type = 'python'
-        elif file_extension == '.yaml' or file_extension == '.yml':  # Case Helm chart files
+        elif file_type == 'helm_chart':  # Case Helm chart files
             try:
                 yaml = YAML()
                 file_content = yaml.load(stream)
@@ -148,7 +166,6 @@ def read_version_from_file(file_path, app_version):
                 raise ValueError("Failed to parse YAML file {0}: {1}".format(file_path, exc))
             # Make sure Helm chart is valid and contains minimal mandatory keys
             if is_valid_helm_chart(file_content):
-                file_type = 'helm_chart'
                 if app_version:
                     current_version = file_content.get('appVersion', None)
 
@@ -162,14 +179,9 @@ def read_version_from_file(file_path, app_version):
             else:
                 raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(file_content))
         else:  # Case file name is just 'VERSION'
-            if os.path.basename(filename) == 'VERSION':
-                # A version file should ONLY contain a valid semantic version string
-                file_content = None
-                current_version = stream.read().strip()
-                file_type = 'plain_version'
-            else:
-                raise ValueError("File name or extension not known to this app: {}{}"
-                                 .format(os.path.basename(filename), file_extension))
+            # A version file should ONLY contain a valid semantic version string
+            file_content = None
+            current_version = stream.read().strip()
 
     return {'file_content': file_content, 'version': current_version, 'file_type': file_type}
 
