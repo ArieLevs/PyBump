@@ -67,6 +67,15 @@ The **auto** flag is primarily intended for CI/CD pipelines, such as pull reques
 
 When using `--auto`, `pybump` appends the Git commit hash as release metadata to the version.
 
+Add `--metadata` to attach the commit hash as build metadata (``+sha``) instead of as a
+release (``-sha``):
+
+.. code-block:: bash
+
+    pybump set --file PATH_TO_CHART.YAML --auto --metadata [--quiet]
+
+ * Note - `--metadata` only has meaning together with `--auto`, and is rejected when combined
+   with `--set-version`.
 
  * Warning - The `--auto` flag can be risky, as it may detect a Git repository unintentionally.
    Ensure that the target file is part of the correct repository before running this command.
