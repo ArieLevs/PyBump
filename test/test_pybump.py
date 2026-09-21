@@ -1,4 +1,5 @@
 import unittest
+from os import remove
 
 from src.pybump import PybumpVersion, get_version_from_file, set_version_in_file, \
     is_valid_helm_chart, write_version_to_file, read_version_from_file
@@ -241,9 +242,11 @@ class PyBumpTest(unittest.TestCase):
         write_version_to_file(file_path='VERSION',
                               file_content='',
                               version='1.1.2', app_version=False)
-        write_version_to_file(file_path='unknown.extension',
-                              file_content='some version="" here',
-                              version='1.1.2', app_version=False)
+        # an unhandled file type is rejected, previously this silently created an empty file
+        with self.assertRaises(ValueError):
+            write_version_to_file(file_path='unknown.extension',
+                                  file_content='some version="" here',
+                                  version='1.1.2', app_version=False)
 
         self.assertEqual(read_version_from_file(
             file_path='test_write_read_file_1.yaml', app_version=False),
@@ -291,6 +294,27 @@ class PyBumpTest(unittest.TestCase):
 
         self.assertIn('test_malformed_chart.yaml', str(context.exception),
                       msg="the error should name the file that failed to parse")
+
+    def test_write_version_to_unknown_file_type_leaves_file_intact(self):
+        """
+        write_version_to_file() opens with mode 'w', which truncates before any
+        branch runs. An unhandled file type must be rejected before that happens,
+        or the file is silently emptied.
+        See https://github.com/ArieLevs/PyBump/issues/75
+        """
+        target = 'test_unhandled_type.conf'
+        original = 'important data that should survive\n'
+        with open(target, 'w') as target_file:
+            target_file.write(original)
+        self.addCleanup(remove, target)
+
+        with self.assertRaises(ValueError):
+            write_version_to_file(file_path=target, file_content='irrelevant',
+                                  version='1.0.0', app_version=False)
+
+        with open(target) as target_file:
+            self.assertEqual(target_file.read(), original,
+                             msg="file must be left untouched when its type is not handled")
 
 
 if __name__ == '__main__':

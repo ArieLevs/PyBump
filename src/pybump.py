@@ -84,21 +84,33 @@ def write_version_to_file(file_path, file_content, version, app_version):
     :param version: version to set as string
     :param app_version: boolean, if True then set the appVersion key
     """
+    filename, file_extension = os.path.splitext(file_path)
+
+    # Resolve the file type before opening for write, mode 'w' truncates the file
+    # immediately, so an unhandled type must be rejected while the content is still there
+    if file_extension in ('.py', '.toml'):
+        file_type = 'python'
+    elif file_extension == '.yaml' or file_extension == '.yml':
+        file_type = 'helm_chart'
+    elif os.path.basename(filename) == 'VERSION':
+        file_type = 'plain_version'
+    else:
+        raise ValueError("File name or extension not known to this app: {0}{1}"
+                         .format(os.path.basename(filename), file_extension))
+
     # Append the 'new_version' to relevant file
     with open(file_path, 'w') as outfile:
-        filename, file_extension = os.path.splitext(file_path)
-        if file_extension in ('.py', '.toml'):
+        if file_type == 'python':
             outfile.write(set_version_in_file(version, file_content))
-        elif file_extension == '.yaml' or file_extension == '.yml':
+        elif file_type == 'helm_chart':
             if app_version:
                 file_content['appVersion'] = version
             else:
                 file_content['version'] = version
             yaml = YAML()
             yaml.dump(file_content, outfile)
-        elif os.path.basename(filename) == 'VERSION':
+        else:
             outfile.write(version)
-        outfile.close()
 
 
 def read_version_from_file(file_path, app_version):
