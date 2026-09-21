@@ -1,5 +1,9 @@
 import unittest
+from os import makedirs
+from os.path import join
+from shutil import rmtree
 from subprocess import run, PIPE
+from tempfile import mkdtemp
 
 
 def simulate_get_version(file, app_version=False, sem_ver=False, release=False, metadata=False):
@@ -377,3 +381,126 @@ class PyBumpSimulatorTest(unittest.TestCase):
                           msg="error message should name the file that failed to parse")
             self.assertEqual(stdout, '',
                              msg="parse errors belong on stderr, stdout should stay clean")
+
+
+class PyBumpAutoFlagTest(unittest.TestCase):
+    """
+    Cover the '--auto' flag, which is the only consumer of GitPython in this project.
+    The logic lives inline in main() which is marked '# pragma: no cover', so these
+    run pybump as a sub process against throwaway repositories.
+    See https://github.com/ArieLevs/PyBump/issues/71
+    """
+
+    def setUp(self):
+        self.temp_dir = mkdtemp()
+        self.addCleanup(rmtree, self.temp_dir, True)
+
+    def init_repo(self, path, version='1.0.0'):
+        """
+        create a git repo containing a single committed setup.py, return its HEAD sha
+        :param path: full path to the repo directory as string
+        :param version: version string to write into setup.py
+        :return: string, the 40 character commit sha
+        """
+        makedirs(path, exist_ok=True)
+        self.git(path, 'init')
+        with open(join(path, 'setup.py'), 'w') as setup_file:
+            setup_file.write('setuptools.setup(\n    version="{0}",\n)\n'.format(version))
+
+        self.git(path, 'add', '.')
+        # disable signing, a developer machine with commit.gpgsign enabled would fail here
+        self.git(path, '-c', 'user.email=test@pybump', '-c', 'user.name=test',
+                 '-c', 'commit.gpgsign=false', 'commit', '-m', 'init')
+        return self.git(path, 'rev-parse', 'HEAD').stdout.decode('utf-8').strip()
+
+    @staticmethod
+    def git(path, *args):
+        """
+        run a git command inside a given directory, raise if it fails
+        :param path: full path to the repo directory as string
+        :param args: git arguments
+        :return: CompletedProcess object
+        """
+        completed_process_object = run(('git', '-C', path) + args, stdout=PIPE, stderr=PIPE)
+        if completed_process_object.returncode != 0:
+            raise RuntimeError('git {0} failed: {1}'.format(
+                ' '.join(args), completed_process_object.stderr.decode('utf-8')))
+        return completed_process_object
+
+    def test_auto_sets_release_to_head_sha(self):
+        repo_path = join(self.temp_dir, 'repo')
+        head_sha = self.init_repo(repo_path)
+
+        completed_process_object = simulate_set_version(join(repo_path, 'setup.py'), auto=True)
+        self.assertEqual(completed_process_object.returncode, 0,
+                         msg="'--auto' against a valid repo should exit 0")
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        self.assertEqual(stdout, '1.0.0-{0}'.format(head_sha),
+                         msg="'--auto' should set the real HEAD sha as release")
+
+    def test_auto_metadata_sets_metadata_to_head_sha(self):
+        repo_path = join(self.temp_dir, 'repo')
+        head_sha = self.init_repo(repo_path, version='2.0.0')
+
+        completed_process_object = simulate_set_version(join(repo_path, 'setup.py'), auto=True, metadata=True)
+        self.assertEqual(completed_process_object.returncode, 0,
+                         msg="'--auto --metadata' against a valid repo should exit 0")
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        self.assertEqual(stdout, '2.0.0+{0}'.format(head_sha),
+                         msg="'--auto --metadata' should set the real HEAD sha as metadata, not as release")
+
+    def test_auto_on_detached_head(self):
+        """
+        on a detached HEAD 'repo.active_branch' raises TypeError, pybump should fall
+        back to 'repo.head.object.hexsha' rather than propagate the exception
+        """
+        repo_path = join(self.temp_dir, 'repo')
+        head_sha = self.init_repo(repo_path)
+        self.git(repo_path, 'checkout', '--detach', 'HEAD')
+
+        completed_process_object = simulate_set_version(join(repo_path, 'setup.py'), auto=True)
+        self.assertEqual(completed_process_object.returncode, 0,
+                         msg="'--auto' on a detached HEAD should exit 0 via the TypeError fallback")
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        self.assertEqual(stdout, '1.0.0-{0}'.format(head_sha),
+                         msg="detached HEAD should still resolve the same sha")
+
+    def test_auto_from_sub_directory_finds_repo_root(self):
+        """
+        pybump passes 'search_parent_directories=True', a file nested below the repo
+        root should still resolve to that repo
+        """
+        repo_path = join(self.temp_dir, 'repo')
+        head_sha = self.init_repo(repo_path)
+
+        nested_dir = join(repo_path, 'charts', 'nested')
+        makedirs(nested_dir)
+        with open(join(nested_dir, 'setup.py'), 'w') as setup_file:
+            setup_file.write('setuptools.setup(\n    version="3.0.0",\n)\n')
+
+        completed_process_object = simulate_set_version(join(nested_dir, 'setup.py'), auto=True)
+        self.assertEqual(completed_process_object.returncode, 0,
+                         msg="'--auto' on a file below the repo root should exit 0")
+
+        stdout = completed_process_object.stdout.decode('utf-8').strip()
+        self.assertEqual(stdout, '3.0.0-{0}'.format(head_sha),
+                         msg="a nested file should resolve the sha of the repo above it")
+
+    def test_auto_outside_a_git_repo(self):
+        plain_dir = join(self.temp_dir, 'not_a_repo')
+        makedirs(plain_dir)
+        with open(join(plain_dir, 'setup.py'), 'w') as setup_file:
+            setup_file.write('setuptools.setup(\n    version="1.0.0",\n)\n')
+
+        completed_process_object = simulate_set_version(join(plain_dir, 'setup.py'), auto=True)
+        self.assertEqual(completed_process_object.returncode, 1,
+                         msg="'--auto' outside a git repo should exit 1")
+
+        stderr = completed_process_object.stderr.decode('utf-8')
+        self.assertIn('is not a valid git repo', stderr,
+                      msg="should report that the directory is not a valid git repo")
+        self.assertNotIn('Traceback', stderr,
+                         msg="should fail cleanly, not raise InvalidGitRepositoryError")
