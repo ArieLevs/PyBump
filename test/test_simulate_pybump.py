@@ -632,3 +632,63 @@ class PyBumpVersionFileTest(unittest.TestCase):
         self.assertEqual(completed_process_object.returncode, 0,
                          msg="a blank line should not make the version unreadable")
         self.assertEqual(completed_process_object.stdout.decode('utf-8').strip(), '1.2.3')
+
+
+class PyBumpFlagCombinationTest(unittest.TestCase):
+    """
+    A flag that cannot take effect should say so rather than be ignored.
+    See https://github.com/ArieLevs/PyBump/issues/77
+    """
+
+    def setUp(self):
+        self.temp_dir = mkdtemp()
+        self.addCleanup(rmtree, self.temp_dir, True)
+
+    def write(self, name, content):
+        path = join(self.temp_dir, name)
+        with open(path, 'w') as target_file:
+            target_file.write(content)
+        return path
+
+    def test_metadata_without_auto_is_rejected(self):
+        path = self.write('chart.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0\n')
+
+        completed_process_object = run(["python", "src/pybump.py", "set", "--file", path,
+                                        "--set-version", "2.0.0", "--metadata"], stdout=PIPE, stderr=PIPE)
+        self.assertNotEqual(completed_process_object.returncode, 0,
+                            msg="'--metadata' without '--auto' cannot take effect and should be rejected")
+        self.assertIn('--metadata', completed_process_object.stderr.decode('utf-8'),
+                      msg="the error should name the flag that was rejected")
+
+        with open(path) as chart_file:
+            self.assertIn('version: 1.0.0', chart_file.read(),
+                          msg="a rejected invocation must not modify the file")
+
+    def test_metadata_with_auto_is_still_accepted(self):
+        """guard that rejecting the combination above did not break the valid one"""
+        path = self.write('setup.py', 'version="1.0.0"\n')
+        # '--auto' needs a repository to read a commit sha from
+        for args in (('init',), ('add', '.'),
+                     ('-c', 'user.email=test@pybump', '-c', 'user.name=test',
+                      '-c', 'commit.gpgsign=false', 'commit', '-m', 'init')):
+            run(('git', '-C', self.temp_dir) + args, stdout=PIPE, stderr=PIPE)
+
+        self.assertEqual(simulate_set_version(path, auto=True, metadata=True).returncode, 0,
+                         msg="'--auto --metadata' is the supported combination and must keep working")
+
+    def test_get_metadata_is_unaffected(self):
+        """the 'get' sub command has its own --metadata with a different meaning"""
+        path = self.write('chart.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0+abc\n')
+
+        completed_process_object = simulate_get_version(path, metadata=True)
+        self.assertEqual(completed_process_object.returncode, 0)
+        self.assertEqual(completed_process_object.stdout.decode('utf-8').strip(), 'abc')
+
+    def test_app_version_on_non_chart_file_warns(self):
+        path = self.write('setup.py', 'version="1.0.0"\n')
+
+        completed_process_object = simulate_bump_version(path, 'patch', app_version=True)
+        self.assertEqual(completed_process_object.returncode, 0,
+                         msg="'--app-version' on a non chart file is documented as ignored, not an error")
+        self.assertIn('app-version', completed_process_object.stderr.decode('utf-8'),
+                      msg="being ignored should be stated on stderr rather than silent")

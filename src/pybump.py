@@ -222,6 +222,11 @@ def main():  # pragma: no cover
 
     args = vars(parser.parse_args())
 
+    # '--metadata' on the 'set' sub command is only read inside the '--auto' branch,
+    # without it the flag would be silently ignored
+    if args['sub_command'] == 'set' and args['metadata'] and not args['auto']:
+        parser_set.error("--metadata is only valid together with --auto")
+
     # Case where no args passed, sub_command is mandatory
     if args['sub_command'] is None:
         if args['verify']:
@@ -264,6 +269,11 @@ def main():  # pragma: no cover
         if not version_object.is_valid_semantic_version():
             version_object.print_invalid_version()
             exit(1)
+
+        # 'appVersion' only exists in Helm charts, say so rather than ignoring the flag
+        if args['app_version'] and file_data.get('file_type') != 'helm_chart':
+            print("warning: --app-version is only relevant for Helm chart files, ignoring it",
+                  file=stderr)
 
         if args['sub_command'] == 'get':
             if args['sem_ver']:
