@@ -316,6 +316,59 @@ class PyBumpTest(unittest.TestCase):
             self.assertEqual(target_file.read(), original,
                              msg="file must be left untouched when its type is not handled")
 
+    def test_write_version_to_file_preserves_trailing_newline(self):
+        """
+        A VERSION file keeps whatever trailing newline it already had.
+        See https://github.com/ArieLevs/PyBump/issues/76
+        """
+        target = 'VERSION'
+        self.addCleanup(remove, target)
+
+        for original, expected in (('1.0.0\n', '1.1.2\n'), ('1.0.0', '1.1.2')):
+            with open(target, 'w') as version_file:
+                version_file.write(original)
+
+            write_version_to_file(file_path=target, file_content=None,
+                                  version='1.1.2', app_version=False)
+
+            with open(target) as version_file:
+                self.assertEqual(version_file.read(), expected,
+                                 msg="writing over {0!r} should produce {1!r}".format(original, expected))
+
+    def test_write_version_to_a_new_version_file(self):
+        """a VERSION file that does not exist yet is created without a trailing newline"""
+        target = 'VERSION'
+        self.addCleanup(remove, target)
+
+        write_version_to_file(file_path=target, file_content=None,
+                              version='1.1.2', app_version=False)
+
+        with open(target) as version_file:
+            self.assertEqual(version_file.read(), '1.1.2')
+
+    def test_read_version_from_file_rejects_invalid_input(self):
+        """
+        read_version_from_file() raises for each unusable input, main() turns these
+        into clean exits. See https://github.com/ArieLevs/PyBump/issues/74
+        """
+        cases = (
+            ('test_not_a_chart.yaml', 'foo: bar\n', False, 'not a valid Helm chart'),
+            ('test_no_app_version.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0\n',
+             True, "Could not find 'appVersion'"),
+            ('test_unknown.conf', 'version="1.0.0"\n', False, 'not known to this app'),
+        )
+
+        for file_name, content, app_version, expected_text in cases:
+            with open(file_name, 'w') as target_file:
+                target_file.write(content)
+            self.addCleanup(remove, file_name)
+
+            with self.assertRaises(ValueError) as context:
+                read_version_from_file(file_path=file_name, app_version=app_version)
+
+            self.assertIn(expected_text, str(context.exception),
+                          msg="{0} should report '{1}'".format(file_name, expected_text))
+
 
 if __name__ == '__main__':
     unittest.main()
