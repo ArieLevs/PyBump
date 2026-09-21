@@ -352,3 +352,28 @@ class PyBumpSimulatorTest(unittest.TestCase):
                                        stdout=PIPE, stderr=PIPE)
         self.assertIs(completed_process_object.returncode, 0,
                       msg="tested 'version' flag that should always return exist 0, even on exceptions")
+
+    def test_malformed_yaml_file(self):
+        """
+        Test that a YAML file which cannot be parsed exits cleanly with a clear
+        message on stderr, rather than crashing with an UnboundLocalError traceback.
+        See https://github.com/ArieLevs/PyBump/issues/63
+        """
+        malformed_file = "test/test_content_files/test_malformed_chart.yaml"
+
+        # every sub command reads the file up front, so all three must fail the same way
+        for completed_process_object in (
+                simulate_get_version(malformed_file),
+                simulate_bump_version(malformed_file, "patch"),
+                simulate_set_version(malformed_file, "3.5.5")):
+            stdout = completed_process_object.stdout.decode('utf-8')
+            stderr = completed_process_object.stderr.decode('utf-8')
+
+            self.assertEqual(completed_process_object.returncode, 1,
+                             msg="malformed YAML file should exit with code 1")
+            self.assertNotIn('Traceback', stderr,
+                             msg="malformed YAML file should not crash with a traceback")
+            self.assertIn(malformed_file, stderr,
+                          msg="error message should name the file that failed to parse")
+            self.assertEqual(stdout, '',
+                             msg="parse errors belong on stderr, stdout should stay clean")

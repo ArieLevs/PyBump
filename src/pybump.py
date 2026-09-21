@@ -125,7 +125,8 @@ def read_version_from_file(file_path, app_version):
                 yaml = YAML()
                 file_content = yaml.load(stream)
             except YAMLError as exc:
-                print(exc)
+                print("Failed to parse YAML file {0}: {1}".format(file_path, exc), file=stderr)
+                exit(1)
             # Make sure Helm chart is valid and contains minimal mandatory keys
             if is_valid_helm_chart(file_content):
                 file_type = 'helm_chart'
