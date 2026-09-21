@@ -279,6 +279,19 @@ class PyBumpTest(unittest.TestCase):
              'file_type': 'plain_version'}
         )
 
+    def test_read_version_from_malformed_yaml_file(self):
+        """
+        An unparseable YAML file should exit 1 rather than fall through to
+        is_valid_helm_chart() with an unbound file_content.
+        See https://github.com/ArieLevs/PyBump/issues/63
+        """
+        with self.assertRaises(SystemExit) as context:
+            read_version_from_file(file_path='test/test_content_files/test_malformed_chart.yaml',
+                                   app_version=False)
+
+        self.assertEqual(context.exception.code, 1,
+                         msg="malformed YAML file should exit with code 1")
+
 
 if __name__ == '__main__':
     unittest.main()
