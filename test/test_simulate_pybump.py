@@ -1,5 +1,5 @@
 import unittest
-from os import makedirs
+from os import access, chmod, makedirs, R_OK
 from os.path import join
 from shutil import rmtree
 from subprocess import run, PIPE
@@ -504,3 +504,191 @@ class PyBumpAutoFlagTest(unittest.TestCase):
                       msg="should report that the directory is not a valid git repo")
         self.assertNotIn('Traceback', stderr,
                          msg="should fail cleanly, not raise InvalidGitRepositoryError")
+
+
+class PyBumpErrorHandlingTest(unittest.TestCase):
+    """
+    Every user facing error should exit 1 with a message on stderr, never a traceback.
+    See https://github.com/ArieLevs/PyBump/issues/74
+    """
+
+    def setUp(self):
+        self.temp_dir = mkdtemp()
+        self.addCleanup(rmtree, self.temp_dir, True)
+
+    def write(self, name, content):
+        """
+        write a file into the test temp directory, return its full path
+        :param name: file name as string
+        :param content: file content as string
+        :return: full path to the written file as string
+        """
+        path = join(self.temp_dir, name)
+        with open(path, 'w') as target_file:
+            target_file.write(content)
+        return path
+
+    def assert_clean_failure(self, completed_process_object, expected_text):
+        """
+        assert a run failed with exit 1 and a readable message rather than a traceback
+        :param completed_process_object: CompletedProcess object
+        :param expected_text: string expected to appear in stderr
+        """
+        stderr = completed_process_object.stderr.decode('utf-8')
+        self.assertEqual(completed_process_object.returncode, 1,
+                         msg="expected exit code 1, got {0}. stderr was: {1}".format(
+                             completed_process_object.returncode, stderr))
+        self.assertNotIn('Traceback', stderr,
+                         msg="expected a clean message, got a traceback: {0}".format(stderr))
+        self.assertIn(expected_text, stderr,
+                      msg="stderr should mention '{0}', got: {1}".format(expected_text, stderr))
+
+    def test_missing_file(self):
+        self.assert_clean_failure(
+            simulate_get_version(join(self.temp_dir, 'does_not_exist.yaml')), 'does_not_exist.yaml')
+
+    def test_file_is_a_directory(self):
+        directory_path = join(self.temp_dir, 'a_directory.yaml')
+        makedirs(directory_path)
+        self.assert_clean_failure(simulate_get_version(directory_path), 'a_directory.yaml')
+
+    def test_unreadable_file(self):
+        path = self.write('locked.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0\n')
+        chmod(path, 0o000)
+        self.addCleanup(chmod, path, 0o644)
+        if access(path, R_OK):
+            self.skipTest('running as a user that bypasses file permissions')
+
+        self.assert_clean_failure(simulate_get_version(path), 'locked.yaml')
+
+    def test_python_file_without_a_version(self):
+        path = self.write('no_version.py', 'import setuptools\nsetuptools.setup(name="x")\n')
+        self.assert_clean_failure(simulate_get_version(path), 'Unable to find version string')
+
+    def test_python_file_with_multiple_versions(self):
+        path = self.write('two_versions.py', 'version="1.0.0"\nversion="2.0.0"\n')
+        self.assert_clean_failure(simulate_get_version(path), "More than one 'version' found")
+
+    def test_yaml_that_is_not_a_helm_chart(self):
+        path = self.write('not_a_chart.yaml', 'foo: bar\n')
+        self.assert_clean_failure(simulate_get_version(path), 'not a valid Helm chart')
+
+    def test_chart_without_app_version(self):
+        path = self.write('no_app_version.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0\n')
+        self.assert_clean_failure(simulate_get_version(path, app_version=True), "Could not find 'appVersion'")
+
+    def test_unknown_file_extension(self):
+        path = self.write('unknown.conf', 'version="1.0.0"\n')
+        self.assert_clean_failure(simulate_get_version(path), 'not known to this app')
+
+
+class PyBumpVersionFileTest(unittest.TestCase):
+    """
+    A VERSION file should keep whatever trailing newline it already had, and
+    surrounding whitespace should not make it unreadable.
+    See https://github.com/ArieLevs/PyBump/issues/76
+    """
+
+    def setUp(self):
+        self.temp_dir = mkdtemp()
+        self.addCleanup(rmtree, self.temp_dir, True)
+
+    def write_version_file(self, content):
+        """
+        write a VERSION file into a fresh sub directory, return its full path
+        :param content: exact bytes to write as string
+        :return: full path to the VERSION file as string
+        """
+        directory = mkdtemp(dir=self.temp_dir)
+        path = join(directory, 'VERSION')
+        with open(path, 'w') as version_file:
+            version_file.write(content)
+        return path
+
+    def read_raw(self, path):
+        with open(path) as version_file:
+            return version_file.read()
+
+    def test_trailing_newline_is_preserved_on_bump(self):
+        path = self.write_version_file('1.0.0\n')
+
+        completed_process_object = simulate_bump_version(path, 'patch')
+        self.assertEqual(completed_process_object.returncode, 0)
+        self.assertEqual(self.read_raw(path), '1.0.1\n',
+                         msg="a VERSION file that ended with a newline should keep it")
+
+    def test_absent_trailing_newline_is_not_added_on_bump(self):
+        path = self.write_version_file('1.0.0')
+
+        completed_process_object = simulate_bump_version(path, 'patch')
+        self.assertEqual(completed_process_object.returncode, 0)
+        self.assertEqual(self.read_raw(path), '1.0.1',
+                         msg="a VERSION file with no trailing newline should not gain one")
+
+    def test_surrounding_whitespace_is_tolerated(self):
+        path = self.write_version_file('1.2.3\n\n')
+
+        completed_process_object = simulate_get_version(path)
+        self.assertEqual(completed_process_object.returncode, 0,
+                         msg="a blank line should not make the version unreadable")
+        self.assertEqual(completed_process_object.stdout.decode('utf-8').strip(), '1.2.3')
+
+
+class PyBumpFlagCombinationTest(unittest.TestCase):
+    """
+    A flag that cannot take effect should say so rather than be ignored.
+    See https://github.com/ArieLevs/PyBump/issues/77
+    """
+
+    def setUp(self):
+        self.temp_dir = mkdtemp()
+        self.addCleanup(rmtree, self.temp_dir, True)
+
+    def write(self, name, content):
+        path = join(self.temp_dir, name)
+        with open(path, 'w') as target_file:
+            target_file.write(content)
+        return path
+
+    def test_metadata_without_auto_is_rejected(self):
+        path = self.write('chart.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0\n')
+
+        completed_process_object = run(["python", "src/pybump.py", "set", "--file", path,
+                                        "--set-version", "2.0.0", "--metadata"], stdout=PIPE, stderr=PIPE)
+        self.assertNotEqual(completed_process_object.returncode, 0,
+                            msg="'--metadata' without '--auto' cannot take effect and should be rejected")
+        self.assertIn('--metadata', completed_process_object.stderr.decode('utf-8'),
+                      msg="the error should name the flag that was rejected")
+
+        with open(path) as chart_file:
+            self.assertIn('version: 1.0.0', chart_file.read(),
+                          msg="a rejected invocation must not modify the file")
+
+    def test_metadata_with_auto_is_still_accepted(self):
+        """guard that rejecting the combination above did not break the valid one"""
+        path = self.write('setup.py', 'version="1.0.0"\n')
+        # '--auto' needs a repository to read a commit sha from
+        for args in (('init',), ('add', '.'),
+                     ('-c', 'user.email=test@pybump', '-c', 'user.name=test',
+                      '-c', 'commit.gpgsign=false', 'commit', '-m', 'init')):
+            run(('git', '-C', self.temp_dir) + args, stdout=PIPE, stderr=PIPE)
+
+        self.assertEqual(simulate_set_version(path, auto=True, metadata=True).returncode, 0,
+                         msg="'--auto --metadata' is the supported combination and must keep working")
+
+    def test_get_metadata_is_unaffected(self):
+        """the 'get' sub command has its own --metadata with a different meaning"""
+        path = self.write('chart.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0+abc\n')
+
+        completed_process_object = simulate_get_version(path, metadata=True)
+        self.assertEqual(completed_process_object.returncode, 0)
+        self.assertEqual(completed_process_object.stdout.decode('utf-8').strip(), 'abc')
+
+    def test_app_version_on_non_chart_file_warns(self):
+        path = self.write('setup.py', 'version="1.0.0"\n')
+
+        completed_process_object = simulate_bump_version(path, 'patch', app_version=True)
+        self.assertEqual(completed_process_object.returncode, 0,
+                         msg="'--app-version' on a non chart file is documented as ignored, not an error")
+        self.assertIn('app-version', completed_process_object.stderr.decode('utf-8'),
+                      msg="being ignored should be stated on stderr rather than silent")

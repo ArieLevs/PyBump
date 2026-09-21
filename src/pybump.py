@@ -23,6 +23,35 @@ except ImportError:
 regex_version_pattern = re.compile(r"((?<![a-zA-Z0-9_-])(?:__)?version(?:__)? ?= ?[\"'])(.+?)([\"'])")
 
 
+# The file types this app knows how to read and write, and the 'file_type'
+# value each one is reported as
+PYTHON_FILE_EXTENSIONS = ('.py', '.toml')
+HELM_CHART_FILE_EXTENSIONS = ('.yaml', '.yml')
+PLAIN_VERSION_FILE_NAME = 'VERSION'
+
+
+def resolve_file_type(file_path):
+    """
+    Resolve which supported file type a path refers to.
+    Both the read and the write side go through here, so they cannot disagree
+    about what is supported.
+    :param file_path: full path to file as string
+    :return: one of 'python', 'helm_chart', 'plain_version'
+    :raises ValueError: if the file name and extension are not supported
+    """
+    filename, file_extension = os.path.splitext(file_path)
+
+    if file_extension in PYTHON_FILE_EXTENSIONS:
+        return 'python'
+    if file_extension in HELM_CHART_FILE_EXTENSIONS:
+        return 'helm_chart'
+    if os.path.basename(filename) == PLAIN_VERSION_FILE_NAME:
+        return 'plain_version'
+
+    raise ValueError("File name or extension not known to this app: {0}{1}"
+                     .format(os.path.basename(filename), file_extension))
+
+
 def is_valid_helm_chart(content):
     """
     Check if input dictionary contains mandatory keys of a Helm Chart.yaml file,
@@ -84,21 +113,31 @@ def write_version_to_file(file_path, file_content, version, app_version):
     :param version: version to set as string
     :param app_version: boolean, if True then set the appVersion key
     """
+    # Resolve the file type before opening for write, mode 'w' truncates the file
+    # immediately, so an unhandled type must be rejected while the content is still there
+    file_type = resolve_file_type(file_path)
+
+    # A VERSION file keeps whatever trailing newline it already had, this has to be
+    # read before opening for write since mode 'w' truncates the file
+    trailing_newline = ''
+    if file_type == 'plain_version' and os.path.isfile(file_path):
+        with open(file_path, 'r') as infile:
+            if infile.read().endswith('\n'):
+                trailing_newline = '\n'
+
     # Append the 'new_version' to relevant file
     with open(file_path, 'w') as outfile:
-        filename, file_extension = os.path.splitext(file_path)
-        if file_extension in ('.py', '.toml'):
+        if file_type == 'python':
             outfile.write(set_version_in_file(version, file_content))
-        elif file_extension == '.yaml' or file_extension == '.yml':
+        elif file_type == 'helm_chart':
             if app_version:
                 file_content['appVersion'] = version
             else:
                 file_content['version'] = version
             yaml = YAML()
             yaml.dump(file_content, outfile)
-        elif os.path.basename(filename) == 'VERSION':
-            outfile.write(version)
-        outfile.close()
+        else:
+            outfile.write(version + trailing_newline)
 
 
 def read_version_from_file(file_path, app_version):
@@ -113,23 +152,20 @@ def read_version_from_file(file_path, app_version):
     :return: dict containing file content, version and type as:
      {'file_content': file_content, 'version': current_version, 'file_type': file_type}
     """
-    with open(file_path, 'r') as stream:
-        filename, file_extension = os.path.splitext(file_path)
+    file_type = resolve_file_type(file_path)
 
-        if file_extension in ('.py', '.toml'):  # Case setup.py / pyproject.toml files
+    with open(file_path, 'r') as stream:
+        if file_type == 'python':  # Case setup.py / pyproject.toml files
             file_content = stream.read()
             current_version = get_version_from_file(file_content)
-            file_type = 'python'
-        elif file_extension == '.yaml' or file_extension == '.yml':  # Case Helm chart files
+        elif file_type == 'helm_chart':  # Case Helm chart files
             try:
                 yaml = YAML()
                 file_content = yaml.load(stream)
             except YAMLError as exc:
-                print("Failed to parse YAML file {0}: {1}".format(file_path, exc), file=stderr)
-                exit(1)
+                raise ValueError("Failed to parse YAML file {0}: {1}".format(file_path, exc))
             # Make sure Helm chart is valid and contains minimal mandatory keys
             if is_valid_helm_chart(file_content):
-                file_type = 'helm_chart'
                 if app_version:
                     current_version = file_content.get('appVersion', None)
 
@@ -143,14 +179,9 @@ def read_version_from_file(file_path, app_version):
             else:
                 raise ValueError("Input file is not a valid Helm chart.yaml: {0}".format(file_content))
         else:  # Case file name is just 'VERSION'
-            if os.path.basename(filename) == 'VERSION':
-                # A version file should ONLY contain a valid semantic version string
-                file_content = None
-                current_version = stream.read()
-                file_type = 'plain_version'
-            else:
-                raise ValueError("File name or extension not known to this app: {}{}"
-                                 .format(os.path.basename(filename), file_extension))
+            # A version file should ONLY contain a valid semantic version string
+            file_content = None
+            current_version = stream.read().strip()
 
     return {'file_content': file_content, 'version': current_version, 'file_type': file_type}
 
@@ -203,6 +234,11 @@ def main():  # pragma: no cover
 
     args = vars(parser.parse_args())
 
+    # '--metadata' on the 'set' sub command is only read inside the '--auto' branch,
+    # without it the flag would be silently ignored
+    if args['sub_command'] == 'set' and args['metadata'] and not args['auto']:
+        parser_set.error("--metadata is only valid together with --auto")
+
     # Case where no args passed, sub_command is mandatory
     if args['sub_command'] is None:
         if args['verify']:
@@ -232,14 +268,24 @@ def main():  # pragma: no cover
     #
     #     print(pybump_patch.check_available_python_patches(requirements_list=requirements))
     else:
-        # Read current version from the given file
-        file_data = read_version_from_file(args['file'], args['app_version'])
+        # Read current version from the given file,
+        # any failure here is a user facing error, report it without a traceback
+        try:
+            file_data = read_version_from_file(args['file'], args['app_version'])
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(exc, file=stderr)
+            exit(1)
         file_content = file_data.get('file_content')
         version_object = PybumpVersion(file_data.get('version'))
 
         if not version_object.is_valid_semantic_version():
             version_object.print_invalid_version()
             exit(1)
+
+        # 'appVersion' only exists in Helm charts, say so rather than ignoring the flag
+        if args['app_version'] and file_data.get('file_type') != 'helm_chart':
+            print("warning: --app-version is only relevant for Helm chart files, ignoring it",
+                  file=stderr)
 
         if args['sub_command'] == 'get':
             if args['sem_ver']:

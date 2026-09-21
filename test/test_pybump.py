@@ -1,7 +1,8 @@
 import unittest
+from os import remove
 
 from src.pybump import PybumpVersion, get_version_from_file, set_version_in_file, \
-    is_valid_helm_chart, write_version_to_file, read_version_from_file
+    is_valid_helm_chart, write_version_to_file, read_version_from_file, resolve_file_type
 
 from . import valid_helm_chart, invalid_helm_chart, empty_helm_chart, \
     valid_setup_py, invalid_setup_py_1, invalid_setup_py_multiple_ver, \
@@ -241,9 +242,11 @@ class PyBumpTest(unittest.TestCase):
         write_version_to_file(file_path='VERSION',
                               file_content='',
                               version='1.1.2', app_version=False)
-        write_version_to_file(file_path='unknown.extension',
-                              file_content='some version="" here',
-                              version='1.1.2', app_version=False)
+        # an unhandled file type is rejected, previously this silently created an empty file
+        with self.assertRaises(ValueError):
+            write_version_to_file(file_path='unknown.extension',
+                                  file_content='some version="" here',
+                                  version='1.1.2', app_version=False)
 
         self.assertEqual(read_version_from_file(
             file_path='test_write_read_file_1.yaml', app_version=False),
@@ -281,16 +284,109 @@ class PyBumpTest(unittest.TestCase):
 
     def test_read_version_from_malformed_yaml_file(self):
         """
-        An unparseable YAML file should exit 1 rather than fall through to
-        is_valid_helm_chart() with an unbound file_content.
-        See https://github.com/ArieLevs/PyBump/issues/63
+        An unparseable YAML file should raise rather than fall through to
+        is_valid_helm_chart() with an unbound file_content. main() turns this
+        into a clean exit 1, see issues 63 and 74.
         """
-        with self.assertRaises(SystemExit) as context:
+        with self.assertRaises(ValueError) as context:
             read_version_from_file(file_path='test/test_content_files/test_malformed_chart.yaml',
                                    app_version=False)
 
-        self.assertEqual(context.exception.code, 1,
-                         msg="malformed YAML file should exit with code 1")
+        self.assertIn('test_malformed_chart.yaml', str(context.exception),
+                      msg="the error should name the file that failed to parse")
+
+    def test_write_version_to_unknown_file_type_leaves_file_intact(self):
+        """
+        write_version_to_file() opens with mode 'w', which truncates before any
+        branch runs. An unhandled file type must be rejected before that happens,
+        or the file is silently emptied.
+        See https://github.com/ArieLevs/PyBump/issues/75
+        """
+        target = 'test_unhandled_type.conf'
+        original = 'important data that should survive\n'
+        with open(target, 'w') as target_file:
+            target_file.write(original)
+        self.addCleanup(remove, target)
+
+        with self.assertRaises(ValueError):
+            write_version_to_file(file_path=target, file_content='irrelevant',
+                                  version='1.0.0', app_version=False)
+
+        with open(target) as target_file:
+            self.assertEqual(target_file.read(), original,
+                             msg="file must be left untouched when its type is not handled")
+
+    def test_write_version_to_file_preserves_trailing_newline(self):
+        """
+        A VERSION file keeps whatever trailing newline it already had.
+        See https://github.com/ArieLevs/PyBump/issues/76
+        """
+        target = 'VERSION'
+        self.addCleanup(remove, target)
+
+        for original, expected in (('1.0.0\n', '1.1.2\n'), ('1.0.0', '1.1.2')):
+            with open(target, 'w') as version_file:
+                version_file.write(original)
+
+            write_version_to_file(file_path=target, file_content=None,
+                                  version='1.1.2', app_version=False)
+
+            with open(target) as version_file:
+                self.assertEqual(version_file.read(), expected,
+                                 msg="writing over {0!r} should produce {1!r}".format(original, expected))
+
+    def test_write_version_to_a_new_version_file(self):
+        """a VERSION file that does not exist yet is created without a trailing newline"""
+        target = 'VERSION'
+        self.addCleanup(remove, target)
+
+        write_version_to_file(file_path=target, file_content=None,
+                              version='1.1.2', app_version=False)
+
+        with open(target) as version_file:
+            self.assertEqual(version_file.read(), '1.1.2')
+
+    def test_read_version_from_file_rejects_invalid_input(self):
+        """
+        read_version_from_file() raises for each unusable input, main() turns these
+        into clean exits. See https://github.com/ArieLevs/PyBump/issues/74
+        """
+        cases = (
+            ('test_not_a_chart.yaml', 'foo: bar\n', False, 'not a valid Helm chart'),
+            ('test_no_app_version.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0\n',
+             True, "Could not find 'appVersion'"),
+            ('test_unknown.conf', 'version="1.0.0"\n', False, 'not known to this app'),
+        )
+
+        for file_name, content, app_version, expected_text in cases:
+            with open(file_name, 'w') as target_file:
+                target_file.write(content)
+            self.addCleanup(remove, file_name)
+
+            with self.assertRaises(ValueError) as context:
+                read_version_from_file(file_path=file_name, app_version=app_version)
+
+            self.assertIn(expected_text, str(context.exception),
+                          msg="{0} should report '{1}'".format(file_name, expected_text))
+
+    def test_resolve_file_type(self):
+        """
+        One place decides which file types are supported, used by both the read
+        and the write side so they can never disagree.
+        """
+        for file_path, expected in (('setup.py', 'python'),
+                                    ('pyproject.toml', 'python'),
+                                    ('Chart.yaml', 'helm_chart'),
+                                    ('Chart.yml', 'helm_chart'),
+                                    ('VERSION', 'plain_version'),
+                                    ('some/dir/VERSION', 'plain_version'),
+                                    ('VERSION.txt', 'plain_version')):
+            self.assertEqual(resolve_file_type(file_path), expected,
+                             msg="{0} should resolve to {1}".format(file_path, expected))
+
+        for file_path in ('unknown.conf', 'notes.txt', 'Makefile'):
+            with self.assertRaises(ValueError, msg="{0} should be rejected".format(file_path)):
+                resolve_file_type(file_path)
 
 
 if __name__ == '__main__':
