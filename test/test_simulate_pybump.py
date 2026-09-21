@@ -580,3 +580,55 @@ class PyBumpErrorHandlingTest(unittest.TestCase):
     def test_unknown_file_extension(self):
         path = self.write('unknown.conf', 'version="1.0.0"\n')
         self.assert_clean_failure(simulate_get_version(path), 'not known to this app')
+
+
+class PyBumpVersionFileTest(unittest.TestCase):
+    """
+    A VERSION file should keep whatever trailing newline it already had, and
+    surrounding whitespace should not make it unreadable.
+    See https://github.com/ArieLevs/PyBump/issues/76
+    """
+
+    def setUp(self):
+        self.temp_dir = mkdtemp()
+        self.addCleanup(rmtree, self.temp_dir, True)
+
+    def write_version_file(self, content):
+        """
+        write a VERSION file into a fresh sub directory, return its full path
+        :param content: exact bytes to write as string
+        :return: full path to the VERSION file as string
+        """
+        directory = mkdtemp(dir=self.temp_dir)
+        path = join(directory, 'VERSION')
+        with open(path, 'w') as version_file:
+            version_file.write(content)
+        return path
+
+    def read_raw(self, path):
+        with open(path) as version_file:
+            return version_file.read()
+
+    def test_trailing_newline_is_preserved_on_bump(self):
+        path = self.write_version_file('1.0.0\n')
+
+        completed_process_object = simulate_bump_version(path, 'patch')
+        self.assertEqual(completed_process_object.returncode, 0)
+        self.assertEqual(self.read_raw(path), '1.0.1\n',
+                         msg="a VERSION file that ended with a newline should keep it")
+
+    def test_absent_trailing_newline_is_not_added_on_bump(self):
+        path = self.write_version_file('1.0.0')
+
+        completed_process_object = simulate_bump_version(path, 'patch')
+        self.assertEqual(completed_process_object.returncode, 0)
+        self.assertEqual(self.read_raw(path), '1.0.1',
+                         msg="a VERSION file with no trailing newline should not gain one")
+
+    def test_surrounding_whitespace_is_tolerated(self):
+        path = self.write_version_file('1.2.3\n\n')
+
+        completed_process_object = simulate_get_version(path)
+        self.assertEqual(completed_process_object.returncode, 0,
+                         msg="a blank line should not make the version unreadable")
+        self.assertEqual(completed_process_object.stdout.decode('utf-8').strip(), '1.2.3')

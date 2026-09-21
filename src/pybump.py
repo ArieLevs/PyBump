@@ -98,6 +98,14 @@ def write_version_to_file(file_path, file_content, version, app_version):
         raise ValueError("File name or extension not known to this app: {0}{1}"
                          .format(os.path.basename(filename), file_extension))
 
+    # A VERSION file keeps whatever trailing newline it already had, this has to be
+    # read before opening for write since mode 'w' truncates the file
+    trailing_newline = ''
+    if file_type == 'plain_version' and os.path.isfile(file_path):
+        with open(file_path, 'r') as infile:
+            if infile.read().endswith('\n'):
+                trailing_newline = '\n'
+
     # Append the 'new_version' to relevant file
     with open(file_path, 'w') as outfile:
         if file_type == 'python':
@@ -110,7 +118,7 @@ def write_version_to_file(file_path, file_content, version, app_version):
             yaml = YAML()
             yaml.dump(file_content, outfile)
         else:
-            outfile.write(version)
+            outfile.write(version + trailing_newline)
 
 
 def read_version_from_file(file_path, app_version):
@@ -157,7 +165,7 @@ def read_version_from_file(file_path, app_version):
             if os.path.basename(filename) == 'VERSION':
                 # A version file should ONLY contain a valid semantic version string
                 file_content = None
-                current_version = stream.read()
+                current_version = stream.read().strip()
                 file_type = 'plain_version'
             else:
                 raise ValueError("File name or extension not known to this app: {}{}"
