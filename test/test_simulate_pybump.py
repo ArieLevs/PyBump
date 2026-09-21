@@ -1,5 +1,5 @@
 import unittest
-from os import makedirs
+from os import access, chmod, makedirs, R_OK
 from os.path import join
 from shutil import rmtree
 from subprocess import run, PIPE
@@ -504,3 +504,79 @@ class PyBumpAutoFlagTest(unittest.TestCase):
                       msg="should report that the directory is not a valid git repo")
         self.assertNotIn('Traceback', stderr,
                          msg="should fail cleanly, not raise InvalidGitRepositoryError")
+
+
+class PyBumpErrorHandlingTest(unittest.TestCase):
+    """
+    Every user facing error should exit 1 with a message on stderr, never a traceback.
+    See https://github.com/ArieLevs/PyBump/issues/74
+    """
+
+    def setUp(self):
+        self.temp_dir = mkdtemp()
+        self.addCleanup(rmtree, self.temp_dir, True)
+
+    def write(self, name, content):
+        """
+        write a file into the test temp directory, return its full path
+        :param name: file name as string
+        :param content: file content as string
+        :return: full path to the written file as string
+        """
+        path = join(self.temp_dir, name)
+        with open(path, 'w') as target_file:
+            target_file.write(content)
+        return path
+
+    def assert_clean_failure(self, completed_process_object, expected_text):
+        """
+        assert a run failed with exit 1 and a readable message rather than a traceback
+        :param completed_process_object: CompletedProcess object
+        :param expected_text: string expected to appear in stderr
+        """
+        stderr = completed_process_object.stderr.decode('utf-8')
+        self.assertEqual(completed_process_object.returncode, 1,
+                         msg="expected exit code 1, got {0}. stderr was: {1}".format(
+                             completed_process_object.returncode, stderr))
+        self.assertNotIn('Traceback', stderr,
+                         msg="expected a clean message, got a traceback: {0}".format(stderr))
+        self.assertIn(expected_text, stderr,
+                      msg="stderr should mention '{0}', got: {1}".format(expected_text, stderr))
+
+    def test_missing_file(self):
+        self.assert_clean_failure(
+            simulate_get_version(join(self.temp_dir, 'does_not_exist.yaml')), 'does_not_exist.yaml')
+
+    def test_file_is_a_directory(self):
+        directory_path = join(self.temp_dir, 'a_directory.yaml')
+        makedirs(directory_path)
+        self.assert_clean_failure(simulate_get_version(directory_path), 'a_directory.yaml')
+
+    def test_unreadable_file(self):
+        path = self.write('locked.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0\n')
+        chmod(path, 0o000)
+        self.addCleanup(chmod, path, 0o644)
+        if access(path, R_OK):
+            self.skipTest('running as a user that bypasses file permissions')
+
+        self.assert_clean_failure(simulate_get_version(path), 'locked.yaml')
+
+    def test_python_file_without_a_version(self):
+        path = self.write('no_version.py', 'import setuptools\nsetuptools.setup(name="x")\n')
+        self.assert_clean_failure(simulate_get_version(path), 'Unable to find version string')
+
+    def test_python_file_with_multiple_versions(self):
+        path = self.write('two_versions.py', 'version="1.0.0"\nversion="2.0.0"\n')
+        self.assert_clean_failure(simulate_get_version(path), "More than one 'version' found")
+
+    def test_yaml_that_is_not_a_helm_chart(self):
+        path = self.write('not_a_chart.yaml', 'foo: bar\n')
+        self.assert_clean_failure(simulate_get_version(path), 'not a valid Helm chart')
+
+    def test_chart_without_app_version(self):
+        path = self.write('no_app_version.yaml', 'apiVersion: v1\nname: t\nversion: 1.0.0\n')
+        self.assert_clean_failure(simulate_get_version(path, app_version=True), "Could not find 'appVersion'")
+
+    def test_unknown_file_extension(self):
+        path = self.write('unknown.conf', 'version="1.0.0"\n')
+        self.assert_clean_failure(simulate_get_version(path), 'not known to this app')

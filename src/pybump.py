@@ -125,8 +125,7 @@ def read_version_from_file(file_path, app_version):
                 yaml = YAML()
                 file_content = yaml.load(stream)
             except YAMLError as exc:
-                print("Failed to parse YAML file {0}: {1}".format(file_path, exc), file=stderr)
-                exit(1)
+                raise ValueError("Failed to parse YAML file {0}: {1}".format(file_path, exc))
             # Make sure Helm chart is valid and contains minimal mandatory keys
             if is_valid_helm_chart(file_content):
                 file_type = 'helm_chart'
@@ -232,8 +231,13 @@ def main():  # pragma: no cover
     #
     #     print(pybump_patch.check_available_python_patches(requirements_list=requirements))
     else:
-        # Read current version from the given file
-        file_data = read_version_from_file(args['file'], args['app_version'])
+        # Read current version from the given file,
+        # any failure here is a user facing error, report it without a traceback
+        try:
+            file_data = read_version_from_file(args['file'], args['app_version'])
+        except (OSError, ValueError, RuntimeError) as exc:
+            print(exc, file=stderr)
+            exit(1)
         file_content = file_data.get('file_content')
         version_object = PybumpVersion(file_data.get('version'))
 
